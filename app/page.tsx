@@ -34,6 +34,7 @@ export default function Home() {
   const [matchdayNum, setMatchdayNum] = useState<number | null>(null);
 
   const [stats, setStats] = useState<SeasonStats | null>(null);
+  const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
   const [lineup, setLineup] = useState<Lineup | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -92,6 +93,17 @@ export default function Home() {
         setMatchdayId(md.id);
         setMatchdayNum(md.number);
 
+// slot del mio team per questa giornata (se schedule generato)
+const { data: mySlot } = await supabase
+  .from("pick_schedule")
+  .select("slot_start_at, slot_end_at")
+  .eq("league_id", leagueId)
+  .eq("matchday_id", md.id)
+  .eq("team_id", m.team_id)
+  .maybeSingle();
+
+setMySlot(mySlot ?? null);
+
         const { data: lu } = await supabase.rpc("get_my_matchday_lineup", { p_matchday_id: md.id });
         setLineup(Array.isArray(lu) && lu.length ? (lu[0] as any) : null);
       } else {
@@ -143,9 +155,16 @@ export default function Home() {
         <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--primary)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Giornata</div>
-            <div style={{ fontWeight: 1000, color: matchdayId ? "var(--primary-dark)" : "var(--muted)" }}>
-              ● {matchdayId ? "OPEN" : "LOCKED"}
-            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+  <div style={{ fontWeight: 1000, color: matchdayId ? "var(--primary-dark)" : "var(--muted)" }}>
+    ● {matchdayId ? "OPEN" : "LOCKED"}
+  </div>
+  {mySlot && (
+    <div style={{ marginTop: 4, alignSelf: "flex-start", fontSize: 13, fontWeight: 900, color: "var(--muted)" }}>
+      {formatSlot(mySlot.slot_start_at, mySlot.slot_end_at)}
+    </div>
+  )}
+</div>
           </div>
 
           <div style={{ marginTop: 8, fontSize: 22, fontWeight: 1000 }}>
@@ -263,4 +282,21 @@ function fmt(n: number) {
   if (!Number.isFinite(n)) return "—";
   const s = Math.round(n * 10) / 10;
   return String(s).replace(".", ",");
+}
+
+function formatSlot(startIso: string, endIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+
+  const dayNames = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+  const day = dayNames[start.getDay()];
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const s = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+  const eMin = pad(end.getMinutes());
+  const eHour = pad(end.getHours());
+
+  // come vuoi tu: "Ven 18:30-20" se i minuti finali sono 00
+  const endStr = eMin === "00" ? `${eHour}` : `${eHour}:${eMin}`;
+  return `${day} ${s}-${endStr}`;
 }
