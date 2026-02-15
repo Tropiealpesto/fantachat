@@ -210,6 +210,24 @@ export default function Home() {
             <SeasonBarChart history={stats?.history || []} totalMatchdays={38} />
           </div>
         </div>
+        {/* Admin */}
+{membership?.role === "admin" && (
+  <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
+    <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
+    <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+      Gestisci voti, giornata, Top6 e giornale.
+    </div>
+
+    <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <a className="btn" href="/admin/voti">Voti</a>
+      <a className="btn" href="/admin/giornata">Giornata</a>
+      <a className="btn" href="/admin/top6">Top6</a>
+      <a className="btn" href="/admin/giornale">Giornale</a>
+      <a className="btn" href="/crea-lega">Crea lega</a>
+    </div>
+  </div>
+)}
+
       </main>
       <BottomNav />
     </>
