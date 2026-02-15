@@ -13,8 +13,6 @@ export default function AdminGiornalePage() {
   const [loading, setLoading] = useState(true);
 
   const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [teamId, setTeamId] = useState<string | null>(null);
-
   const [leagueName, setLeagueName] = useState("—");
   const [teamName, setTeamName] = useState("—");
 
@@ -26,7 +24,6 @@ export default function AdminGiornalePage() {
   const [content, setContent] = useState<string>("");
 
   const [savedList, setSavedList] = useState<{ matchday_id: string; title: string; created_at: string }[]>([]);
-
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,39 +33,24 @@ export default function AdminGiornalePage() {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return router.replace("/login");
 
-      // 1) lega attiva
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-
+      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
       if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const activeLeagueId = ctx.active_league_id as string;
-      setLeagueId(activeLeagueId);
+      const lid = ctx.active_league_id as string;
+      setLeagueId(lid);
 
-      // 2) membership per quella lega (deve essere admin)
-      const { data: mem } = await supabase
-        .from("memberships")
-        .select("team_id, role")
-        .eq("league_id", activeLeagueId)
-        .limit(1)
-        .maybeSingle();
-
+      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
       if (!mem || mem.role !== "admin") return router.replace("/");
-      setTeamId(mem.team_id);
 
-      // 3) nomi lega e squadra
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", activeLeagueId).single();
+      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
       if (lg?.name) setLeagueName(lg.name);
 
       const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
       if (tm?.name) setTeamName(tm.name);
 
-      // 4) matchdays
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number, status")
+        .eq("league_id", lid)
         .order("number", { ascending: false });
 
       const list = (mds || []) as Matchday[];
@@ -83,23 +65,15 @@ export default function AdminGiornalePage() {
     run();
   }, [router]);
 
-  const matchdayNumber = useMemo(
-    () => matchdays.find((x) => x.id === matchdayId)?.number,
-    [matchdays, matchdayId]
-  );
+  const matchdayNumber = useMemo(() => matchdays.find((x) => x.id === matchdayId)?.number, [matchdays, matchdayId]);
 
   async function loadPrompt(mid: string) {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
     setPromptText("");
     if (!mid) return;
 
-    // La RPC get_article_prompt è già admin-only e usa la lega attiva
     const { data, error } = await supabase.rpc("get_article_prompt", { p_matchday_id: mid });
-    if (error) {
-      setErr(error.message);
-      return;
-    }
+    if (error) { setErr(error.message); return; }
     setPromptText(String(data || ""));
   }
 
@@ -142,43 +116,26 @@ export default function AdminGiornalePage() {
       await navigator.clipboard.writeText(promptText);
       setMsg("Prompt copiato ✅");
     } catch {
-      setErr("Impossibile copiare. Seleziona e copia manualmente.");
+      setErr("Impossibile copiare. Copia manualmente.");
     }
   }
 
   async function saveArticle() {
     if (!leagueId || !matchdayId) return;
 
-    setMsg(null);
-    setErr(null);
-
-    if (!title.trim() || !content.trim()) {
-      setErr("Inserisci titolo e contenuto.");
-      return;
-    }
+    setMsg(null); setErr(null);
+    if (!title.trim() || !content.trim()) return setErr("Inserisci titolo e contenuto.");
 
     setBusy(true);
-
     const { error } = await supabase
       .from("matchday_articles")
       .upsert(
-        {
-          league_id: leagueId,
-          matchday_id: matchdayId,
-          title: title.trim(),
-          content: content.trim(),
-          updated_at: new Date().toISOString(),
-        },
+        { league_id: leagueId, matchday_id: matchdayId, title: title.trim(), content: content.trim(), updated_at: new Date().toISOString() },
         { onConflict: "league_id,matchday_id" }
       );
-
     setBusy(false);
 
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-
+    if (error) return setErr(error.message);
     setMsg("Giornale salvato ✅");
     await loadSavedList();
   }
@@ -223,7 +180,6 @@ export default function AdminGiornalePage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
-            placeholder="Titolo del giornale..."
           />
 
           <div style={{ marginTop: 12, fontWeight: 1000 }}>Articolo</div>
@@ -231,20 +187,17 @@ export default function AdminGiornalePage() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 12, border: "1px solid var(--border)", minHeight: 220, fontWeight: 700 }}
-            placeholder="Incolla qui il testo generato da ChatGPT..."
           />
 
           <button className="btn btn-primary" style={{ marginTop: 12, width: "100%", padding: 12 }} onClick={saveArticle} disabled={busy}>
             {busy ? "Salvataggio..." : "Salva Giornale"}
           </button>
 
-          {msg && <div style={{ marginTop: 12, fontWeight: 900, color: "var(--primary-dark)" }}>{msg}</div>}
-          {err && <div style={{ marginTop: 12, fontWeight: 900, color: "var(--accent-dark)" }}>{err}</div>}
+          {msg && <div style={{ marginTop: 12, color: "var(--primary-dark)", fontWeight: 900 }}>{msg}</div>}
+          {err && <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>{err}</div>}
 
           <div style={{ marginTop: 12 }}>
-            <a className="btn" href="/giornale" style={{ textDecoration: "none" }}>
-              Vai a /giornale
-            </a>
+            <a className="btn" href="/giornale" style={{ textDecoration: "none" }}>Vai a /giornale</a>
           </div>
         </div>
 
@@ -255,12 +208,7 @@ export default function AdminGiornalePage() {
               <div style={{ color: "var(--muted)", fontWeight: 800 }}>Nessun articolo ancora.</div>
             ) : (
               savedList.map((a) => (
-                <a
-                  key={a.matchday_id}
-                  href={`/giornale?matchday=${a.matchday_id}`}
-                  className="action"
-                  style={{ margin: 0 }}
-                >
+                <a key={a.matchday_id} href={`/giornale?matchday=${a.matchday_id}`} className="action" style={{ margin: 0 }}>
                   <div style={{ fontWeight: 1000 }}>{a.title}</div>
                   <small>{new Date(a.created_at).toLocaleString()}</small>
                 </a>

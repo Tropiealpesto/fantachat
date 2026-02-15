@@ -10,12 +10,10 @@ type Row = { team_name: string; email: string; role: "player" | "admin" };
 
 export default function CreaLegaPage() {
   const router = useRouter();
-
   const [loading, setLoading] = useState(true);
   const [myEmail, setMyEmail] = useState<string>("");
 
-  const [leagueName, setLeagueName] = useState<string>("");
-
+  const [leagueName, setLeagueName] = useState("");
   const [rows, setRows] = useState<Row[]>([
     { team_name: "La mia squadra", email: "", role: "admin" },
     { team_name: "Squadra 2", email: "", role: "player" },
@@ -28,10 +26,7 @@ export default function CreaLegaPage() {
   useEffect(() => {
     async function run() {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        router.replace("/login");
-        return;
-      }
+      if (!data.user) return router.replace("/login");
 
       const e = (data.user.email || "").toLowerCase();
       setMyEmail(e);
@@ -72,33 +67,22 @@ export default function CreaLegaPage() {
   }, [leagueName, rows, myEmail]);
 
   async function createLeague() {
-    setErr(null);
-    setMsg(null);
-
-    if (!canSubmit) {
-      setErr("Controlla: nome lega, almeno 2 squadre, e la prima riga deve avere la tua email come admin.");
-      return;
-    }
+    setErr(null); setMsg(null);
+    if (!canSubmit) return setErr("Controlla nome lega e prima riga (la tua email admin).");
 
     const emails = rows.map((r) => r.email.trim().toLowerCase()).filter(Boolean);
-    if (new Set(emails).size !== emails.length) {
-      setErr("Hai inserito due volte la stessa email.");
-      return;
-    }
+    if (new Set(emails).size !== emails.length) return setErr("Hai inserito due volte la stessa email.");
 
     setBusy(true);
-    const { data, error } = await supabase.rpc("create_league_with_teams_and_invites", {
+    const { error } = await supabase.rpc("create_league_with_teams_and_invites", {
       p_league_name: leagueName.trim(),
       p_items: rows,
     });
     setBusy(false);
 
-    if (error) {
-      setErr(error.message);
-      return;
-    }
+    if (error) return setErr(error.message);
 
-    setMsg("Lega creata ✅ Ti porto alla Home della nuova lega...");
+    setMsg("Lega creata ✅");
     setTimeout(() => router.replace("/"), 700);
   }
 
@@ -110,9 +94,6 @@ export default function CreaLegaPage() {
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Crea una nuova lega</div>
-          <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Inserisci squadre ed email. La prima riga è la tua (admin).
-          </div>
 
           <div style={{ marginTop: 12, fontWeight: 1000 }}>Nome lega</div>
           <input
@@ -133,37 +114,28 @@ export default function CreaLegaPage() {
                   placeholder="Nome squadra"
                   style={{ width: "100%", padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                 />
-
                 <input
                   value={r.email}
                   onChange={(e) => updateRow(i, "email", e.target.value)}
                   placeholder="Email proprietario"
-                  style={{ width: "100%", padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900, marginTop: 8 }}
+                  style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                 />
-
-                <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+                <div style={{ display: "flex", gap: 10, justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
                   <select
                     value={r.role}
                     onChange={(e) => updateRow(i, "role", e.target.value)}
-                    style={{ padding: 10, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                     disabled={i === 0}
+                    style={{ padding: 10, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                   >
                     <option value="player">player</option>
                     <option value="admin">admin</option>
                   </select>
-
                   {i > 1 && (
                     <button className="btn" style={{ border: "2px solid var(--accent)" }} onClick={() => removeRow(i)}>
                       Rimuovi
                     </button>
                   )}
                 </div>
-
-                {i === 0 && (
-                  <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>
-                    Questa riga deve essere la tua email (admin).
-                  </div>
-                )}
               </div>
             ))}
           </div>

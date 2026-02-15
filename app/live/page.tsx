@@ -18,71 +18,50 @@ type ScoreRow = {
 
 export default function LivePage() {
   const router = useRouter();
-
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<ScoreRow[]>([]);
-  const [matchdayNumber, setMatchdayNumber] = useState<number | null>(null);
+
   const [leagueName, setLeagueName] = useState("—");
   const [teamName, setTeamName] = useState("—");
   const [myTeamId, setMyTeamId] = useState<string | null>(null);
 
+  const [matchdayNumber, setMatchdayNumber] = useState<number | null>(null);
+  const [rows, setRows] = useState<ScoreRow[]>([]);
+
   useEffect(() => {
     async function run() {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        router.replace("/login");
-        return;
-      }
+      if (!auth.user) return router.replace("/login");
 
-      // 1️⃣ Lega attiva
       const { data: ctx } = await supabase
         .from("user_context")
         .select("active_league_id")
         .eq("user_id", auth.user.id)
         .maybeSingle();
 
-      if (!ctx?.active_league_id) {
-        router.replace("/seleziona-lega");
-        return;
-      }
+      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
+      const leagueId = ctx.active_league_id as string;
 
-      const leagueId = ctx.active_league_id;
-
-      // 2️⃣ Membership per quella lega
-      const { data: m } = await supabase
+      const { data: mem } = await supabase
         .from("memberships")
         .select("team_id")
         .eq("league_id", leagueId)
         .limit(1)
         .maybeSingle();
 
-      if (!m) {
-        router.replace("/seleziona-lega");
-        return;
-      }
+      if (!mem) return router.replace("/seleziona-lega");
+      setMyTeamId(mem.team_id);
 
-      setMyTeamId(m.team_id);
-
-      const { data: lg } = await supabase
-        .from("leagues")
-        .select("name")
-        .eq("id", leagueId)
-        .single();
-
+      const { data: lg } = await supabase.from("leagues").select("name").eq("id", leagueId).single();
       if (lg?.name) setLeagueName(lg.name);
 
-      const { data: tm } = await supabase
-        .from("teams")
-        .select("name")
-        .eq("id", m.team_id)
-        .single();
-
+      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
       if (tm?.name) setTeamName(tm.name);
 
-      // 3️⃣ Giornata open
+      // matchday open PER LEGA
       const { data: md } = await supabase
         .from("matchdays")
         .select("id, number")
+        .eq("league_id", leagueId)
         .eq("status", "open")
         .order("number", { ascending: false })
         .limit(1)
@@ -95,12 +74,9 @@ export default function LivePage() {
 
       setMatchdayNumber(md.number);
 
-      // ⚠️ Questa RPC deve essere già adattata a user_context
-      const { data } = await supabase.rpc("get_league_scores", {
-        p_matchday_id: md.id,
-      });
-
+      const { data } = await supabase.rpc("get_league_scores", { p_matchday_id: md.id });
       setRows((data || []) as ScoreRow[]);
+
       setLoading(false);
     }
 
@@ -114,9 +90,7 @@ export default function LivePage() {
       <AppBar league={leagueName} team={teamName} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>
-            Live – Giornata {matchdayNumber ?? "—"}
-          </div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Live – Giornata {matchdayNumber ?? "—"}</div>
         </div>
 
         <div style={{ marginTop: 12 }}>
@@ -135,18 +109,23 @@ export default function LivePage() {
                 style={{
                   padding: 16,
                   marginBottom: 12,
-                  borderLeft: isMine
-                    ? "6px solid var(--primary)"
-                    : "1px solid var(--border)",
+                  borderLeft: isMine ? "6px solid var(--primary)" : "1px solid var(--border)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                   <div style={{ fontWeight: 1000 }}>
                     {i + 1}. {r.team_name}
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 1000, color: totalColor }}>
                     {fmt(total)}
                   </div>
+                </div>
+
+                <div style={{ marginTop: 8, display: "grid", gap: 4, fontWeight: 900 }}>
+                  <Line role="P" name={r.gk_name} vote={r.gk_vote} />
+                  <Line role="D" name={r.def_name} vote={r.def_vote} />
+                  <Line role="C" name={r.mid_name} vote={r.mid_vote} />
+                  <Line role="A" name={r.fwd_name} vote={r.fwd_vote} />
                 </div>
               </div>
             );
@@ -155,6 +134,20 @@ export default function LivePage() {
       </main>
       <BottomNav />
     </>
+  );
+}
+
+function Line(props: { role: string; name: string; vote: number }) {
+  let color = "var(--muted)";
+  if (props.vote > 0) color = "var(--primary-dark)";
+  if (props.vote < 0) color = "var(--accent-dark)";
+
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+      <span style={{ width: 20, color: "var(--muted)" }}>{props.role}</span>
+      <span style={{ flex: 1 }}>{props.name}</span>
+      <span style={{ color }}>{fmt(props.vote)}</span>
+    </div>
   );
 }
 

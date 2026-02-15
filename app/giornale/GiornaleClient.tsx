@@ -14,8 +14,8 @@ export default function GiornaleClient() {
   const [loading, setLoading] = useState(true);
 
   const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [teamName, setTeamName] = useState("—");
   const [leagueName, setLeagueName] = useState("—");
+  const [teamName, setTeamName] = useState("—");
 
   const [matchdays, setMatchdays] = useState<{ id: string; number: number }[]>([]);
   const [matchdayId, setMatchdayId] = useState<string | null>(null);
@@ -35,20 +35,19 @@ export default function GiornaleClient() {
         .maybeSingle();
 
       if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-
-      const activeLeagueId = ctx.active_league_id as string;
-      setLeagueId(activeLeagueId);
+      const lid = ctx.active_league_id as string;
+      setLeagueId(lid);
 
       const { data: mem } = await supabase
         .from("memberships")
         .select("team_id")
-        .eq("league_id", activeLeagueId)
+        .eq("league_id", lid)
         .limit(1)
         .maybeSingle();
 
       if (!mem) return router.replace("/seleziona-lega");
 
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", activeLeagueId).single();
+      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
       if (lg?.name) setLeagueName(lg.name);
 
       const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
@@ -57,6 +56,7 @@ export default function GiornaleClient() {
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number")
+        .eq("league_id", lid)
         .order("number", { ascending: false });
 
       const list = (mds || []) as any[];
@@ -94,12 +94,17 @@ export default function GiornaleClient() {
     [matchdays, matchdayId]
   );
 
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(`${title}\n\n${content}`);
+    } catch {}
+  }
+
   if (loading) return <div style={{ padding: 20 }}>Caricamento...</div>;
 
   return (
     <>
       <AppBar league={leagueName} team={teamName} />
-
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>
@@ -110,13 +115,7 @@ export default function GiornaleClient() {
             <select
               value={matchdayId ?? ""}
               onChange={(e) => setMatchdayId(e.target.value)}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 12,
-                border: "1px solid var(--border)",
-                fontWeight: 900,
-              }}
+              style={{ width: "100%", padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
             >
               {matchdays.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -129,9 +128,12 @@ export default function GiornaleClient() {
           <div style={{ marginTop: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
             {content}
           </div>
+
+          <button className="btn" style={{ marginTop: 12, border: "2px solid var(--accent)" }} onClick={copy}>
+            Copia testo
+          </button>
         </div>
       </main>
-
       <BottomNav />
     </>
   );

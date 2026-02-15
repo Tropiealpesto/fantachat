@@ -8,12 +8,12 @@ import BottomNav from "../../components/BottomNav";
 
 type Matchday = { id: string; number: number; status: string };
 type RealTeam = { id: string; name: string };
-type Top6Row = { rank: number; real_team_id: string; name: string };
 
 export default function AdminTop6Page() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  const [leagueId, setLeagueId] = useState<string | null>(null);
   const [leagueName, setLeagueName] = useState("—");
   const [teamName, setTeamName] = useState("—");
 
@@ -34,18 +34,24 @@ export default function AdminTop6Page() {
 
       const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
       if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const leagueId = ctx.active_league_id;
+      const lid = ctx.active_league_id as string;
+      setLeagueId(lid);
 
-      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", leagueId).limit(1).maybeSingle();
+      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
       if (!mem || mem.role !== "admin") return router.replace("/");
 
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", leagueId).single();
+      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
       if (lg?.name) setLeagueName(lg.name);
 
       const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
       if (tm?.name) setTeamName(tm.name);
 
-      const { data: mds } = await supabase.from("matchdays").select("id, number, status").order("number", { ascending: false });
+      const { data: mds } = await supabase
+        .from("matchdays")
+        .select("id, number, status")
+        .eq("league_id", lid)
+        .order("number", { ascending: false });
+
       const list = (mds || []) as Matchday[];
       setMatchdays(list);
 
@@ -57,6 +63,7 @@ export default function AdminTop6Page() {
 
       setLoading(false);
     }
+
     run();
   }, [router]);
 
@@ -64,12 +71,12 @@ export default function AdminTop6Page() {
     setMsg(null); setErr(null);
     if (!mid) return;
 
-    const { data, error } = await supabase.rpc("get_top6_for_matchday", { p_matchday_id: mid });
+    const { data, error } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: mid } as any);
     if (error) { setSelected(["", "", "", "", "", ""]); return; }
 
     const rows = (data || []) as any[];
     const arr = ["", "", "", "", "", ""];
-    rows.forEach((r) => { if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id; });
+    rows.forEach((r: any) => { if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id; });
     setSelected(arr);
   }
 
@@ -80,20 +87,20 @@ export default function AdminTop6Page() {
   }, [matchdayId]);
 
   async function save() {
-    setErr(null); setMsg(null);
+    setMsg(null); setErr(null);
 
-    if (selected.some((x) => !x)) { setErr("Seleziona tutte e 6 le squadre."); return; }
-    if (new Set(selected).size !== 6) { setErr("Top6 contiene duplicati."); return; }
+    if (selected.some((x) => !x)) return setErr("Seleziona tutte e 6 le squadre.");
+    if (new Set(selected).size !== 6) return setErr("Top6 contiene duplicati.");
 
     setSaving(true);
     const { data, error } = await supabase.rpc("set_top6_for_matchday", {
-      p_matchday_id: matchdayId,
+      p_league_matchday_id: matchdayId,
       p_real_team_ids: selected,
-    });
+    } as any);
     setSaving(false);
 
-    if (error) { setErr(error.message); return; }
-    setMsg(`Top6 salvata ✅ (righe: ${data})`);
+    if (error) return setErr(error.message);
+    setMsg("Top6 salvata ✅");
   }
 
   if (loading) return <main className="container">Caricamento...</main>;
@@ -123,7 +130,7 @@ export default function AdminTop6Page() {
                 <div style={{ fontWeight: 1000 }}>#{i + 1}</div>
                 <select
                   value={selected[i]}
-                  onChange={(e) => setSelected((p) => { const c=[...p]; c[i]=e.target.value; return c; })}
+                  onChange={(e) => setSelected((p) => { const c = [...p]; c[i] = e.target.value; return c; })}
                   style={{ padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                 >
                   <option value="">-- scegli --</option>

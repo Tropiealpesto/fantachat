@@ -20,6 +20,7 @@ export default function AdminVotiPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  const [leagueId, setLeagueId] = useState<string | null>(null);
   const [leagueName, setLeagueName] = useState("—");
   const [teamName, setTeamName] = useState("—");
 
@@ -28,6 +29,7 @@ export default function AdminVotiPage() {
 
   const [rows, setRows] = useState<PickedPlayerRow[]>([]);
   const [votes, setVotes] = useState<Record<string, string>>({});
+
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,31 +39,26 @@ export default function AdminVotiPage() {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return router.replace("/login");
 
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-
+      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
       if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const leagueId = ctx.active_league_id;
+      const lid = ctx.active_league_id as string;
+      setLeagueId(lid);
 
-      const { data: mem } = await supabase
-        .from("memberships")
-        .select("team_id, role")
-        .eq("league_id", leagueId)
-        .limit(1)
-        .maybeSingle();
-
+      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
       if (!mem || mem.role !== "admin") return router.replace("/");
 
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", leagueId).single();
+      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
       if (lg?.name) setLeagueName(lg.name);
 
       const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
       if (tm?.name) setTeamName(tm.name);
 
-      const { data: mds } = await supabase.from("matchdays").select("id, number, status").order("number", { ascending: false });
+      const { data: mds } = await supabase
+        .from("matchdays")
+        .select("id, number, status")
+        .eq("league_id", lid)
+        .order("number", { ascending: false });
+
       const list = (mds || []) as Matchday[];
       setMatchdays(list);
 
@@ -70,6 +67,7 @@ export default function AdminVotiPage() {
 
       setLoading(false);
     }
+
     run();
   }, [router]);
 
@@ -88,7 +86,7 @@ export default function AdminVotiPage() {
     r.forEach((x) => (init[x.player_id] = x.current_vote != null ? String(x.current_vote) : ""));
     setVotes(init);
 
-    if (r.length === 0) setMsg("Nessun giocatore schierato per questa giornata nella lega selezionata.");
+    if (!r.length) setMsg("Nessun giocatore schierato per questa giornata.");
   }
 
   useEffect(() => {
@@ -114,7 +112,7 @@ export default function AdminVotiPage() {
     setSaving(false);
 
     if (error) { setErr(error.message); return; }
-    setMsg(`Salvati/aggiornati ${data} voti ✅`);
+    setMsg(`Salvati ${data} voti ✅`);
     await loadPicked(matchdayId);
   }
 
@@ -152,8 +150,10 @@ export default function AdminVotiPage() {
           <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
             {rows.map((r) => (
               <div key={r.player_id} className="card" style={{ padding: 12, boxShadow: "none" }}>
-                <div style={{ fontWeight: 1000 }}>{r.player_name} <span style={{ color: "var(--muted)" }}>· {r.real_team} · {r.role}</span></div>
-                <div style={{ marginTop: 6, display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{ fontWeight: 1000 }}>
+                  {r.player_name} <span style={{ color: "var(--muted)" }}>· {r.real_team} · {r.role}</span>
+                </div>
+                <div style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center" }}>
                   <input
                     value={votes[r.player_id] ?? ""}
                     onChange={(e) => setVotes((p) => ({ ...p, [r.player_id]: e.target.value }))}
@@ -161,9 +161,7 @@ export default function AdminVotiPage() {
                     inputMode="decimal"
                     style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
                   />
-                  <div style={{ color: "var(--muted)", fontWeight: 800 }}>
-                    x{r.picked_count}
-                  </div>
+                  <div style={{ color: "var(--muted)", fontWeight: 900 }}>x{r.picked_count}</div>
                 </div>
               </div>
             ))}
