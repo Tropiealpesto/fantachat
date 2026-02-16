@@ -309,78 +309,102 @@ setFixtures(fixtures || []);
           </div>
         )}
 
-        {/* Top6 sotto */}
-        <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
-          <div style={{ fontWeight: 1000, fontSize: 18 }}>Top 6 della giornata</div>
-          <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Max 1 giocatore da queste squadre.
-          </div>
-
-          {top6.length === 0 ? (
-            <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 800 }}>Top6 non impostata.</div>
-          ) : (
-            <div style={{ marginTop: 10, overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr><th style={th}>#</th><th style={th}>Squadra</th></tr>
-                </thead>
-                <tbody>
-                  {top6.slice().sort((a,b)=>a.rank-b.rank).map((r) => (
-                    <tr key={r.real_team_id}>
-                      <td style={td}><b>{r.rank}</b></td>
-                      <td style={td}>{r.real_team_name}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {fixtures.length > 0 && (
+{/* Partite + Top6 affiancati (compatti) */}
+<div
+  style={{
+    marginTop: 12,
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+  }}
+>
+  {/* PARTITE */}
   <div
     className="card"
     style={{
-      padding: 16,
-      marginTop: 12,
-      borderLeft: "6px solid var(--primary)",
+      padding: 12,
+      borderLeft: "6px solid var(--accent)",
+      boxShadow: "none",
     }}
   >
-    <div style={{ fontWeight: 1000, fontSize: 18 }}>
-      Partite della giornata
+    <div style={{ fontWeight: 1000, fontSize: 14, color: "var(--accent-dark)" }}>
+      Partite
     </div>
 
-    <div style={{ marginTop: 10 }}>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <tbody>
-          {fixtures.map((f) => (
-            <tr key={f.slot}>
-              <td
-  style={{
-    ...tdStyle,
-    fontWeight: top6Names.has(f.home_team) ? 1000 : 900,
-  }}
->
-  {f.home_team}
-</td>
-              <td style={{ ...tdStyle, textAlign: "center", fontWeight: 900 }}>
-                -
-              </td>
-              <td
-  style={{
-    ...tdStyle,
-    fontWeight: top6Names.has(f.away_team) ? 1000 : 900,
-  }}
->
-  {f.away_team}
-</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    {fixtures.length === 0 ? (
+      <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>
+        Nessuna partita inserita.
+      </div>
+    ) : (
+      <div style={{ marginTop: 8, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            {fixtures.map((f) => (
+              <tr key={f.slot}>
+                <td
+                  style={{
+                    ...miniTd,
+                    fontWeight: top6Names.has(f.home_team) ? 1000 : 900,
+                  }}
+                >
+                  {f.home_team}
+                </td>
+                <td style={{ ...miniTd, textAlign: "center", width: 16 }}>-</td>
+                <td
+                  style={{
+                    ...miniTd,
+                    fontWeight: top6Names.has(f.away_team) ? 1000 : 900,
+                  }}
+                >
+                  {f.away_team}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
-)}
+
+  {/* TOP 6 */}
+  <div
+    className="card"
+    style={{
+      padding: 12,
+      borderLeft: "6px solid var(--accent)",
+      boxShadow: "none",
+    }}
+  >
+    <div style={{ fontWeight: 1000, fontSize: 14, color: "var(--accent-dark)" }}>
+      Top 6
+    </div>
+
+    {top6.length === 0 ? (
+      <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>
+        Non impostata.
+      </div>
+    ) : (
+      <div style={{ marginTop: 8, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            {top6
+              .slice()
+              .sort((a, b) => a.rank - b.rank)
+              .map((r) => (
+                <tr key={r.real_team_id}>
+                  <td style={{ ...miniTd, width: 24, color: "var(--accent-dark)" }}>
+                    <b>{r.rank}</b>
+                  </td>
+                  <td style={miniTd}>{r.real_team_name}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</div>
+
 
         {msg && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--primary)", fontWeight: 900, color: "var(--primary-dark)" }}>{msg}</div>}
         {err && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--accent)", fontWeight: 900, color: "var(--accent-dark)" }}>{err}</div>}
@@ -407,4 +431,11 @@ const tdStyle = {
   padding: "8px 6px",
   borderBottom: "1px solid var(--border)",
   fontWeight: 900,
+};
+
+const miniTd: any = {
+  padding: "6px 6px",
+  borderBottom: "1px solid rgba(249,115,22,.18)",
+  fontWeight: 900,
+  fontSize: 12,
 };
