@@ -243,6 +243,7 @@ setMySlot(mySlot ?? null);
       <a className="btn" href="/admin/top6">Top6</a>
       <a className="btn" href="/admin/giornale">Giornale</a>
       <a className="btn" href="/crea-lega">Crea lega</a>
+      <a className="btn" href="/admin/partite">Partite</a>
     </div>
   </div>
 )}

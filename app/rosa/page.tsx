@@ -39,6 +39,10 @@ export default function RosaPage() {
 
   const [top6, setTop6] = useState<Top6Row[]>([]);
   const top6TeamIds = useMemo(() => new Set(top6.map((t) => t.real_team_id)), [top6]);
+  const top6Names = useMemo(
+  () => new Set(top6.map((t) => t.real_team_name)),
+  [top6]
+);
 
   const [gk, setGk] = useState("");
   const [def, setDef] = useState("");
@@ -351,11 +355,25 @@ setFixtures(fixtures || []);
         <tbody>
           {fixtures.map((f) => (
             <tr key={f.slot}>
-              <td style={tdStyle}>{f.home_team}</td>
+              <td
+  style={{
+    ...tdStyle,
+    fontWeight: top6Names.has(f.home_team) ? 1000 : 900,
+  }}
+>
+  {f.home_team}
+</td>
               <td style={{ ...tdStyle, textAlign: "center", fontWeight: 900 }}>
                 -
               </td>
-              <td style={tdStyle}>{f.away_team}</td>
+              <td
+  style={{
+    ...tdStyle,
+    fontWeight: top6Names.has(f.away_team) ? 1000 : 900,
+  }}
+>
+  {f.away_team}
+</td>
             </tr>
           ))}
         </tbody>
