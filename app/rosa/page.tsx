@@ -45,6 +45,10 @@ export default function RosaPage() {
   const [mid, setMid] = useState("");
   const [fwd, setFwd] = useState("");
 
+  const [fixtures, setFixtures] = useState<
+  { slot: number; home_team: string; away_team: string }[]
+>([]);
+
   const [savedPick, setSavedPick] = useState<PickRow | null>(null);
   const [savedNames, setSavedNames] = useState<{ gk: string; def: string; mid: string; fwd: string } | null>(null);
 
@@ -117,6 +121,12 @@ export default function RosaPage() {
         return;
       }
       setMatchday(md);
+
+      // Carica partite della giornata
+const { data: fixtures } =
+  await supabase.rpc("get_fixtures_for_active_league_open_matchday");
+
+setFixtures(fixtures || []);
 
       // Top6 (RPC ora accetta matchday_id per lega)
       const { data: t6 } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: md.id } as any);
@@ -323,6 +333,37 @@ export default function RosaPage() {
           )}
         </div>
 
+        {fixtures.length > 0 && (
+  <div
+    className="card"
+    style={{
+      padding: 16,
+      marginTop: 12,
+      borderLeft: "6px solid var(--primary)",
+    }}
+  >
+    <div style={{ fontWeight: 1000, fontSize: 18 }}>
+      Partite della giornata
+    </div>
+
+    <div style={{ marginTop: 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <tbody>
+          {fixtures.map((f) => (
+            <tr key={f.slot}>
+              <td style={tdStyle}>{f.home_team}</td>
+              <td style={{ ...tdStyle, textAlign: "center", fontWeight: 900 }}>
+                -
+              </td>
+              <td style={tdStyle}>{f.away_team}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
         {msg && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--primary)", fontWeight: 900, color: "var(--primary-dark)" }}>{msg}</div>}
         {err && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--accent)", fontWeight: 900, color: "var(--accent-dark)" }}>{err}</div>}
       </main>
@@ -344,3 +385,8 @@ const th: any = { textAlign: "left", padding: "10px 12px", borderBottom: "1px so
 const td: any = { padding: "10px 12px", borderBottom: "1px solid var(--border)", fontWeight: 800 };
 const label: any = { fontWeight: 900, marginTop: 12, display: "block" };
 const selectStyle: any = { width: "100%", padding: 12, marginTop: 6, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 800, background: "white" };
+const tdStyle = {
+  padding: "8px 6px",
+  borderBottom: "1px solid var(--border)",
+  fontWeight: 900,
+};
