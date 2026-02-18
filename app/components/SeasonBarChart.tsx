@@ -56,7 +56,7 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
   };
 
   return (
-    <div style={{ width: "100%", height: 320 }}>
+    <div style={{ width: "100%", height: 250 }}>
       <ResponsiveContainer>
         <BarChart data={data} margin={{ top: 18, right: 12, left: 0, bottom: 0 }}>
           <XAxis dataKey="md" tick={{ fontSize: 12 }} interval={0} />

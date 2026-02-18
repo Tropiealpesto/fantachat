@@ -138,23 +138,23 @@ setMySlot(mySlot ?? null);
     run();
   }, [router]);
 
-  if (loading) return <main className="container">Caricamento...</main>;
+  if (loading) return <main className="container" style={{ fontSize: "0.94rem" }}>Caricamento...</main>;
 
   const ctaLabel = lineup ? "Vedi Rosa (inviata)" : "Invia Rosa";
 
   return (
     <>
       <AppBar league={leagueName} team={teamName} right={<button className="btn" onClick={() => router.push("/seleziona-lega")}>Leghe</button>} />
-      <main className="container">
+      <main className="container" style={{ fontSize: "0.94rem" }}>
         {err && (
           <div className="card" style={{ padding: 14, borderColor: "#fecaca", background: "#fff1f2", color: "#991b1b", fontWeight: 900 }}>
             Errore: {err}
           </div>
         )}
 
-        <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--primary)" }}>
+        <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--primary)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <div style={{ fontWeight: 1000, fontSize: 18 }}>Giornata</div>
+            <div style={{ fontWeight: 1000, fontSize: 16 }}>Giornata</div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
   <div style={{ fontWeight: 1000, color: matchdayId ? "var(--primary-dark)" : "var(--muted)" }}>
     ● {matchdayId ? "OPEN" : "LOCKED"}
@@ -231,7 +231,7 @@ setMySlot(mySlot ?? null);
         </div>
         {/* Admin */}
 {membership?.role === "admin" && (
-  <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
+  <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
     <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
     <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
       Gestisci voti, giornata, Top6 e giornale.
@@ -258,7 +258,7 @@ function Kpi(props: { title: string; value: string }) {
   return (
     <div className="card" style={{ padding: 14 }}>
       <div style={{ color: "var(--muted)", fontWeight: 900 }}>{props.title}</div>
-      <div style={{ marginTop: 6, fontSize: 24, fontWeight: 1000 }}>{props.value}</div>
+      <div style={{ marginTop: 4, fontSize: 20, fontWeight: 1000 }}>{props.value}</div>
     </div>
   );
 }
