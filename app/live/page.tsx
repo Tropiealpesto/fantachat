@@ -9,12 +9,15 @@ import BottomNav from "../components/BottomNav";
 type ScoreRow = {
   team_id: string;
   team_name: string;
-  gk_name: string; gk_vote: number;
-  def_name: string; def_vote: number;
-  mid_name: string; mid_vote: number;
-  fwd_name: string; fwd_vote: number;
+
+  gk_name: string; gk_real_team_name: string; gk_vote: number;
+  def_name: string; def_real_team_name: string; def_vote: number;
+  mid_name: string; mid_real_team_name: string; mid_vote: number;
+  fwd_name: string; fwd_real_team_name: string; fwd_vote: number;
+
   total_score: number;
 };
+
 
 export default function LivePage() {
   const router = useRouter();
@@ -123,9 +126,9 @@ export default function LivePage() {
 
                 <div style={{ marginTop: 8, display: "grid", gap: 4, fontWeight: 900 }}>
                   <Line role="P" name={r.gk_name} vote={r.gk_vote} />
-                  <Line role="D" name={r.def_name} vote={r.def_vote} />
-                  <Line role="C" name={r.mid_name} vote={r.mid_vote} />
-                  <Line role="A" name={r.fwd_name} vote={r.fwd_vote} />
+<Line role="D" name={r.def_name} team={r.def_real_team_name} vote={r.def_vote} />
+<Line role="C" name={r.mid_name} team={r.mid_real_team_name} vote={r.mid_vote} />
+<Line role="A" name={r.fwd_name} team={r.fwd_real_team_name} vote={r.fwd_vote} />
                 </div>
               </div>
             );
@@ -137,15 +140,18 @@ export default function LivePage() {
   );
 }
 
-function Line(props: { role: string; name: string; vote: number }) {
+function Line(props: { role: string; name: string; team?: string; vote: number }) {
   let color = "var(--muted)";
   if (props.vote > 0) color = "var(--primary-dark)";
   if (props.vote < 0) color = "var(--accent-dark)";
 
+  const label =
+    props.role === "P" ? props.name : `${props.name} (${props.team || "?"})`;
+
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
       <span style={{ width: 20, color: "var(--muted)" }}>{props.role}</span>
-      <span style={{ flex: 1 }}>{props.name}</span>
+      <span style={{ flex: 1 }}>{label}</span>
       <span style={{ color }}>{fmt(props.vote)}</span>
     </div>
   );
