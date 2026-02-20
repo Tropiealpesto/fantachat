@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 
 type Matchday = { id: string; number: number; status: string };
+type Team = { id: string; name: string };
 
 export default function AdminGiornataPage() {
   const router = useRouter();
@@ -26,6 +27,11 @@ export default function AdminGiornataPage() {
   // recap whatsapp
   const [recapText, setRecapText] = useState<string>("");
   const [recapLoading, setRecapLoading] = useState(false);
+
+  // reset rosa
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [resetTeamId, setResetTeamId] = useState<string>("");
+  const [resetting, setResetting] = useState(false);
 
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -54,6 +60,18 @@ export default function AdminGiornataPage() {
 
     // reset recap quando cambi contesto
     setRecapText("");
+  }
+
+  async function loadTeams(lid: string) {
+    const { data } = await supabase
+      .from("teams")
+      .select("id, name")
+      .eq("league_id", lid)
+      .order("name", { ascending: true });
+
+    const list = (data || []) as Team[];
+    setTeams(list);
+    setResetTeamId(list[0]?.id ?? "");
   }
 
   useEffect(() => {
@@ -87,9 +105,9 @@ export default function AdminGiornataPage() {
       if (tm?.name) setTeamName(tm.name);
 
       await refresh(lid);
+      await loadTeams(lid);
 
-      // default deadline suggerita: venerdì 20:00 della settimana corrente (solo suggerimento)
-      // L’admin può cambiarla.
+      // default deadline suggerita: venerdì alle 20:00 della settimana corrente (solo suggerimento)
       setDeadlineEndLocal(suggestFriday20Local());
 
       setLoading(false);
@@ -99,7 +117,8 @@ export default function AdminGiornataPage() {
   }, [router]);
 
   async function openDay() {
-    setMsg(null); setErr(null);
+    setMsg(null);
+    setErr(null);
     const { error } = await supabase.rpc("open_matchday", { p_number: numberToOpen });
     if (error) return setErr(error.message);
     setMsg(`Giornata ${numberToOpen} aperta ✅`);
@@ -107,7 +126,8 @@ export default function AdminGiornataPage() {
   }
 
   async function closeProvv() {
-    setMsg(null); setErr(null);
+    setMsg(null);
+    setErr(null);
     if (!current) return setErr("Nessuna giornata open.");
     const { data, error } = await supabase.rpc("close_matchday_for_league", {
       p_matchday_id: current.id,
@@ -118,7 +138,8 @@ export default function AdminGiornataPage() {
   }
 
   async function finalize() {
-    setMsg(null); setErr(null);
+    setMsg(null);
+    setErr(null);
     if (!current) return setErr("Nessuna giornata open.");
     const { data, error } = await supabase.rpc("close_matchday_for_league", {
       p_matchday_id: current.id,
@@ -138,10 +159,8 @@ export default function AdminGiornataPage() {
     if (!current) return setErr("Apri prima una giornata.");
     if (!deadlineEndLocal) return setErr("Seleziona una data/ora di fine slot.");
 
-    // datetime-local -> ISO string (usa timezone locale del dispositivo)
     const iso = new Date(deadlineEndLocal).toISOString();
 
-    // 1) salva settings
     const { error: sErr } = await supabase.rpc("set_matchday_settings", {
       p_matchday_id: current.id,
       p_deadline_end_at: iso,
@@ -150,14 +169,12 @@ export default function AdminGiornataPage() {
 
     if (sErr) return setErr(sErr.message);
 
-    // 2) genera schedule
     const { data: count, error: gErr } = await supabase.rpc("generate_pick_schedule", {
       p_matchday_id: current.id,
     });
 
     if (gErr) return setErr(gErr.message);
 
-    // 3) genera testo recap per whatsapp
     setRecapLoading(true);
     const { data: recap, error: rErr } = await supabase.rpc("get_pick_schedule_recap_text", {
       p_matchday_id: current.id,
@@ -179,12 +196,34 @@ export default function AdminGiornataPage() {
     }
   }
 
+  async function resetPick() {
+    setMsg(null);
+    setErr(null);
+
+    if (!current) return setErr("Nessuna giornata open.");
+    if (!resetTeamId) return setErr("Seleziona una squadra.");
+    if (!confirm("Confermi reset rosa per questa squadra? (Cancella la formazione della giornata)")) return;
+
+    setResetting(true);
+    const { data, error } = await supabase.rpc("admin_reset_team_pick", {
+      p_matchday_id: current.id,
+      p_team_id: resetTeamId,
+    });
+    setResetting(false);
+
+    if (error) return setErr(error.message);
+
+    const tName = teams.find((t) => t.id === resetTeamId)?.name || "Squadra";
+    setMsg(`Rosa resettata ✅ (${tName})`);
+  }
+
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
     <>
       <AppBar league={leagueName} team={`${teamName} • ADMIN`} />
       <main className="container">
+        {/* Giornata: open/close */}
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Giornata</div>
 
@@ -211,11 +250,47 @@ export default function AdminGiornataPage() {
           </div>
         </div>
 
+        {/* Reset rosa */}
+        <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
+          <div style={{ fontWeight: 1000, fontSize: 18 }}>Reset rosa (Admin)</div>
+          <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+            Cancella la formazione della squadra selezionata per la giornata open.
+          </div>
+
+          <select
+            value={resetTeamId}
+            onChange={(e) => setResetTeamId(e.target.value)}
+            style={{
+              width: "100%",
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              border: "1px solid var(--border)",
+              fontWeight: 900,
+            }}
+          >
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            className="btn"
+            style={{ marginTop: 12, width: "100%", border: "2px solid var(--accent)" }}
+            onClick={resetPick}
+            disabled={resetting || !current}
+          >
+            {resetting ? "Reset..." : "Reset rosa"}
+          </button>
+        </div>
+
         {/* Schedule / WhatsApp recap */}
         <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Slot inserimento Rosa (WhatsApp)</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Imposta la fine slot (es. venerdì 20:00). Genero lo schedule a ritroso (90 min).
+            Imposta la fine slot (es. venerdì 20:00). Genero lo schedule a ritroso (90 min) saltando 22:00–09:30.
           </div>
 
           <div style={{ marginTop: 12, fontWeight: 1000 }}>Fine slot (deadline_end_at)</div>
@@ -257,32 +332,25 @@ export default function AdminGiornataPage() {
               </button>
             </>
           )}
-
-          {msg && <div style={{ marginTop: 12, color: "var(--primary-dark)", fontWeight: 900 }}>{msg}</div>}
-          {err && <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>{err}</div>}
         </div>
+
+        {msg && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--primary)", fontWeight: 900, color: "var(--primary-dark)" }}>{msg}</div>}
+        {err && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--accent)", fontWeight: 900, color: "var(--accent-dark)" }}>{err}</div>}
       </main>
       <BottomNav />
     </>
   );
 }
 
-/**
- * Suggerisce un venerdì alle 20:00 (timezone locale del dispositivo).
- * Ritorna stringa compatibile con <input type="datetime-local">: YYYY-MM-DDTHH:MM
- */
 function suggestFriday20Local() {
   const now = new Date();
   const day = now.getDay(); // 0=dom, 5=ven
   const target = new Date(now);
 
-  // calcola quanti giorni mancano a venerdì
   const diff = (5 - day + 7) % 7;
   target.setDate(now.getDate() + diff);
-
   target.setHours(20, 0, 0, 0);
 
-  // format per datetime-local
   const pad = (n: number) => String(n).padStart(2, "0");
   const y = target.getFullYear();
   const m = pad(target.getMonth() + 1);
