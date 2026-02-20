@@ -65,14 +65,6 @@ export default function RosaPage() {
 
   const top6IdSet = useMemo(() => new Set(top6.map((t) => t.real_team_id)), [top6]);
 
-const chosenTop6RealTeamId = useMemo(() => {
-  for (const pid of selectedIds) {
-    const rt = idToRealTeam.get(pid);
-    if (rt && top6IdSet.has(rt)) return rt;
-  }
-  return null;
-}, [selectedIds, idToRealTeam, top6IdSet]);
-
   // label "Nome (Squadra)"
   function playerLabel(p: Player) {
     const team = realTeams.get(p.real_team_id) || "";
@@ -100,6 +92,14 @@ const chosenTop6RealTeamId = useMemo(() => {
     const d = fwdMap.get(fwdText) || "";
     return [a, b, c, d].filter(Boolean);
   }, [gkText, defText, midText, fwdText, gkMap, defMap, midMap, fwdMap]);
+
+  const chosenTop6RealTeamId = useMemo(() => {
+  for (const pid of selectedIds) {
+    const rt = idToRealTeam.get(pid);
+    if (rt && top6IdSet.has(rt)) return rt;
+  }
+  return null;
+}, [selectedIds, idToRealTeam, top6IdSet]);
 
   // selected real teams
   const selectedRealTeams = useMemo(() => {
@@ -203,7 +203,10 @@ const chosenTop6RealTeamId = useMemo(() => {
 
       const { data: taken } = await supabase.rpc("get_taken_player_ids", { p_matchday_id: md.id });
 
-const s = new Set<string>();(taken || []).forEach((x: any) => {  if (x.player_id) s.add(String(x.player_id));});
+const s = new Set<string>();
+(taken || []).forEach((x: any) => {
+    if (x.player_id) s.add(String(x.player_id));
+  });
 setTakenIds(s);
 
       // Fixtures globali per giornata open (rpc usa lega attiva)
