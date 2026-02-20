@@ -49,6 +49,8 @@ export default function RosaPage() {
   const [midText, setMidText] = useState("");
   const [fwdText, setFwdText] = useState("");
 
+  const [takenIds, setTakenIds] = useState<Set<string>>(new Set());
+
   // saved pick readonly
   const [savedPick, setSavedPick] = useState<PickRow | null>(null);
   const [savedNames, setSavedNames] = useState<{ gk: string; def: string; mid: string; fwd: string } | null>(null);
@@ -60,6 +62,16 @@ export default function RosaPage() {
   const normTeam = (s: string) => String(s || "").trim().toLowerCase();
 
   const top6Names = useMemo(() => new Set(top6.map((t) => normTeam(t.real_team_name))), [top6]);
+
+  const top6IdSet = useMemo(() => new Set(top6.map((t) => t.real_team_id)), [top6]);
+
+const chosenTop6RealTeamId = useMemo(() => {
+  for (const pid of selectedIds) {
+    const rt = idToRealTeam.get(pid);
+    if (rt && top6IdSet.has(rt)) return rt;
+  }
+  return null;
+}, [selectedIds, idToRealTeam, top6IdSet]);
 
   // label "Nome (Squadra)"
   function playerLabel(p: Player) {
@@ -100,12 +112,30 @@ export default function RosaPage() {
   }, [selectedIds, idToRealTeam]);
 
   function filterByRealTeam(list: Player[], currentText: string, map: Map<string, string>) {
-    const currentId = map.get(currentText) || "";
-    return list.filter((p) => {
-      if (p.id === currentId) return true;
-      return !selectedRealTeams.has(p.real_team_id);
-    });
-  }
+  const currentId = map.get(currentText) || "";
+
+  return list.filter((p) => {
+    // lascia sempre visibile la scelta corrente (se già selezionata)
+    if (p.id === currentId) return true;
+
+    // NON mostrare giocatori già presi da altre squadre
+    if (takenIds.has(p.id)) return false;
+
+    // NON mostrare i giocatori già scelti da te in altri ruoli
+    if (selectedIds.includes(p.id)) return false;
+
+    // vincolo: non più di un giocatore per squadra reale
+    if (selectedRealTeams.has(p.real_team_id)) return false;
+
+    // vincolo UI: max 1 Top6
+    if (chosenTop6RealTeamId && top6IdSet.has(p.real_team_id) && p.real_team_id !== chosenTop6RealTeamId) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 
   useEffect(() => {
     async function run() {
@@ -170,6 +200,11 @@ export default function RosaPage() {
       // Top6 (rpc accetta matchday per lega)
       const { data: t6 } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: md.id } as any);
       setTop6((t6 || []) as any);
+
+      const { data: taken } = await supabase.rpc("get_taken_player_ids", { p_matchday_id: md.id });
+
+const s = new Set<string>();(taken || []).forEach((x: any) => {  if (x.player_id) s.add(String(x.player_id));});
+setTakenIds(s);
 
       // Fixtures globali per giornata open (rpc usa lega attiva)
       const { data: fx } = await supabase.rpc("get_fixtures_for_active_league_open_matchday");
