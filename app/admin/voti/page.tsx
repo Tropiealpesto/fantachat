@@ -140,12 +140,13 @@ export default function AdminVotiPage() {
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center" }}>
                   <input
-                    value={votes[r.player_id] ?? ""}
-                    onChange={(e) => setVotes((p) => ({ ...p, [r.player_id]: e.target.value }))}
-                    placeholder="voto"
-                    inputMode="decimal"
-                    style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
-                  />
+  type="text"
+  value={votes[r.player_id] ?? ""}
+  onChange={(e) => setVotes((p) => ({ ...p, [r.player_id]: e.target.value }))}
+  placeholder="es. -1,5"
+  inputMode="text"
+  style={{ flex: 1, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
+/>
                   <div style={{ color: "var(--muted)", fontWeight: 900 }}>x{r.picked_count}</div>
                 </div>
               </div>
