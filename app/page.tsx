@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "./components/AppBar";
 import BottomNav from "./components/BottomNav";
 import SeasonBarChart from "./components/SeasonBarChart";
-
-type Membership = { league_id: string; team_id: string; role: "player" | "admin" };
+import { useApp } from "./components/AppContext";
 
 type SeasonStats = {
-  rank: number; total: number; avg: number; best: number; worst: number; played: number;
+  rank: number;
+  total: number;
+  avg: number;
+  best: number;
+  worst: number;
+  played: number;
   history: { matchday_number: number; score: number; is_final: boolean }[];
 };
 
@@ -24,97 +28,91 @@ type Lineup = {
 
 export default function Home() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
 
-  const [membership, setMembership] = useState<Membership | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
+  const [loading, setLoading] = useState(true);
 
   const [matchdayId, setMatchdayId] = useState<string | null>(null);
   const [matchdayNum, setMatchdayNum] = useState<number | null>(null);
 
-  const [stats, setStats] = useState<SeasonStats | null>(null);
-  const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
   const [lineup, setLineup] = useState<Lineup | null>(null);
+  const [stats, setStats] = useState<SeasonStats | null>(null);
+
+  const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
+
+  const [articleTitle, setArticleTitle] = useState<string | null>(null);
+  const [articlePreview, setArticlePreview] = useState<string | null>(null);
+  const [articleMatchday, setArticleMatchday] = useState<number | null>(null);
+
   const [err, setErr] = useState<string | null>(null);
 
-  const actions = useMemo(
-    () => [
-      { title: "Rosa", desc: "Scegli i 4 giocatori", href: "/rosa" },
-      { title: "Live", desc: "Punteggi giornata", href: "/live" },
-      { title: "Classifica", desc: "Ranking campionato", href: "/classifica" },
-    ],
-    []
-  );
-
   useEffect(() => {
+    if (!ready) return;
+
+    // redirect base
+    if (!userId) {
+      router.replace("/login");
+      return;
+    }
+    if (!activeLeagueId || !teamId) {
+      router.replace("/seleziona-lega");
+      return;
+    }
+
+    let cancelled = false;
+
     async function run() {
       setErr(null);
+      setLoading(true);
 
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
+      try {
+        // 1) Giornata open PER LEGA
+        const { data: md } = await supabase
+          .from("matchdays")
+          .select("id, number")
+          .eq("league_id", activeLeagueId)
+          .eq("status", "open")
+          .order("number", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
+        if (cancelled) return;
 
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const leagueId = ctx.active_league_id as string;
+        if (!md?.id) {
+          setMatchdayId(null);
+          setMatchdayNum(null);
+          setLineup(null);
+          setMySlot(null);
+        } else {
+          setMatchdayId(md.id);
+          setMatchdayNum(md.number);
 
-      const { data: m } = await supabase
-        .from("memberships")
-        .select("league_id, team_id, role")
-        .eq("league_id", leagueId)
-        .limit(1)
-        .maybeSingle();
+          // 2) Mia formazione + voti
+          const { data: lu } = await supabase.rpc("get_my_matchday_lineup", {
+            p_matchday_id: md.id,
+          });
 
-      if (!m) return router.replace("/seleziona-lega");
-      setMembership(m as Membership);
+          if (cancelled) return;
+          setLineup(Array.isArray(lu) && lu.length ? (lu[0] as any) : null);
 
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", leagueId).single();
-      if (lg?.name) setLeagueName(lg.name);
+          // 3) Il mio slot (se schedule generato)
+          const { data: mySlotData } = await supabase
+            .from("pick_schedule")
+            .select("slot_start_at, slot_end_at")
+            .eq("league_id", activeLeagueId)
+            .eq("matchday_id", md.id)
+            .eq("team_id", teamId)
+            .maybeSingle();
 
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", m.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
+          if (cancelled) return;
+          setMySlot(mySlotData ?? null);
+        }
 
-      // giornata open PER LEGA
-      const { data: md } = await supabase
-        .from("matchdays")
-        .select("id, number")
-        .eq("league_id", leagueId)
-        .eq("status", "open")
-        .order("number", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        // 4) Stats stagione
+        const { data: s, error: sErr } = await supabase.rpc("get_my_season_stats");
+        if (sErr) setErr(sErr.message);
+        if (cancelled) return;
 
-      if (md?.id) {
-        setMatchdayId(md.id);
-        setMatchdayNum(md.number);
-
-// slot del mio team per questa giornata (se schedule generato)
-const { data: mySlot } = await supabase
-  .from("pick_schedule")
-  .select("slot_start_at, slot_end_at")
-  .eq("league_id", leagueId)
-  .eq("matchday_id", md.id)
-  .eq("team_id", m.team_id)
-  .maybeSingle();
-
-setMySlot(mySlot ?? null);
-
-        const { data: lu } = await supabase.rpc("get_my_matchday_lineup", { p_matchday_id: md.id });
-        setLineup(Array.isArray(lu) && lu.length ? (lu[0] as any) : null);
-      } else {
-        setMatchdayId(null);
-        setMatchdayNum(null);
-        setLineup(null);
-      }
-
-      const { data: s, error: sErr } = await supabase.rpc("get_my_season_stats");
-      if (sErr) setErr(sErr.message);
-      else {
         setStats({
           rank: Number(s?.rank ?? 0),
           total: Number(s?.total ?? 0),
@@ -130,48 +128,118 @@ setMySlot(mySlot ?? null);
               }))
             : [],
         });
-      }
 
-      setLoading(false);
+        // 5) Ultimo giornale della lega (se presente)
+        const { data: lastArticle } = await supabase
+          .from("matchday_articles")
+          .select("title, content, matchday_id, created_at")
+          .eq("league_id", activeLeagueId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (lastArticle?.title) {
+          setArticleTitle(lastArticle.title);
+
+          const preview = String(lastArticle.content || "")
+            .split("\n")
+            .filter((x) => x.trim() !== "")
+            .slice(0, 2)
+            .join(" ");
+          setArticlePreview(preview);
+
+          const { data: mdNum } = await supabase
+            .from("matchdays")
+            .select("number")
+            .eq("id", lastArticle.matchday_id)
+            .maybeSingle();
+
+          setArticleMatchday(mdNum?.number ?? null);
+        } else {
+          setArticleTitle(null);
+          setArticlePreview(null);
+          setArticleMatchday(null);
+        }
+
+        setLoading(false);
+      } catch (e: any) {
+        setErr(e?.message || String(e));
+        setLoading(false);
+      }
     }
 
     run();
-  }, [router]);
 
-  if (loading) return <main className="container" style={{ fontSize: "0.94rem" }}>Caricamento...</main>;
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, userId, activeLeagueId, teamId, router]);
+
+  if (!ready) return <main className="container">Caricamento...</main>;
+  if (!userId) return <main className="container">Caricamento...</main>;
+  if (!activeLeagueId || !teamId) return <main className="container">Caricamento...</main>;
+  if (loading) return <main className="container">Caricamento...</main>;
 
   const ctaLabel = lineup ? "Vedi Rosa (inviata)" : "Invia Rosa";
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} right={<button className="btn" onClick={() => router.push("/seleziona-lega")}>Leghe</button>} />
+      <AppBar
+        league={leagueName}
+        team={teamName}
+        right={
+          <button className="btn" onClick={() => router.push("/seleziona-lega")}>
+            Leghe
+          </button>
+        }
+      />
+
       <main className="container" style={{ fontSize: "0.94rem" }}>
         {err && (
-          <div className="card" style={{ padding: 14, borderColor: "#fecaca", background: "#fff1f2", color: "#991b1b", fontWeight: 900 }}>
+          <div
+            className="card"
+            style={{
+              padding: 14,
+              borderColor: "#fecaca",
+              background: "#fff1f2",
+              color: "#991b1b",
+              fontWeight: 900,
+            }}
+          >
             Errore: {err}
           </div>
         )}
 
+        {/* Card Giornata */}
         <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--primary)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <div style={{ fontWeight: 1000, fontSize: 16 }}>Giornata</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+            <div style={{ fontWeight: 1000, fontSize: 18 }}>Giornata</div>
+
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-  <div style={{ fontWeight: 1000, color: matchdayId ? "var(--primary-dark)" : "var(--muted)" }}>
-    ● {matchdayId ? "OPEN" : "LOCKED"}
-  </div>
-  {mySlot && (
-    <div style={{ marginTop: 4, alignSelf: "flex-start", fontSize: 13, fontWeight: 900, color: "var(--muted)" }}>
-      {formatSlot(mySlot.slot_start_at, mySlot.slot_end_at)}
-    </div>
-  )}
-</div>
+              <div style={{ fontWeight: 1000, color: matchdayId ? "var(--primary-dark)" : "var(--muted)" }}>
+                ● {matchdayId ? "OPEN" : "LOCKED"}
+              </div>
+
+              {mySlot && (
+                <div style={{ marginTop: 4, alignSelf: "flex-start", fontSize: 13, fontWeight: 900, color: "var(--muted)" }}>
+                  {formatSlot(mySlot.slot_start_at, mySlot.slot_end_at)}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div style={{ marginTop: 8, fontSize: 22, fontWeight: 1000 }}>
+          <div style={{ marginTop: 8, fontSize: 20, fontWeight: 1000 }}>
             {matchdayNum ? `${matchdayNum} / 38` : "— / 38"}
           </div>
 
-          <button className="btn btn-primary" style={{ marginTop: 12, width: "100%", padding: 12 }} onClick={() => router.push("/rosa")} disabled={!matchdayId}>
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 14 }}
+            onClick={() => router.push("/rosa")}
+            disabled={!matchdayId}
+          >
             {ctaLabel}
           </button>
 
@@ -187,15 +255,29 @@ setMySlot(mySlot ?? null);
 
                 {(() => {
                   const total = Number(lineup.total_score || 0);
+
                   let color = "var(--muted)";
                   if (total > 0) color = "var(--primary-dark)";
                   if (total < 0) color = "var(--accent-dark)";
+
                   return (
-                    <div style={{
-                      marginTop: 14, padding: "12px 14px", borderRadius: 16,
-                      background: total > 0 ? "rgba(34,197,94,.12)" : total < 0 ? "rgba(249,115,22,.12)" : "#f1f5f9",
-                      display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 1000
-                    }}>
+                    <div
+                      style={{
+                        marginTop: 14,
+                        padding: "12px 14px",
+                        borderRadius: 16,
+                        background:
+                          total > 0
+                            ? "rgba(34,197,94,.12)"
+                            : total < 0
+                            ? "rgba(249,115,22,.12)"
+                            : "#f1f5f9",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontWeight: 1000,
+                      }}
+                    >
                       <span style={{ color: "var(--text)" }}>Totale giornata</span>
                       <span style={{ fontSize: 22, color }}>{fmt(total)}</span>
                     </div>
@@ -203,52 +285,101 @@ setMySlot(mySlot ?? null);
                 })()}
               </>
             ) : (
-              <div style={{ color: "var(--muted)", fontWeight: 800 }}>Rosa non inviata.</div>
+              <div style={{ color: "var(--muted)", fontWeight: 800 }}>
+                Rosa non inviata per questa giornata.
+              </div>
             )}
           </div>
         </div>
 
-        <div className="kpi-grid" style={{ marginTop: 12 }}>
+        {/* KPI */}
+        <div className="kpi-grid" style={{ marginTop: 10 }}>
           <Kpi title="Posizione" value={stats ? `#${stats.rank || "—"}` : "—"} />
           <Kpi title="Totale" value={stats ? fmt(stats.total) : "—"} />
           <Kpi title="Media" value={stats ? fmt(stats.avg) : "—"} />
         </div>
 
-        <div className="actions-grid" style={{ marginTop: 12 }}>
-          {actions.map((a) => (
-            <a key={a.title} href={a.href} className="action">
-              <div style={{ fontSize: 18 }}>{a.title}</div>
-              <small>{a.desc}</small>
+        {/* Giornale (se esiste) */}
+        {articleTitle && (
+          <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
+            <div style={{ fontSize: 18, fontWeight: 1000 }}>
+              📰 {articleTitle}
+              {articleMatchday && (
+                <span style={{ color: "var(--muted)", fontWeight: 800, fontSize: 14 }}>
+                  {" "}• Giornata {articleMatchday}
+                </span>
+              )}
+            </div>
+
+            <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800 }}>
+              {articlePreview}
+            </div>
+
+            <a
+              href="/giornale"
+              style={{
+                display: "inline-block",
+                marginTop: 10,
+                border: "2px solid var(--accent)",
+                borderRadius: 14,
+                padding: "8px 14px",
+                fontWeight: 900,
+                textDecoration: "none",
+                color: "var(--text)",
+              }}
+            >
+              Leggi tutto →
             </a>
-          ))}
+          </div>
+        )}
+
+        {/* Azioni */}
+        <div className="actions-grid" style={{ marginTop: 10 }}>
+          <a href="/rosa" className="action">
+            <div style={{ fontSize: 18, fontWeight: 1000 }}>Rosa</div>
+            <small>Scegli i 4 giocatori</small>
+          </a>
+          <a href="/live" className="action">
+            <div style={{ fontSize: 18, fontWeight: 1000 }}>Live</div>
+            <small>Punteggi giornata</small>
+          </a>
+          <a href="/classifica" className="action">
+            <div style={{ fontSize: 18, fontWeight: 1000 }}>Classifica</div>
+            <small>Ranking campionato</small>
+          </a>
+          <a href="/giornale" className="action">
+            <div style={{ fontSize: 18, fontWeight: 1000 }}>Giornale</div>
+            <small>Il Giornale FantaChat</small>
+          </a>
         </div>
 
-        <div id="storico" className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
+        {/* Grafico */}
+        <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Andamento stagione</div>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 10 }}>
             <SeasonBarChart history={stats?.history || []} totalMatchdays={38} />
           </div>
         </div>
+
         {/* Admin */}
-{membership?.role === "admin" && (
-  <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
-    <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
-    <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-      Gestisci voti, giornata, Top6 e giornale.
-    </div>
-
-    <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-      <a className="btn" href="/admin/voti">Voti</a>
-      <a className="btn" href="/admin/giornata">Giornata</a>
-      <a className="btn" href="/admin/top6">Top6</a>
-      <a className="btn" href="/admin/giornale">Giornale</a>
-      <a className="btn" href="/crea-lega">Crea lega</a>
-      <a className="btn" href="/admin/partite">Partite</a>
-    </div>
-  </div>
-)}
-
+        {role === "admin" && (
+          <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
+            <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
+            <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+              Gestisci voti, giornata, Top6, giornale e partite.
+            </div>
+            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <a className="btn" href="/admin/voti">Voti</a>
+              <a className="btn" href="/admin/giornata">Giornata</a>
+              <a className="btn" href="/admin/top6">Top6</a>
+              <a className="btn" href="/admin/giornale">Giornale</a>
+              <a className="btn" href="/admin/partite">Partite</a>
+              <a className="btn" href="/crea-lega">Crea lega</a>
+            </div>
+          </div>
+        )}
       </main>
+
       <BottomNav />
     </>
   );
@@ -265,11 +396,13 @@ function Kpi(props: { title: string; value: string }) {
 
 function LineupRow(props: { role: string; name: string; vote: number | null }) {
   const hasVote = typeof props.vote === "number" && Number.isFinite(props.vote);
+
   let voteColor = "var(--muted)";
   if (hasVote) {
     if ((props.vote as number) > 0) voteColor = "var(--primary-dark)";
     else if ((props.vote as number) < 0) voteColor = "var(--accent-dark)";
   }
+
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontWeight: 900 }}>
       <span style={{ width: 22, color: "var(--muted)" }}>{props.role}</span>
@@ -297,7 +430,6 @@ function formatSlot(startIso: string, endIso: string) {
   const eMin = pad(end.getMinutes());
   const eHour = pad(end.getHours());
 
-  // come vuoi tu: "Ven 18:30-20" se i minuti finali sono 00
   const endStr = eMin === "00" ? `${eHour}` : `${eHour}:${eMin}`;
   return `${day} ${s}-${endStr}`;
 }

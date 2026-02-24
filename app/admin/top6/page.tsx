@@ -5,17 +5,16 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
+import { useApp } from "../../components/AppContext";
 
 type Matchday = { id: string; number: number; status: string };
 type RealTeam = { id: string; name: string };
 
 export default function AdminTop6Page() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
 
-  const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
+  const [loading, setLoading] = useState(true);
 
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [matchdayId, setMatchdayId] = useState<string>("");
@@ -29,32 +28,19 @@ export default function AdminTop6Page() {
 
   useEffect(() => {
     async function run() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
-
-      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const lid = ctx.active_league_id as string;
-      setLeagueId(lid);
-
-      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
-      if (!mem || mem.role !== "admin") return router.replace("/");
-
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (role !== "admin") return router.replace("/");
 
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number, status")
-        .eq("league_id", lid)
+        .eq("league_id", activeLeagueId)
         .order("number", { ascending: false });
 
       const list = (mds || []) as Matchday[];
       setMatchdays(list);
-
       const open = list.find((x) => x.status === "open");
       setMatchdayId(open?.id ?? list[0]?.id ?? "");
 
@@ -65,25 +51,23 @@ export default function AdminTop6Page() {
     }
 
     run();
-  }, [router]);
-
-  async function loadTop6(mid: string) {
-    setMsg(null); setErr(null);
-    if (!mid) return;
-
-    const { data, error } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: mid } as any);
-    if (error) { setSelected(["", "", "", "", "", ""]); return; }
-
-    const rows = (data || []) as any[];
-    const arr = ["", "", "", "", "", ""];
-    rows.forEach((r: any) => { if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id; });
-    setSelected(arr);
-  }
+  }, [ready, userId, activeLeagueId, teamId, role, router]);
 
   useEffect(() => {
-    if (!matchdayId) return;
-    loadTop6(matchdayId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    async function load(mid: string) {
+      setMsg(null); setErr(null);
+      if (!mid) return;
+      const { data, error } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: mid } as any);
+      if (error) {
+        setSelected(["", "", "", "", "", ""]);
+        return;
+      }
+      const rows = (data || []) as any[];
+      const arr = ["", "", "", "", "", ""];
+      rows.forEach((r: any) => { if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id; });
+      setSelected(arr);
+    }
+    if (matchdayId) load(matchdayId);
   }, [matchdayId]);
 
   async function save() {
@@ -93,7 +77,7 @@ export default function AdminTop6Page() {
     if (new Set(selected).size !== 6) return setErr("Top6 contiene duplicati.");
 
     setSaving(true);
-    const { data, error } = await supabase.rpc("set_top6_for_matchday", {
+    const { error } = await supabase.rpc("set_top6_for_matchday", {
       p_league_matchday_id: matchdayId,
       p_real_team_ids: selected,
     } as any);
@@ -103,6 +87,7 @@ export default function AdminTop6Page() {
     setMsg("Top6 salvata ✅");
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (

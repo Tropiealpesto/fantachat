@@ -5,6 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
+import { useApp } from "../../components/AppContext";
 
 type Matchday = { id: string; number: number; status: string };
 type PickedPlayerRow = {
@@ -18,12 +19,9 @@ type PickedPlayerRow = {
 
 export default function AdminVotiPage() {
   const router = useRouter();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+
   const [loading, setLoading] = useState(true);
-
-  const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
-
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [matchdayId, setMatchdayId] = useState<string>("");
 
@@ -36,32 +34,19 @@ export default function AdminVotiPage() {
 
   useEffect(() => {
     async function run() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
-
-      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const lid = ctx.active_league_id as string;
-      setLeagueId(lid);
-
-      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
-      if (!mem || mem.role !== "admin") return router.replace("/");
-
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (role !== "admin") return router.replace("/");
 
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number, status")
-        .eq("league_id", lid)
+        .eq("league_id", activeLeagueId)
         .order("number", { ascending: false });
 
       const list = (mds || []) as Matchday[];
       setMatchdays(list);
-
       const open = list.find((x) => x.status === "open");
       setMatchdayId(open?.id ?? list[0]?.id ?? "");
 
@@ -69,7 +54,7 @@ export default function AdminVotiPage() {
     }
 
     run();
-  }, [router]);
+  }, [ready, userId, activeLeagueId, teamId, role, router]);
 
   async function loadPicked(mid: string) {
     setMsg(null); setErr(null);
@@ -90,8 +75,7 @@ export default function AdminVotiPage() {
   }
 
   useEffect(() => {
-    if (!matchdayId) return;
-    loadPicked(matchdayId);
+    if (matchdayId) loadPicked(matchdayId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchdayId]);
 
@@ -116,6 +100,7 @@ export default function AdminVotiPage() {
     await loadPicked(matchdayId);
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (

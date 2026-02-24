@@ -5,16 +5,15 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
+import { useApp } from "../../components/AppContext";
 
 type Matchday = { id: string; number: number; status: string };
 
 export default function AdminGiornalePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
 
-  const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
+  const [loading, setLoading] = useState(true);
 
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [matchdayId, setMatchdayId] = useState<string>("");
@@ -30,27 +29,15 @@ export default function AdminGiornalePage() {
 
   useEffect(() => {
     async function run() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
-
-      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const lid = ctx.active_league_id as string;
-      setLeagueId(lid);
-
-      const { data: mem } = await supabase.from("memberships").select("team_id, role").eq("league_id", lid).limit(1).maybeSingle();
-      if (!mem || mem.role !== "admin") return router.replace("/");
-
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (role !== "admin") return router.replace("/");
 
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number, status")
-        .eq("league_id", lid)
+        .eq("league_id", activeLeagueId)
         .order("number", { ascending: false });
 
       const list = (mds || []) as Matchday[];
@@ -63,7 +50,7 @@ export default function AdminGiornalePage() {
     }
 
     run();
-  }, [router]);
+  }, [ready, userId, activeLeagueId, teamId, role, router]);
 
   const matchdayNumber = useMemo(() => matchdays.find((x) => x.id === matchdayId)?.number, [matchdays, matchdayId]);
 
@@ -71,19 +58,18 @@ export default function AdminGiornalePage() {
     setMsg(null); setErr(null);
     setPromptText("");
     if (!mid) return;
-
     const { data, error } = await supabase.rpc("get_article_prompt", { p_matchday_id: mid });
-    if (error) { setErr(error.message); return; }
+    if (error) return setErr(error.message);
     setPromptText(String(data || ""));
   }
 
   async function loadExistingArticle(mid: string) {
-    if (!leagueId || !mid) return;
+    if (!activeLeagueId || !mid) return;
 
     const { data } = await supabase
       .from("matchday_articles")
       .select("title, content")
-      .eq("league_id", leagueId)
+      .eq("league_id", activeLeagueId)
       .eq("matchday_id", mid)
       .maybeSingle();
 
@@ -92,24 +78,23 @@ export default function AdminGiornalePage() {
   }
 
   async function loadSavedList() {
-    if (!leagueId) return;
-
+    if (!activeLeagueId) return;
     const { data } = await supabase
       .from("matchday_articles")
       .select("matchday_id, title, created_at")
-      .eq("league_id", leagueId)
+      .eq("league_id", activeLeagueId)
       .order("created_at", { ascending: false });
 
     setSavedList((data || []) as any);
   }
 
   useEffect(() => {
-    if (!leagueId || !matchdayId) return;
+    if (!activeLeagueId || !matchdayId) return;
     loadPrompt(matchdayId);
     loadExistingArticle(matchdayId);
     loadSavedList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueId, matchdayId]);
+  }, [activeLeagueId, matchdayId]);
 
   async function copyPrompt() {
     try {
@@ -121,7 +106,7 @@ export default function AdminGiornalePage() {
   }
 
   async function saveArticle() {
-    if (!leagueId || !matchdayId) return;
+    if (!activeLeagueId || !matchdayId) return;
 
     setMsg(null); setErr(null);
     if (!title.trim() || !content.trim()) return setErr("Inserisci titolo e contenuto.");
@@ -130,7 +115,7 @@ export default function AdminGiornalePage() {
     const { error } = await supabase
       .from("matchday_articles")
       .upsert(
-        { league_id: leagueId, matchday_id: matchdayId, title: title.trim(), content: content.trim(), updated_at: new Date().toISOString() },
+        { league_id: activeLeagueId, matchday_id: matchdayId, title: title.trim(), content: content.trim(), updated_at: new Date().toISOString() },
         { onConflict: "league_id,matchday_id" }
       );
     setBusy(false);
@@ -140,6 +125,7 @@ export default function AdminGiornalePage() {
     await loadSavedList();
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
@@ -195,10 +181,6 @@ export default function AdminGiornalePage() {
 
           {msg && <div style={{ marginTop: 12, color: "var(--primary-dark)", fontWeight: 900 }}>{msg}</div>}
           {err && <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>{err}</div>}
-
-          <div style={{ marginTop: 12 }}>
-            <a className="btn" href="/giornale" style={{ textDecoration: "none" }}>Vai a /giornale</a>
-          </div>
         </div>
 
         <div className="card" style={{ padding: 16, marginTop: 12 }}>

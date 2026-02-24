@@ -5,23 +5,22 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
+import { useApp } from "../../components/AppContext";
 
 type Matchday = { id: string; number: number; status: string };
 type Team = { id: string; name: string };
 
 export default function AdminGiornataPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
 
-  const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
+  const [loading, setLoading] = useState(true);
 
   const [current, setCurrent] = useState<Matchday | null>(null);
   const [numberToOpen, setNumberToOpen] = useState(1);
 
   // schedule settings
-  const [deadlineEndLocal, setDeadlineEndLocal] = useState<string>(""); // datetime-local value
+  const [deadlineEndLocal, setDeadlineEndLocal] = useState<string>("");
   const [slotMinutes, setSlotMinutes] = useState<number>(90);
 
   // recap whatsapp
@@ -36,11 +35,13 @@ export default function AdminGiornataPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  async function refresh(lid: string) {
+  async function refresh() {
+    if (!activeLeagueId) return;
+
     const { data: md } = await supabase
       .from("matchdays")
       .select("id, number, status")
-      .eq("league_id", lid)
+      .eq("league_id", activeLeagueId)
       .eq("status", "open")
       .order("number", { ascending: false })
       .limit(1)
@@ -51,22 +52,22 @@ export default function AdminGiornataPage() {
     const { data: last } = await supabase
       .from("matchdays")
       .select("number")
-      .eq("league_id", lid)
+      .eq("league_id", activeLeagueId)
       .order("number", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     setNumberToOpen(((last?.number ?? 0) + 1) || 1);
-
-    // reset recap quando cambi contesto
     setRecapText("");
   }
 
-  async function loadTeams(lid: string) {
+  async function loadTeams() {
+    if (!activeLeagueId) return;
+
     const { data } = await supabase
       .from("teams")
       .select("id, name")
-      .eq("league_id", lid)
+      .eq("league_id", activeLeagueId)
       .order("name", { ascending: true });
 
     const list = (data || []) as Team[];
@@ -76,58 +77,33 @@ export default function AdminGiornataPage() {
 
   useEffect(() => {
     async function run() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
+      if (!ready) return;
 
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (role !== "admin") return router.replace("/");
 
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const lid = ctx.active_league_id as string;
-      setLeagueId(lid);
-
-      const { data: mem } = await supabase
-        .from("memberships")
-        .select("team_id, role")
-        .eq("league_id", lid)
-        .limit(1)
-        .maybeSingle();
-
-      if (!mem || mem.role !== "admin") return router.replace("/");
-
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
-
-      await refresh(lid);
-      await loadTeams(lid);
-
-      // default deadline suggerita: venerdì alle 20:00 della settimana corrente (solo suggerimento)
       setDeadlineEndLocal(suggestFriday20Local());
 
+      await refresh();
+      await loadTeams();
       setLoading(false);
     }
 
     run();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, userId, activeLeagueId, teamId, role]);
 
   async function openDay() {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
     const { error } = await supabase.rpc("open_matchday", { p_number: numberToOpen });
     if (error) return setErr(error.message);
     setMsg(`Giornata ${numberToOpen} aperta ✅`);
-    if (leagueId) await refresh(leagueId);
+    await refresh();
   }
 
   async function closeProvv() {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
     if (!current) return setErr("Nessuna giornata open.");
     const { data, error } = await supabase.rpc("close_matchday_for_league", {
       p_matchday_id: current.id,
@@ -138,22 +114,22 @@ export default function AdminGiornataPage() {
   }
 
   async function finalize() {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
     if (!current) return setErr("Nessuna giornata open.");
     const { data, error } = await supabase.rpc("close_matchday_for_league", {
       p_matchday_id: current.id,
       p_finalize: true,
     });
     if (error) return setErr(error.message);
+
     await supabase.from("matchdays").update({ status: "locked" }).eq("id", current.id);
+
     setMsg(`Finalizzata ✅ (snapshot: ${data})`);
-    if (leagueId) await refresh(leagueId);
+    await refresh();
   }
 
   async function saveSettingsAndGenerateRecap() {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
     setRecapText("");
 
     if (!current) return setErr("Apri prima una giornata.");
@@ -166,13 +142,11 @@ export default function AdminGiornataPage() {
       p_deadline_end_at: iso,
       p_slot_minutes: slotMinutes,
     });
-
     if (sErr) return setErr(sErr.message);
 
     const { data: count, error: gErr } = await supabase.rpc("generate_pick_schedule", {
       p_matchday_id: current.id,
     });
-
     if (gErr) return setErr(gErr.message);
 
     setRecapLoading(true);
@@ -197,15 +171,14 @@ export default function AdminGiornataPage() {
   }
 
   async function resetPick() {
-    setMsg(null);
-    setErr(null);
+    setMsg(null); setErr(null);
 
     if (!current) return setErr("Nessuna giornata open.");
     if (!resetTeamId) return setErr("Seleziona una squadra.");
     if (!confirm("Confermi reset rosa per questa squadra? (Cancella la formazione della giornata)")) return;
 
     setResetting(true);
-    const { data, error } = await supabase.rpc("admin_reset_team_pick", {
+    const { error } = await supabase.rpc("admin_reset_team_pick", {
       p_matchday_id: current.id,
       p_team_id: resetTeamId,
     });
@@ -217,13 +190,14 @@ export default function AdminGiornataPage() {
     setMsg(`Rosa resettata ✅ (${tName})`);
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
     <>
       <AppBar league={leagueName} team={`${teamName} • ADMIN`} />
       <main className="container">
-        {/* Giornata: open/close */}
+        {/* Giornata */}
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Giornata</div>
 
@@ -260,19 +234,10 @@ export default function AdminGiornataPage() {
           <select
             value={resetTeamId}
             onChange={(e) => setResetTeamId(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid var(--border)",
-              fontWeight: 900,
-            }}
+            style={{ width: "100%", marginTop: 12, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
           >
             {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
+              <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
 
@@ -290,7 +255,7 @@ export default function AdminGiornataPage() {
         <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Slot inserimento Rosa (WhatsApp)</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Imposta la fine slot (es. venerdì 20:00). Genero lo schedule a ritroso (90 min) saltando 22:00–09:30.
+            Imposta fine slot e genera recap da copiare.
           </div>
 
           <div style={{ marginTop: 12, fontWeight: 1000 }}>Fine slot (deadline_end_at)</div>
@@ -309,11 +274,7 @@ export default function AdminGiornataPage() {
             style={{ width: "100%", marginTop: 8, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
           />
 
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: 12, width: "100%", padding: 12 }}
-            onClick={saveSettingsAndGenerateRecap}
-          >
+          <button className="btn btn-primary" style={{ marginTop: 12, width: "100%", padding: 12 }} onClick={saveSettingsAndGenerateRecap}>
             Genera recap WhatsApp
           </button>
 
@@ -337,6 +298,7 @@ export default function AdminGiornataPage() {
         {msg && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--primary)", fontWeight: 900, color: "var(--primary-dark)" }}>{msg}</div>}
         {err && <div className="card" style={{ padding: 14, marginTop: 12, borderLeft: "6px solid var(--accent)", fontWeight: 900, color: "var(--accent-dark)" }}>{err}</div>}
       </main>
+
       <BottomNav />
     </>
   );
@@ -344,9 +306,8 @@ export default function AdminGiornataPage() {
 
 function suggestFriday20Local() {
   const now = new Date();
-  const day = now.getDay(); // 0=dom, 5=ven
+  const day = now.getDay();
   const target = new Date(now);
-
   const diff = (5 - day + 7) % 7;
   target.setDate(now.getDate() + diff);
   target.setHours(20, 0, 0, 0);

@@ -5,45 +5,31 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
+import { useApp } from "../components/AppContext";
 
 type Player = { id: string; name: string; real_team_id: string };
 type Matchday = { id: string; number: number; status: string };
-type RealTeam = { id: string; name: string };
 type Top6Row = { rank: number; real_team_id: string; real_team_name: string };
-
-type PickRow = {
-  id: string;
-  gk_player_id: string;
-  def_player_id: string;
-  mid_player_id: string;
-  fwd_player_id: string;
-};
+type PickRow = { id: string; gk_player_id: string; def_player_id: string; mid_player_id: string; fwd_player_id: string };
 
 export default function RosaPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
 
-  const [leagueId, setLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
-  const [myTeamId, setMyTeamId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [matchday, setMatchday] = useState<Matchday | null>(null);
 
-  // real teams map
   const [realTeams, setRealTeams] = useState<Map<string, string>>(new Map());
 
-  // players per role
   const [gks, setGks] = useState<Player[]>([]);
   const [defs, setDefs] = useState<Player[]>([]);
   const [mids, setMids] = useState<Player[]>([]);
   const [fwds, setFwds] = useState<Player[]>([]);
 
-  // Top6 + Fixtures
   const [top6, setTop6] = useState<Top6Row[]>([]);
   const [fixtures, setFixtures] = useState<{ slot: number; home_team: string; away_team: string }[]>([]);
 
-  // datalist input texts
   const [gkText, setGkText] = useState("");
   const [defText, setDefText] = useState("");
   const [midText, setMidText] = useState("");
@@ -51,7 +37,6 @@ export default function RosaPage() {
 
   const [takenIds, setTakenIds] = useState<Set<string>>(new Set());
 
-  // saved pick readonly
   const [savedPick, setSavedPick] = useState<PickRow | null>(null);
   const [savedNames, setSavedNames] = useState<{ gk: string; def: string; mid: string; fwd: string } | null>(null);
 
@@ -59,32 +44,27 @@ export default function RosaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const normTeam = (s: string) => String(s || "").trim().toLowerCase();
+  const norm = (s: string) => String(s || "").trim().toLowerCase();
 
-  const top6Names = useMemo(() => new Set(top6.map((t) => normTeam(t.real_team_name))), [top6]);
-
+  const top6Names = useMemo(() => new Set(top6.map((t) => norm(t.real_team_name))), [top6]);
   const top6IdSet = useMemo(() => new Set(top6.map((t) => t.real_team_id)), [top6]);
 
-  // label "Nome (Squadra)"
   function playerLabel(p: Player) {
     const team = realTeams.get(p.real_team_id) || "";
     return team ? `${p.name} (${team})` : p.name;
   }
 
-  // maps label -> id
   const gkMap = useMemo(() => new Map(gks.map((p) => [playerLabel(p), p.id])), [gks, realTeams]);
   const defMap = useMemo(() => new Map(defs.map((p) => [playerLabel(p), p.id])), [defs, realTeams]);
   const midMap = useMemo(() => new Map(mids.map((p) => [playerLabel(p), p.id])), [mids, realTeams]);
   const fwdMap = useMemo(() => new Map(fwds.map((p) => [playerLabel(p), p.id])), [fwds, realTeams]);
 
-  // id -> real_team_id map (for “no two same real team” UI)
   const idToRealTeam = useMemo(() => {
     const m = new Map<string, string>();
     [...gks, ...defs, ...mids, ...fwds].forEach((p) => m.set(p.id, p.real_team_id));
     return m;
   }, [gks, defs, mids, fwds]);
 
-  // selected IDs from text
   const selectedIds = useMemo(() => {
     const a = gkMap.get(gkText) || "";
     const b = defMap.get(defText) || "";
@@ -93,15 +73,6 @@ export default function RosaPage() {
     return [a, b, c, d].filter(Boolean);
   }, [gkText, defText, midText, fwdText, gkMap, defMap, midMap, fwdMap]);
 
-  const chosenTop6RealTeamId = useMemo(() => {
-  for (const pid of selectedIds) {
-    const rt = idToRealTeam.get(pid);
-    if (rt && top6IdSet.has(rt)) return rt;
-  }
-  return null;
-}, [selectedIds, idToRealTeam, top6IdSet]);
-
-  // selected real teams
   const selectedRealTeams = useMemo(() => {
     const s = new Set<string>();
     selectedIds.forEach((pid) => {
@@ -111,80 +82,41 @@ export default function RosaPage() {
     return s;
   }, [selectedIds, idToRealTeam]);
 
-  function filterByRealTeam(list: Player[], currentText: string, map: Map<string, string>) {
-  const currentId = map.get(currentText) || "";
-
-  return list.filter((p) => {
-    // lascia sempre visibile la scelta corrente (se già selezionata)
-    if (p.id === currentId) return true;
-
-    // NON mostrare giocatori già presi da altre squadre
-    if (takenIds.has(p.id)) return false;
-
-    // NON mostrare i giocatori già scelti da te in altri ruoli
-    if (selectedIds.includes(p.id)) return false;
-
-    // vincolo: non più di un giocatore per squadra reale
-    if (selectedRealTeams.has(p.real_team_id)) return false;
-
-    // vincolo UI: max 1 Top6
-    if (chosenTop6RealTeamId && top6IdSet.has(p.real_team_id) && p.real_team_id !== chosenTop6RealTeamId) {
-      return false;
+  const chosenTop6RealTeamId = useMemo(() => {
+    for (const pid of selectedIds) {
+      const rt = idToRealTeam.get(pid);
+      if (rt && top6IdSet.has(rt)) return rt;
     }
+    return null;
+  }, [selectedIds, idToRealTeam, top6IdSet]);
 
-    return true;
-  });
-}
-
+  function filterChoices(list: Player[], currentText: string, map: Map<string, string>) {
+    const currentId = map.get(currentText) || "";
+    return list.filter((p) => {
+      if (p.id === currentId) return true;
+      if (takenIds.has(p.id)) return false;
+      if (selectedIds.includes(p.id)) return false;
+      if (selectedRealTeams.has(p.real_team_id)) return false;
+      if (chosenTop6RealTeamId && top6IdSet.has(p.real_team_id) && p.real_team_id !== chosenTop6RealTeamId) return false;
+      return true;
+    });
+  }
 
   useEffect(() => {
     async function run() {
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+
+      setLoading(true);
       setErr(null);
       setMsg(null);
 
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
-
-      // lega attiva
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const lid = ctx.active_league_id as string;
-      setLeagueId(lid);
-
-      // membership per lega
-      const { data: mem } = await supabase
-        .from("memberships")
-        .select("team_id")
-        .eq("league_id", lid)
-        .limit(1)
-        .maybeSingle();
-
-      if (!mem) return router.replace("/seleziona-lega");
-      setMyTeamId(mem.team_id);
-
-      // nomi lega/squadra
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", lid).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
-
-      // real teams
-      const { data: rt } = await supabase.from("real_teams").select("id, name");
-      const rtMap = new Map<string, string>();
-      (rt || []).forEach((x: any) => rtMap.set(x.id, x.name));
-      setRealTeams(rtMap);
-
-      // matchday open PER LEGA
+      // matchday open per lega
       const { data: md } = await supabase
         .from("matchdays")
         .select("id, number, status")
-        .eq("league_id", lid)
+        .eq("league_id", activeLeagueId)
         .eq("status", "open")
         .order("number", { ascending: false })
         .limit(1)
@@ -197,19 +129,23 @@ export default function RosaPage() {
       }
       setMatchday(md as any);
 
-      // Top6 (rpc accetta matchday per lega)
+      // real teams
+      const { data: rt } = await supabase.from("real_teams").select("id, name");
+      const rtMap = new Map<string, string>();
+      (rt || []).forEach((x: any) => rtMap.set(x.id, x.name));
+      setRealTeams(rtMap);
+
+      // top6
       const { data: t6 } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: md.id } as any);
       setTop6((t6 || []) as any);
 
+      // taken players
       const { data: taken } = await supabase.rpc("get_taken_player_ids", { p_matchday_id: md.id });
+      const s = new Set<string>();
+      (taken || []).forEach((x: any) => x.player_id && s.add(String(x.player_id)));
+      setTakenIds(s);
 
-const s = new Set<string>();
-(taken || []).forEach((x: any) => {
-    if (x.player_id) s.add(String(x.player_id));
-  });
-setTakenIds(s);
-
-      // Fixtures globali per giornata open (rpc usa lega attiva)
+      // fixtures
       const { data: fx } = await supabase.rpc("get_fixtures_for_active_league_open_matchday");
       setFixtures((fx || []) as any);
 
@@ -226,28 +162,21 @@ setTakenIds(s);
       };
 
       let a: Player[] = [], b: Player[] = [], c: Player[] = [], d: Player[] = [];
-      try {
-        [a, b, c, d] = await Promise.all([loadRole("GK"), loadRole("DEF"), loadRole("MID"), loadRole("FWD")]);
-        setGks(a); setDefs(b); setMids(c); setFwds(d);
-      } catch (e: any) {
-        setErr(e?.message || String(e));
-        setLoading(false);
-        return;
-      }
+      [a, b, c, d] = await Promise.all([loadRole("GK"), loadRole("DEF"), loadRole("MID"), loadRole("FWD")]);
+      setGks(a); setDefs(b); setMids(c); setFwds(d);
 
-      // pick già salvata?
+      // already saved pick?
       const { data: pick } = await supabase
         .from("picks")
         .select("id, gk_player_id, def_player_id, mid_player_id, fwd_player_id")
-        .eq("league_id", lid)
+        .eq("league_id", activeLeagueId)
         .eq("matchday_id", md.id)
-        .eq("team_id", mem.team_id)
+        .eq("team_id", teamId)
         .limit(1)
         .maybeSingle();
 
       if (pick) {
         setSavedPick(pick as any);
-
         const all = [...a, ...b, ...c, ...d];
         const pm = new Map<string, Player>();
         all.forEach((p) => pm.set(p.id, p));
@@ -272,7 +201,7 @@ setTakenIds(s);
     }
 
     run();
-  }, [router]);
+  }, [ready, userId, activeLeagueId, teamId, router]);
 
   async function save() {
     setErr(null);
@@ -314,6 +243,9 @@ setTakenIds(s);
     window.location.reload();
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
+  if (!userId) return <main className="container">Caricamento...</main>;
+  if (!activeLeagueId || !teamId) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
@@ -327,33 +259,15 @@ setTakenIds(s);
           </div>
         </div>
 
-        {/* Formazione */}
         {savedPick && savedNames ? (
           <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--primary)" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Rosa inviata (non modificabile)</div>
-
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               <ReadonlyBox label="Portiere" value={savedNames.gk} />
               <ReadonlyBox label="Difensore" value={savedNames.def} />
               <ReadonlyBox label="Centrocampista" value={savedNames.mid} />
               <ReadonlyBox label="Attaccante" value={savedNames.fwd} />
             </div>
-
-            <a
-              href="/live"
-              style={{
-                display: "inline-block",
-                marginTop: 12,
-                border: "2px solid var(--accent)",
-                color: "var(--text)",
-                borderRadius: 14,
-                padding: "10px 16px",
-                fontWeight: 1000,
-                textDecoration: "none",
-              }}
-            >
-              Vai a Live
-            </a>
           </div>
         ) : (
           <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--primary)" }}>
@@ -363,59 +277,27 @@ setTakenIds(s);
             </div>
 
             <label style={label}>Portiere</label>
-            <input
-              list="dl_gk"
-              value={gkText}
-              onChange={(e) => setGkText(e.target.value)}
-              placeholder="Cerca portiere..."
-              style={selectStyle}
-            />
+            <input list="dl_gk" value={gkText} onChange={(e) => setGkText(e.target.value)} placeholder="Cerca portiere..." style={selectStyle} />
             <datalist id="dl_gk">
-              {filterByRealTeam(gks, gkText, gkMap).map((p) => (
-                <option key={p.id} value={playerLabel(p)} />
-              ))}
+              {filterChoices(gks, gkText, gkMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
             </datalist>
 
             <label style={label}>Difensore</label>
-            <input
-              list="dl_def"
-              value={defText}
-              onChange={(e) => setDefText(e.target.value)}
-              placeholder="Cerca difensore..."
-              style={selectStyle}
-            />
+            <input list="dl_def" value={defText} onChange={(e) => setDefText(e.target.value)} placeholder="Cerca difensore..." style={selectStyle} />
             <datalist id="dl_def">
-              {filterByRealTeam(defs, defText, defMap).map((p) => (
-                <option key={p.id} value={playerLabel(p)} />
-              ))}
+              {filterChoices(defs, defText, defMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
             </datalist>
 
             <label style={label}>Centrocampista</label>
-            <input
-              list="dl_mid"
-              value={midText}
-              onChange={(e) => setMidText(e.target.value)}
-              placeholder="Cerca centrocampista..."
-              style={selectStyle}
-            />
+            <input list="dl_mid" value={midText} onChange={(e) => setMidText(e.target.value)} placeholder="Cerca centrocampista..." style={selectStyle} />
             <datalist id="dl_mid">
-              {filterByRealTeam(mids, midText, midMap).map((p) => (
-                <option key={p.id} value={playerLabel(p)} />
-              ))}
+              {filterChoices(mids, midText, midMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
             </datalist>
 
             <label style={label}>Attaccante</label>
-            <input
-              list="dl_fwd"
-              value={fwdText}
-              onChange={(e) => setFwdText(e.target.value)}
-              placeholder="Cerca attaccante..."
-              style={selectStyle}
-            />
+            <input list="dl_fwd" value={fwdText} onChange={(e) => setFwdText(e.target.value)} placeholder="Cerca attaccante..." style={selectStyle} />
             <datalist id="dl_fwd">
-              {filterByRealTeam(fwds, fwdText, fwdMap).map((p) => (
-                <option key={p.id} value={playerLabel(p)} />
-              ))}
+              {filterChoices(fwds, fwdText, fwdMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
             </datalist>
 
             <button className="btn btn-primary" style={{ marginTop: 16, width: "100%", padding: 12 }} onClick={save} disabled={saving}>
@@ -424,36 +306,21 @@ setTakenIds(s);
           </div>
         )}
 
-        {/* Partite + Top6 affiancati compatti arancioni */}
-        <div
-          style={{
-            marginTop: 12,
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 12,
-          }}
-        >
-          {/* PARTITE */}
+        {/* Partite + Top6 compatti */}
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div className="card" style={{ padding: 12, borderLeft: "6px solid var(--accent)", boxShadow: "none" }}>
             <div style={{ fontWeight: 1000, fontSize: 14, color: "var(--accent-dark)" }}>Partite</div>
-
             {fixtures.length === 0 ? (
-              <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>
-                Nessuna partita inserita.
-              </div>
+              <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>Nessuna partita inserita.</div>
             ) : (
               <div style={{ marginTop: 8, overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
                     {fixtures.map((f) => (
                       <tr key={f.slot}>
-                        <td style={{ ...miniTd, fontWeight: top6Names.has(normTeam(f.home_team)) ? 1000 : 900 }}>
-                          {f.home_team}
-                        </td>
+                        <td style={{ ...miniTd, fontWeight: top6Names.has(norm(f.home_team)) ? 1000 : 900 }}>{f.home_team}</td>
                         <td style={{ ...miniTd, textAlign: "center", width: 16 }}>-</td>
-                        <td style={{ ...miniTd, fontWeight: top6Names.has(normTeam(f.away_team)) ? 1000 : 900 }}>
-                          {f.away_team}
-                        </td>
+                        <td style={{ ...miniTd, fontWeight: top6Names.has(norm(f.away_team)) ? 1000 : 900 }}>{f.away_team}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -462,29 +329,20 @@ setTakenIds(s);
             )}
           </div>
 
-          {/* TOP6 */}
           <div className="card" style={{ padding: 12, borderLeft: "6px solid var(--accent)", boxShadow: "none" }}>
             <div style={{ fontWeight: 1000, fontSize: 14, color: "var(--accent-dark)" }}>Top 6</div>
-
             {top6.length === 0 ? (
-              <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>
-                Non impostata.
-              </div>
+              <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800, fontSize: 12 }}>Non impostata.</div>
             ) : (
               <div style={{ marginTop: 8, overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
-                    {top6
-                      .slice()
-                      .sort((a, b) => a.rank - b.rank)
-                      .map((r) => (
-                        <tr key={r.real_team_id}>
-                          <td style={{ ...miniTd, width: 24, color: "var(--accent-dark)" }}>
-                            <b>{r.rank}</b>
-                          </td>
-                          <td style={miniTd}>{r.real_team_name}</td>
-                        </tr>
-                      ))}
+                    {top6.slice().sort((a, b) => a.rank - b.rank).map((r) => (
+                      <tr key={r.real_team_id}>
+                        <td style={{ ...miniTd, width: 24, color: "var(--accent-dark)" }}><b>{r.rank}</b></td>
+                        <td style={miniTd}>{r.real_team_name}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -511,11 +369,4 @@ function ReadonlyBox(props: { label: string; value: string }) {
 
 const label: any = { fontWeight: 900, marginTop: 12, display: "block" };
 const selectStyle: any = { width: "100%", padding: 12, marginTop: 6, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 800, background: "white" };
-
-// tabelline compatte arancioni
-const miniTd: any = {
-  padding: "6px 6px",
-  borderBottom: "1px solid rgba(249,115,22,.18)",
-  fontWeight: 900,
-  fontSize: 12,
-};
+const miniTd: any = { padding: "6px 6px", borderBottom: "1px solid rgba(249,115,22,.18)", fontWeight: 900, fontSize: 12 };

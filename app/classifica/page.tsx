@@ -6,44 +6,31 @@ import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useApp } from "../components/AppContext";
 
 type TableRow = { team_id: string; total_score: number; teams: { name: string } };
 type SeriesRow = { team_id: string; team_name: string; matchday_number: number; cumulative_score: number };
 
 export default function ClassificaPage() {
   const router = useRouter();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+
   const [loading, setLoading] = useState(true);
-
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
-  const [myTeamId, setMyTeamId] = useState<string | null>(null);
-
   const [table, setTable] = useState<TableRow[]>([]);
   const [series, setSeries] = useState<SeriesRow[]>([]);
 
   useEffect(() => {
     async function run() {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return router.replace("/login");
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
 
-      const { data: ctx } = await supabase.from("user_context").select("active_league_id").eq("user_id", auth.user.id).maybeSingle();
-      if (!ctx?.active_league_id) return router.replace("/seleziona-lega");
-      const leagueId = ctx.active_league_id as string;
-
-      const { data: mem } = await supabase.from("memberships").select("team_id").eq("league_id", leagueId).limit(1).maybeSingle();
-      if (!mem) return router.replace("/seleziona-lega");
-      setMyTeamId(mem.team_id);
-
-      const { data: lg } = await supabase.from("leagues").select("name").eq("id", leagueId).single();
-      if (lg?.name) setLeagueName(lg.name);
-
-      const { data: tm } = await supabase.from("teams").select("name").eq("id", mem.team_id).single();
-      if (tm?.name) setTeamName(tm.name);
+      setLoading(true);
 
       const { data: tData } = await supabase
         .from("league_table")
         .select("team_id, total_score, teams(name)")
-        .eq("league_id", leagueId)
+        .eq("league_id", activeLeagueId)
         .order("total_score", { ascending: false });
 
       setTable((tData || []) as any);
@@ -55,21 +42,18 @@ export default function ClassificaPage() {
     }
 
     run();
-  }, [router]);
+  }, [ready, userId, activeLeagueId, teamId, router]);
 
   const chartData = useMemo(() => {
     if (!series.length) return [];
     const teams = Array.from(new Set(series.map((r) => r.team_name)));
     const byMatch: Record<number, Record<string, number>> = {};
-
     for (const r of series) {
       if (!byMatch[r.matchday_number]) byMatch[r.matchday_number] = {};
       byMatch[r.matchday_number][r.team_name] = Number(r.cumulative_score);
     }
-
     const matchdays = Object.keys(byMatch).map(Number).sort((a, b) => a - b);
     const last: Record<string, number> = {};
-
     return matchdays.map((md) => {
       const row: any = { matchday: md };
       for (const tn of teams) {
@@ -90,6 +74,7 @@ export default function ClassificaPage() {
     return palette[h % palette.length];
   };
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
@@ -102,11 +87,8 @@ export default function ClassificaPage() {
 
         <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Andamento cumulativo</div>
-
           {chartData.length === 0 ? (
-            <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 800 }}>
-              Nessun dato ancora.
-            </div>
+            <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 800 }}>Nessun dato ancora.</div>
           ) : (
             <div style={{ marginTop: 12, width: "100%", height: 320 }}>
               <ResponsiveContainer>
@@ -126,15 +108,10 @@ export default function ClassificaPage() {
 
         <div style={{ marginTop: 12 }}>
           {table.map((r, i) => {
-            const isMine = r.team_id === myTeamId;
+            const isMine = r.team_id === teamId;
             const total = Number(r.total_score || 0);
-
             return (
-              <div
-                key={r.team_id}
-                className="card"
-                style={{ padding: 16, marginBottom: 12, borderLeft: isMine ? "6px solid var(--primary)" : "1px solid var(--border)" }}
-              >
+              <div key={r.team_id} className="card" style={{ padding: 16, marginBottom: 12, borderLeft: isMine ? "6px solid var(--primary)" : "1px solid var(--border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                   <div style={{ fontWeight: 1000 }}>{i + 1}. {r.teams.name}</div>
                   <div style={{ fontSize: 20, fontWeight: 1000, color: total > 0 ? "var(--primary-dark)" : total < 0 ? "var(--accent-dark)" : "var(--muted)" }}>

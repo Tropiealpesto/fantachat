@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
+import { useApp } from "../components/AppContext";
 
 type Row = {
   league_id: string;
@@ -16,6 +17,7 @@ type Row = {
 
 export default function SelezionaLegaPage() {
   const router = useRouter();
+  const { ready, userId } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
@@ -24,40 +26,27 @@ export default function SelezionaLegaPage() {
 
   useEffect(() => {
     async function run() {
+      if (!ready) return;
+      if (!userId) return router.replace("/login");
+
       setErr(null);
       setMsg(null);
+      setLoading(true);
 
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        router.replace("/login");
-        return;
-      }
+      // auto-claim inviti
+      await supabase.rpc("claim_invites_for_me");
 
-      // ✅ AUTO-CLAIM: associa automaticamente l'utente alle leghe dove è invitato
-      // (se inviti sono già presenti in team_invites)
-      const { error: claimErr } = await supabase.rpc("claim_invites_for_me");
-      if (claimErr) {
-        // non blocchiamo la pagina, ma mostriamo l'errore se serve
-        setErr(claimErr.message);
-      }
-
-      // Leggi memberships multi-lega (dopo claim)
       const { data, error } = await supabase
         .from("memberships")
         .select("league_id, leagues(name), team_id, teams(name), role");
 
-      if (error) {
-        setErr(error.message);
-        setRows([]);
-      } else {
-        setRows((data || []) as any);
-      }
-
+      if (error) setErr(error.message);
+      setRows((data || []) as any);
       setLoading(false);
     }
 
     run();
-  }, [router]);
+  }, [ready, userId, router]);
 
   async function setLeague(leagueId: string) {
     setErr(null);
@@ -81,6 +70,7 @@ export default function SelezionaLegaPage() {
     router.replace("/login");
   }
 
+  if (!ready) return <main className="container">Caricamento...</main>;
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
@@ -88,11 +78,7 @@ export default function SelezionaLegaPage() {
       <AppBar
         league="FantaChat"
         team="Seleziona lega"
-        right={
-          <button className="btn" onClick={logout}>
-            Esci
-          </button>
-        }
+        right={<button className="btn" onClick={logout}>Esci</button>}
       />
 
       <main className="container">
@@ -102,33 +88,18 @@ export default function SelezionaLegaPage() {
             Scegli la lega attiva. Puoi crearne una nuova in basso.
           </div>
 
-          {err && (
-            <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>
-              {err}
-            </div>
-          )}
-          {msg && (
-            <div style={{ marginTop: 12, color: "var(--primary-dark)", fontWeight: 900 }}>
-              {msg}
-            </div>
-          )}
+          {err && <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>{err}</div>}
+          {msg && <div style={{ marginTop: 12, color: "var(--primary-dark)", fontWeight: 900 }}>{msg}</div>}
 
           <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
             {rows.length === 0 ? (
-              <div style={{ color: "var(--muted)", fontWeight: 800 }}>
-                Non sei ancora in nessuna lega.
-              </div>
+              <div style={{ color: "var(--muted)", fontWeight: 800 }}>Non sei ancora in nessuna lega.</div>
             ) : (
               rows.map((r, i) => (
                 <button
                   key={i}
                   className="card"
-                  style={{
-                    padding: 14,
-                    textAlign: "left",
-                    cursor: "pointer",
-                    borderLeft: "6px solid var(--primary)",
-                  }}
+                  style={{ padding: 14, textAlign: "left", cursor: "pointer", borderLeft: "6px solid var(--primary)" }}
                   onClick={() => setLeague(r.league_id)}
                 >
                   <div style={{ fontWeight: 1000 }}>{r.leagues?.name || "Lega"}</div>
@@ -143,14 +114,7 @@ export default function SelezionaLegaPage() {
           <a
             href="/crea-lega"
             className="btn btn-primary"
-            style={{
-              marginTop: 14,
-              width: "100%",
-              display: "inline-block",
-              textAlign: "center",
-              padding: 12,
-              textDecoration: "none",
-            }}
+            style={{ marginTop: 14, width: "100%", display: "inline-block", textAlign: "center", padding: 12, textDecoration: "none" }}
           >
             + Crea nuova lega
           </a>
