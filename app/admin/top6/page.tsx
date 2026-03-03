@@ -12,7 +12,7 @@ type RealTeam = { id: string; name: string };
 
 export default function AdminTop6Page() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, userEmail, activeLeagueId, leagueName, teamName } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -26,13 +26,47 @@ export default function AdminTop6Page() {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ✅ redirect immediato se non super admin
   useEffect(() => {
-    async function run() {
+    async function checkSuperAdmin() {
       if (!ready) return;
-      if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
-      if (role !== "admin") return router.replace("/");
 
+      if (!userId) {
+        router.replace("/login");
+        return;
+      }
+
+      const email = (userEmail || "").toLowerCase();
+      if (!email) {
+        router.replace("/");
+        return;
+      }
+
+      const { data: adminRow } = await supabase
+        .from("app_admins")
+        .select("email")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (!adminRow) {
+        router.replace("/");
+        return;
+      }
+
+      // super admin ok, possiamo caricare la pagina
+      setLoading(false);
+    }
+
+    checkSuperAdmin();
+  }, [ready, userId, userEmail, router]);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!ready) return;
+      if (!userId) return;
+      if (!activeLeagueId) return; // se non c'è lega attiva, la home lo gestisce
+
+      // matchdays per lega attiva
       const { data: mds } = await supabase
         .from("matchdays")
         .select("id, number, status")
@@ -41,37 +75,58 @@ export default function AdminTop6Page() {
 
       const list = (mds || []) as Matchday[];
       setMatchdays(list);
+
       const open = list.find((x) => x.status === "open");
       setMatchdayId(open?.id ?? list[0]?.id ?? "");
 
-      const { data: rts } = await supabase.from("real_teams").select("id, name").order("name", { ascending: true });
-      setTeams((rts || []) as RealTeam[]);
+      // real teams
+      const { data: rts } = await supabase
+        .from("real_teams")
+        .select("id, name")
+        .order("name", { ascending: true });
 
-      setLoading(false);
+      setTeams((rts || []) as RealTeam[]);
     }
 
-    run();
-  }, [ready, userId, activeLeagueId, teamId, role, router]);
+    // carichiamo i dati solo quando la pagina è “autorizzata”
+    if (!loading) loadData();
+  }, [ready, userId, activeLeagueId, loading]);
+
+  async function loadTop6(mid: string) {
+    setMsg(null);
+    setErr(null);
+
+    if (!mid) return;
+
+    const { data, error } = await supabase.rpc("get_top6_for_matchday", {
+      p_league_matchday_id: mid,
+    } as any);
+
+    if (error) {
+      setSelected(["", "", "", "", "", ""]);
+      return;
+    }
+
+    const rows = (data || []) as any[];
+    const arr = ["", "", "", "", "", ""];
+
+    rows.forEach((r: any) => {
+      if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id;
+    });
+
+    setSelected(arr);
+  }
 
   useEffect(() => {
-    async function load(mid: string) {
-      setMsg(null); setErr(null);
-      if (!mid) return;
-      const { data, error } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: mid } as any);
-      if (error) {
-        setSelected(["", "", "", "", "", ""]);
-        return;
-      }
-      const rows = (data || []) as any[];
-      const arr = ["", "", "", "", "", ""];
-      rows.forEach((r: any) => { if (r.rank >= 1 && r.rank <= 6) arr[r.rank - 1] = r.real_team_id; });
-      setSelected(arr);
-    }
-    if (matchdayId) load(matchdayId);
-  }, [matchdayId]);
+    if (!matchdayId) return;
+    if (loading) return;
+    loadTop6(matchdayId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchdayId, loading]);
 
   async function save() {
-    setMsg(null); setErr(null);
+    setMsg(null);
+    setErr(null);
 
     if (selected.some((x) => !x)) return setErr("Seleziona tutte e 6 le squadre.");
     if (new Set(selected).size !== 6) return setErr("Top6 contiene duplicati.");
@@ -92,15 +147,26 @@ export default function AdminTop6Page() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} • ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} • SUPER ADMIN`} />
+
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Top6</div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Super Admin • Top6</div>
+          <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+            Imposta la Top6 globale (valida per tutte le leghe).
+          </div>
 
           <select
             value={matchdayId}
             onChange={(e) => setMatchdayId(e.target.value)}
-            style={{ width: "100%", marginTop: 12, padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
+            style={{
+              width: "100%",
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              border: "1px solid var(--border)",
+              fontWeight: 900,
+            }}
           >
             {matchdays.map((m) => (
               <option key={m.id} value={m.id}>
@@ -111,21 +177,49 @@ export default function AdminTop6Page() {
 
           <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 1fr", gap: 10, alignItems: "center" }}>
+              <div
+                key={i}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "70px 1fr",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
                 <div style={{ fontWeight: 1000 }}>#{i + 1}</div>
                 <select
                   value={selected[i]}
-                  onChange={(e) => setSelected((p) => { const c = [...p]; c[i] = e.target.value; return c; })}
-                  style={{ padding: 12, borderRadius: 12, border: "1px solid var(--border)", fontWeight: 900 }}
+                  onChange={(e) =>
+                    setSelected((p) => {
+                      const c = [...p];
+                      c[i] = e.target.value;
+                      return c;
+                    })
+                  }
+                  style={{
+                    padding: 12,
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    fontWeight: 900,
+                  }}
                 >
                   <option value="">-- scegli --</option>
-                  {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             ))}
           </div>
 
-          <button className="btn btn-primary" style={{ marginTop: 12, width: "100%", padding: 12 }} onClick={save} disabled={saving}>
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: 12, width: "100%", padding: 12 }}
+            onClick={save}
+            disabled={saving}
+          >
             {saving ? "Salvataggio..." : "Salva Top6"}
           </button>
 
@@ -133,6 +227,7 @@ export default function AdminTop6Page() {
           {err && <div style={{ marginTop: 12, color: "var(--accent-dark)", fontWeight: 900 }}>{err}</div>}
         </div>
       </main>
+
       <BottomNav />
     </>
   );
