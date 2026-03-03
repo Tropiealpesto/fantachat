@@ -392,6 +392,7 @@ export default function Home() {
             <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <a className="btn" href="/admin/giornata">Giornata</a>
               <a className="btn" href="/admin/giornale">Giornale</a>
+              <a className="btn" href="/admin/regole">Regole Lega</a>
             </div>
 
             {/* Super admin */}
