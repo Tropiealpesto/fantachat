@@ -44,12 +44,13 @@ export default function Home() {
   const [articlePreview, setArticlePreview] = useState<string | null>(null);
   const [articleMatchday, setArticleMatchday] = useState<number | null>(null);
 
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
 
-    // redirect base
     if (!userId) {
       router.replace("/login");
       return;
@@ -66,6 +67,24 @@ export default function Home() {
       setLoading(true);
 
       try {
+        // Super admin check (tabella app_admins)
+        try {
+          const { data: auth } = await supabase.auth.getUser();
+          const email = (auth.user?.email || "").toLowerCase();
+          if (email) {
+            const { data: adminRow } = await supabase
+              .from("app_admins")
+              .select("email")
+              .eq("email", email)
+              .maybeSingle();
+            if (!cancelled) setIsSuperAdmin(!!adminRow);
+          } else {
+            if (!cancelled) setIsSuperAdmin(false);
+          }
+        } catch {
+          if (!cancelled) setIsSuperAdmin(false);
+        }
+
         // 1) Giornata open PER LEGA
         const { data: md } = await supabase
           .from("matchdays")
@@ -129,7 +148,7 @@ export default function Home() {
             : [],
         });
 
-        // 5) Ultimo giornale della lega (se presente)
+        // 5) Ultimo giornale della lega
         const { data: lastArticle } = await supabase
           .from("matchday_articles")
           .select("title, content, matchday_id, created_at")
@@ -299,7 +318,7 @@ export default function Home() {
           <Kpi title="Media" value={stats ? fmt(stats.avg) : "—"} />
         </div>
 
-        {/* Giornale (se esiste) */}
+        {/* Giornale */}
         {articleTitle && (
           <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
             <div style={{ fontSize: 18, fontWeight: 1000 }}>
@@ -365,17 +384,29 @@ export default function Home() {
         {role === "admin" && (
           <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
-            <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-              Gestisci voti, giornata, Top6, giornale e partite.
+
+            {/* Admin lega */}
+            <div style={{ marginTop: 10, fontWeight: 1000, color: "var(--muted)" }}>
+              Admin Lega
             </div>
-            <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <a className="btn" href="/admin/voti">Voti</a>
+            <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <a className="btn" href="/admin/giornata">Giornata</a>
-              <a className="btn" href="/admin/top6">Top6</a>
               <a className="btn" href="/admin/giornale">Giornale</a>
-              <a className="btn" href="/admin/partite">Partite</a>
-              <a className="btn" href="/crea-lega">Crea lega</a>
             </div>
+
+            {/* Super admin */}
+            {isSuperAdmin && (
+              <>
+                <div style={{ marginTop: 14, fontWeight: 1000, color: "var(--muted)" }}>
+                  Super Admin
+                </div>
+                <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <a className="btn" href="/admin/partite">Partite</a>
+                  <a className="btn" href="/admin/top6">Top6</a>
+                  <a className="btn" href="/admin/statistiche">Statistiche</a>
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>
@@ -433,3 +464,4 @@ function formatSlot(startIso: string, endIso: string) {
   const endStr = eMin === "00" ? `${eHour}` : `${eHour}:${eMin}`;
   return `${day} ${s}-${endStr}`;
 }
+
