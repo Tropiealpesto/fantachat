@@ -19,10 +19,14 @@ type SeasonStats = {
 };
 
 type Lineup = {
-  gk_name: string;  gk_vote: number | null;
-  def_name: string; def_vote: number | null;
-  mid_name: string; mid_vote: number | null;
-  fwd_name: string; fwd_vote: number | null;
+  gk_name: string;
+  gk_vote: number | null;
+  def_name: string;
+  def_vote: number | null;
+  mid_name: string;
+  mid_vote: number | null;
+  fwd_name: string;
+  fwd_vote: number | null;
   total_score: number;
 };
 
@@ -39,10 +43,6 @@ export default function Home() {
   const [stats, setStats] = useState<SeasonStats | null>(null);
 
   const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
-
-  const [articleTitle, setArticleTitle] = useState<string | null>(null);
-  const [articlePreview, setArticlePreview] = useState<string | null>(null);
-  const [articleMatchday, setArticleMatchday] = useState<number | null>(null);
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -67,7 +67,7 @@ export default function Home() {
       setLoading(true);
 
       try {
-        // Super admin check (tabella app_admins)
+        // Super admin check
         try {
           const { data: auth } = await supabase.auth.getUser();
           const email = (auth.user?.email || "").toLowerCase();
@@ -85,7 +85,7 @@ export default function Home() {
           if (!cancelled) setIsSuperAdmin(false);
         }
 
-        // 1) Giornata open PER LEGA
+        // Giornata open per lega
         const { data: md } = await supabase
           .from("matchdays")
           .select("id, number")
@@ -106,7 +106,7 @@ export default function Home() {
           setMatchdayId(md.id);
           setMatchdayNum(md.number);
 
-          // 2) Mia formazione + voti
+          // Mia formazione + voti
           const { data: lu } = await supabase.rpc("get_my_matchday_lineup", {
             p_matchday_id: md.id,
           });
@@ -114,7 +114,7 @@ export default function Home() {
           if (cancelled) return;
           setLineup(Array.isArray(lu) && lu.length ? (lu[0] as any) : null);
 
-          // 3) Il mio slot (se schedule generato)
+          // Il mio slot
           const { data: mySlotData } = await supabase
             .from("pick_schedule")
             .select("slot_start_at, slot_end_at")
@@ -127,7 +127,7 @@ export default function Home() {
           setMySlot(mySlotData ?? null);
         }
 
-        // 4) Stats stagione
+        // Stats stagione
         const { data: s, error: sErr } = await supabase.rpc("get_my_season_stats");
         if (sErr) setErr(sErr.message);
         if (cancelled) return;
@@ -147,40 +147,6 @@ export default function Home() {
               }))
             : [],
         });
-
-        // 5) Ultimo giornale della lega
-        const { data: lastArticle } = await supabase
-          .from("matchday_articles")
-          .select("title, content, matchday_id, created_at")
-          .eq("league_id", activeLeagueId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (cancelled) return;
-
-        if (lastArticle?.title) {
-          setArticleTitle(lastArticle.title);
-
-          const preview = String(lastArticle.content || "")
-            .split("\n")
-            .filter((x) => x.trim() !== "")
-            .slice(0, 2)
-            .join(" ");
-          setArticlePreview(preview);
-
-          const { data: mdNum } = await supabase
-            .from("matchdays")
-            .select("number")
-            .eq("id", lastArticle.matchday_id)
-            .maybeSingle();
-
-          setArticleMatchday(mdNum?.number ?? null);
-        } else {
-          setArticleTitle(null);
-          setArticlePreview(null);
-          setArticleMatchday(null);
-        }
 
         setLoading(false);
       } catch (e: any) {
@@ -318,40 +284,6 @@ export default function Home() {
           <Kpi title="Media" value={stats ? fmt(stats.avg) : "—"} />
         </div>
 
-        {/* Giornale */}
-        {articleTitle && (
-          <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
-            <div style={{ fontSize: 18, fontWeight: 1000 }}>
-              📰 {articleTitle}
-              {articleMatchday && (
-                <span style={{ color: "var(--muted)", fontWeight: 800, fontSize: 14 }}>
-                  {" "}• Giornata {articleMatchday}
-                </span>
-              )}
-            </div>
-
-            <div style={{ marginTop: 8, color: "var(--muted)", fontWeight: 800 }}>
-              {articlePreview}
-            </div>
-
-            <a
-              href="/giornale"
-              style={{
-                display: "inline-block",
-                marginTop: 10,
-                border: "2px solid var(--accent)",
-                borderRadius: 14,
-                padding: "8px 14px",
-                fontWeight: 900,
-                textDecoration: "none",
-                color: "var(--text)",
-              }}
-            >
-              Leggi tutto →
-            </a>
-          </div>
-        )}
-
         {/* Azioni */}
         <div className="actions-grid" style={{ marginTop: 10 }}>
           <a href="/rosa" className="action">
@@ -360,15 +292,11 @@ export default function Home() {
           </a>
           <a href="/live" className="action">
             <div style={{ fontSize: 18, fontWeight: 1000 }}>Live</div>
-            <small>Punteggi giornata</small>
+            <small>Campionato in diretta</small>
           </a>
           <a href="/classifica" className="action">
             <div style={{ fontSize: 18, fontWeight: 1000 }}>Classifica</div>
             <small>Ranking campionato</small>
-          </a>
-          <a href="/giornale" className="action">
-            <div style={{ fontSize: 18, fontWeight: 1000 }}>Giornale</div>
-            <small>Il Giornale FantaChat</small>
           </a>
         </div>
 
@@ -391,7 +319,6 @@ export default function Home() {
             </div>
             <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <a className="btn" href="/admin/giornata">Giornata</a>
-              <a className="btn" href="/admin/giornale">Giornale</a>
               <a className="btn" href="/admin/regole">Regole Lega</a>
             </div>
 
@@ -465,4 +392,3 @@ function formatSlot(startIso: string, endIso: string) {
   const endStr = eMin === "00" ? `${eHour}` : `${eHour}:${eMin}`;
   return `${day} ${s}-${endStr}`;
 }
-

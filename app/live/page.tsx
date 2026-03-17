@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 import AppBar from "../components/AppBar";
@@ -39,6 +39,11 @@ export default function LivePage() {
   const [rows, setRows] = useState<LiveRow[]>([]);
   const [matchday, setMatchday] = useState<Matchday | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  const [nyxMessage, setNyxMessage] = useState<string | null>(null);
+
+  const prevLeaderRef = useRef<string | null>(null);
+  const nyxTimerRef = useRef<number | null>(null);
 
   async function refresh() {
     if (!activeLeagueId) return;
@@ -132,7 +137,35 @@ export default function LivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, activeLeagueId]);
 
-  const podiumLabel = useMemo(() => {
+  // Overlay Nyx quando cambia il leader
+  useEffect(() => {
+    if (!rows || rows.length === 0) return;
+
+    const currentLeader = rows[0].team_id;
+    const prevLeader = prevLeaderRef.current;
+
+    if (prevLeader && currentLeader !== prevLeader) {
+      setNyxMessage("Abbiamo un nuovo leader!");
+
+      if (nyxTimerRef.current) {
+        window.clearTimeout(nyxTimerRef.current);
+      }
+
+      nyxTimerRef.current = window.setTimeout(() => {
+        setNyxMessage(null);
+      }, 2500);
+    }
+
+    prevLeaderRef.current = currentLeader;
+
+    return () => {
+      if (nyxTimerRef.current) {
+        window.clearTimeout(nyxTimerRef.current);
+      }
+    };
+  }, [rows]);
+
+  const titleLabel = useMemo(() => {
     if (!matchday) return "Classifica campionato";
     return matchday.status === "open"
       ? `Classifica campionato live · Giornata ${matchday.number}`
@@ -150,7 +183,7 @@ export default function LivePage() {
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Live</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            {podiumLabel}
+            {titleLabel}
           </div>
         </div>
 
@@ -272,6 +305,45 @@ export default function LivePage() {
           </div>
         )}
       </main>
+
+      {nyxMessage && (
+        <div
+          style={{
+            position: "fixed",
+            top: "18%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            textAlign: "center",
+            pointerEvents: "none",
+            width: "min(86vw, 320px)",
+          }}
+        >
+          <img
+            src="/nyx.png"
+            alt="Nyx"
+            style={{
+              width: 170,
+              maxWidth: "60vw",
+              marginBottom: 8,
+            }}
+          />
+
+          <div
+            style={{
+              background: "rgba(255,255,255,.96)",
+              padding: "10px 16px",
+              borderRadius: 16,
+              fontWeight: 1000,
+              fontSize: 15,
+              color: "var(--text)",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+            }}
+          >
+            {nyxMessage}
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </>
