@@ -44,13 +44,15 @@ export default function LivePage() {
 
   const prevLeaderRef = useRef<string | null>(null);
   const nyxTimerRef = useRef<number | null>(null);
+  const lastNyxAtRef = useRef<number>(0);
+  const lastNyxTypeRef = useRef<string | null>(null);
 
   async function refresh() {
     if (!activeLeagueId) return;
 
     setErr(null);
 
-    // giornata open se esiste, altrimenti ultima giornata con score
+    // Giornata open se esiste, altrimenti ultima con dati
     const { data: openMd } = await supabase
       .from("matchdays")
       .select("id, number, status")
@@ -137,26 +139,69 @@ export default function LivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, activeLeagueId]);
 
-  // Overlay Nyx quando cambia il leader
+  function canShowNyx() {
+    const now = Date.now();
+    return now - lastNyxAtRef.current > 120000; // 2 minuti
+  }
+
+  function showNyx(message: string, type: string) {
+    const now = Date.now();
+
+    if (!canShowNyx() && lastNyxTypeRef.current === type) return;
+
+    lastNyxAtRef.current = now;
+    lastNyxTypeRef.current = type;
+
+    setNyxMessage(message);
+
+    if (nyxTimerRef.current) {
+      window.clearTimeout(nyxTimerRef.current);
+    }
+
+    nyxTimerRef.current = window.setTimeout(() => {
+      setNyxMessage(null);
+    }, 2500);
+  }
+
   useEffect(() => {
     if (!rows || rows.length === 0) return;
 
     const currentLeader = rows[0].team_id;
     const prevLeader = prevLeaderRef.current;
 
+    // 1) Nuovo leader
     if (prevLeader && currentLeader !== prevLeader) {
-      setNyxMessage("Abbiamo un nuovo leader!");
-
-      if (nyxTimerRef.current) {
-        window.clearTimeout(nyxTimerRef.current);
-      }
-
-      nyxTimerRef.current = window.setTimeout(() => {
-        setNyxMessage(null);
-      }, 2500);
+      showNyx("Abbiamo un nuovo leader!", "leader");
+      prevLeaderRef.current = currentLeader;
+      return;
     }
 
     prevLeaderRef.current = currentLeader;
+
+    // 2) Bonus forte
+    const bestRow = rows[0];
+    if (bestRow && bestRow.live_score >= 6 && canShowNyx()) {
+      const bonusMessages = [
+        "Nyx osserva. Che bonus.",
+        "Nyx sorride. Qui si vola.",
+        "Nyx dice: giornata pesante.",
+      ];
+      const msg = bonusMessages[Math.floor(Math.random() * bonusMessages.length)];
+      showNyx(msg, "bonus");
+      return;
+    }
+
+    // 3) Malus forte
+    const worstRow = [...rows].sort((a, b) => a.live_score - b.live_score)[0];
+    if (worstRow && worstRow.live_score <= -3 && canShowNyx()) {
+      const malusMessages = [
+        "Nyx scuote la testa. Questo malus farà male.",
+        "Nyx ha visto di meglio.",
+        "Nyx dice: giornata complicata.",
+      ];
+      const msg = malusMessages[Math.floor(Math.random() * malusMessages.length)];
+      showNyx(msg, "malus");
+    }
 
     return () => {
       if (nyxTimerRef.current) {
@@ -226,7 +271,6 @@ export default function LivePage() {
                         : "6px solid transparent",
                   }}
                 >
-                  {/* Riga principale */}
                   <div
                     style={{
                       display: "grid",
@@ -284,7 +328,6 @@ export default function LivePage() {
                     </div>
                   </div>
 
-                  {/* Giocatori */}
                   <div
                     style={{
                       marginTop: 12,

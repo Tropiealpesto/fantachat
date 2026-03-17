@@ -30,6 +30,17 @@ type Lineup = {
   total_score: number;
 };
 
+type NyxCard = {
+  matchday_number: number;
+  top_team: string;
+  top_score: number;
+  bottom_team: string;
+  bottom_score: number;
+  leader_team: string;
+  leader_total: number;
+  message: string;
+};
+
 export default function Home() {
   const router = useRouter();
   const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
@@ -41,6 +52,7 @@ export default function Home() {
 
   const [lineup, setLineup] = useState<Lineup | null>(null);
   const [stats, setStats] = useState<SeasonStats | null>(null);
+  const [nyxCard, setNyxCard] = useState<NyxCard | null>(null);
 
   const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
 
@@ -147,6 +159,13 @@ export default function Home() {
               }))
             : [],
         });
+
+        // Card Nyx
+        const { data: nyxData } = await supabase.rpc("get_home_nyx_message");
+        if (!cancelled) {
+          const row = Array.isArray(nyxData) ? nyxData[0] : nyxData;
+          setNyxCard(row || null);
+        }
 
         setLoading(false);
       } catch (e: any) {
@@ -277,6 +296,30 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Card Nyx */}
+        {nyxCard && (
+          <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <img
+                src="/nyx.png"
+                alt="Nyx"
+                style={{
+                  width: 74,
+                  height: "auto",
+                  flexShrink: 0,
+                }}
+              />
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 18, fontWeight: 1000 }}>Nyx osserva</div>
+                <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800, whiteSpace: "pre-line" }}>
+                  {nyxCard.message}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* KPI */}
         <div className="kpi-grid" style={{ marginTop: 10 }}>
           <Kpi title="Posizione" value={stats ? `#${stats.rank || "—"}` : "—"} />
@@ -313,7 +356,6 @@ export default function Home() {
           <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
 
-            {/* Admin lega */}
             <div style={{ marginTop: 10, fontWeight: 1000, color: "var(--muted)" }}>
               Admin Lega
             </div>
@@ -322,7 +364,6 @@ export default function Home() {
               <a className="btn" href="/admin/regole">Regole Lega</a>
             </div>
 
-            {/* Super admin */}
             {isSuperAdmin && (
               <>
                 <div style={{ marginTop: 14, fontWeight: 1000, color: "var(--muted)" }}>
