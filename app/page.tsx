@@ -298,27 +298,49 @@ export default function Home() {
 
         {/* Card Nyx */}
         {nyxCard && (
-          <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <img
-                src="/nyx.png"
-                alt="Nyx"
-                style={{
-                  width: 74,
-                  height: "auto",
-                  flexShrink: 0,
-                }}
-              />
+  <div style={{ marginTop: 16, textAlign: "center" }}>
+    
+    <img
+      src="/nyx.png"
+      alt="Nyx"
+      style={{
+        width: 220,
+        maxWidth: "70vw",
+        margin: "0 auto",
+        display: "block"
+      }}
+    />
 
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 18, fontWeight: 1000 }}>Nyx osserva</div>
-                <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800, whiteSpace: "pre-line" }}>
-                  {nyxCard.message}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+    <div
+      style={{
+        marginTop: 12,
+        fontWeight: 900,
+        fontSize: 15,
+        color: "var(--text)"
+      }}
+    >
+      {nyxCard.title}
+    </div>
+
+    <div
+      style={{
+        marginTop: 10,
+        fontWeight: 800,
+        fontSize: 14,
+        color: "#111",
+        lineHeight: 1.5,
+        whiteSpace: "pre-line",
+        maxWidth: 500,
+        marginLeft: "auto",
+        marginRight: "auto"
+      }}
+    >
+      {nyxCard.message}
+    </div>
+
+  </div>
+)}
+
 
         {/* KPI */}
         <div className="kpi-grid" style={{ marginTop: 10 }}>
