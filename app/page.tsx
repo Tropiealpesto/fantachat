@@ -38,6 +38,7 @@ type NyxCard = {
   bottom_score: number;
   leader_team: string;
   leader_total: number;
+  title: string;
   message: string;
 };
 
