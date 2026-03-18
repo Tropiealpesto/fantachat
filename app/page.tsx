@@ -56,9 +56,7 @@ export default function Home() {
   const [nyxCard, setNyxCard] = useState<NyxCard | null>(null);
 
   const [mySlot, setMySlot] = useState<{ slot_start_at: string; slot_end_at: string } | null>(null);
-
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,7 +78,6 @@ export default function Home() {
       setLoading(true);
 
       try {
-        // Super admin check
         try {
           const { data: auth } = await supabase.auth.getUser();
           const email = (auth.user?.email || "").toLowerCase();
@@ -98,7 +95,6 @@ export default function Home() {
           if (!cancelled) setIsSuperAdmin(false);
         }
 
-        // Giornata open per lega
         const { data: md } = await supabase
           .from("matchdays")
           .select("id, number")
@@ -119,7 +115,6 @@ export default function Home() {
           setMatchdayId(md.id);
           setMatchdayNum(md.number);
 
-          // Mia formazione + voti
           const { data: lu } = await supabase.rpc("get_my_matchday_lineup", {
             p_matchday_id: md.id,
           });
@@ -127,7 +122,6 @@ export default function Home() {
           if (cancelled) return;
           setLineup(Array.isArray(lu) && lu.length ? (lu[0] as any) : null);
 
-          // Il mio slot
           const { data: mySlotData } = await supabase
             .from("pick_schedule")
             .select("slot_start_at, slot_end_at")
@@ -140,7 +134,6 @@ export default function Home() {
           setMySlot(mySlotData ?? null);
         }
 
-        // Stats stagione
         const { data: s, error: sErr } = await supabase.rpc("get_my_season_stats");
         if (sErr) setErr(sErr.message);
         if (cancelled) return;
@@ -161,7 +154,6 @@ export default function Home() {
             : [],
         });
 
-        // Card Nyx
         const { data: nyxData } = await supabase.rpc("get_home_nyx_message");
         if (!cancelled) {
           const row = Array.isArray(nyxData) ? nyxData[0] : nyxData;
@@ -217,7 +209,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Card Giornata */}
         <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--primary)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Giornata</div>
@@ -297,60 +288,69 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Card Nyx */}
         {nyxCard && (
-  <div style={{ marginTop: 16, textAlign: "center" }}>
-    
-    <img
-      src="/nyx.png"
-      alt="Nyx"
-      style={{
-        width: 220,
-        maxWidth: "70vw",
-        margin: "0 auto",
-        display: "block"
-      }}
-    />
+          <div style={{ marginTop: 16 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "100px 1fr",
+                gap: 12,
+                alignItems: "start",
+              }}
+            >
+              <img
+                src="/nyx-v2.png"
+                alt="Nyx"
+                style={{
+                  width: 100,
+                  maxWidth: "100%",
+                  display: "block",
+                }}
+              />
 
-    <div
-      style={{
-        marginTop: 12,
-        fontWeight: 900,
-        fontSize: 15,
-        color: "var(--text)"
-      }}
-    >
-      {nyxCard.title}
-    </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontWeight: 1000,
+                    fontSize: 18,
+                    color: "var(--text)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {nyxCard.title}
+                </div>
 
-    <div
-      style={{
-        marginTop: 10,
-        fontWeight: 800,
-        fontSize: 14,
-        color: "#111",
-        lineHeight: 1.5,
-        whiteSpace: "pre-line",
-        maxWidth: 500,
-        marginLeft: "auto",
-        marginRight: "auto"
-      }}
-    >
-      {nyxCard.message}
-    </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontWeight: 800,
+                    fontSize: 13,
+                    color: "#111",
+                    lineHeight: 1.45,
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  {nyxCard.message}
+                </div>
 
-  </div>
-)}
+                <button
+                  className="btn"
+                  style={{ marginTop: 12 }}
+                  onClick={() => router.push("/podcast")}
+                >
+                  Ascolta la puntata intera
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-
-        {/* KPI */}
         <div className="kpi-grid" style={{ marginTop: 10 }}>
           <Kpi title="Posizione" value={stats ? `#${stats.rank || "—"}` : "—"} />
           <Kpi title="Totale" value={stats ? fmt(stats.total) : "—"} />
           <Kpi title="Media" value={stats ? fmt(stats.avg) : "—"} />
         </div>
 
-        {/* Azioni */}
         <div className="actions-grid" style={{ marginTop: 10 }}>
           <a href="/rosa" className="action">
             <div style={{ fontSize: 18, fontWeight: 1000 }}>Rosa</div>
@@ -366,7 +366,6 @@ export default function Home() {
           </a>
         </div>
 
-        {/* Grafico */}
         <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Andamento stagione</div>
           <div style={{ marginTop: 10 }}>
@@ -374,7 +373,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Admin */}
         {role === "admin" && (
           <div className="card" style={{ padding: 14, marginTop: 10, borderLeft: "6px solid var(--accent)" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>Admin</div>
@@ -385,6 +383,7 @@ export default function Home() {
             <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <a className="btn" href="/admin/giornata">Giornata</a>
               <a className="btn" href="/admin/regole">Regole Lega</a>
+              <a className="btn" href="/admin/podcast">Podcast</a>
             </div>
 
             {isSuperAdmin && (
