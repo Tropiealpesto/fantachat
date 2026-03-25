@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
-import "../seleziona-lega/ccs";
+import "../seleziona-lega/css";
 
 type Row = {
   league_id: string;
