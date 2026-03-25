@@ -65,24 +65,21 @@ export default function LivePage() {
     if (openMd) {
       setMatchday(openMd as Matchday);
     } else {
-      const { data: lastScored } = await supabase
-        .from("matchday_team_scores")
-        .select("matchday_id, matchdays!inner(id, number, status)")
-        .eq("league_id", activeLeagueId)
-        .order("matchday_id", { ascending: false })
-        .limit(1);
+  const { data: closedMatchdays } = await supabase
+    .from("matchdays")
+    .select("id, number, status")
+    .eq("league_id", activeLeagueId)
+    .neq("status", "open")
+    .order("number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-      const row: any = lastScored?.[0];
-      if (row?.matchdays) {
-        setMatchday({
-          id: row.matchdays.id,
-          number: row.matchdays.number,
-          status: row.matchdays.status,
-        });
-      } else {
-        setMatchday(null);
-      }
-    }
+  if (closedMatchdays) {
+    setMatchday(closedMatchdays as Matchday);
+  } else {
+    setMatchday(null);
+  }
+}
 
     const { data, error } = await supabase.rpc("get_live_table_for_active_league");
 
