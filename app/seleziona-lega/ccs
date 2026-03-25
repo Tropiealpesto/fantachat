@@ -1,11 +1,11 @@
-.fc-page {
+fc-page {
   font-family: 'Nunito', sans-serif;
   max-width: 480px;
   margin: 0 auto;
   padding: 16px 16px 100px;
 }
 
-.fc-section-title {
+fc-section-title {
   font-size: 22px;
   font-weight: 900;
   color: var(--color-text-primary, #111);
@@ -13,7 +13,7 @@
   letter-spacing: -0.3px;
 }
 
-.fc-section-desc {
+fc-section-desc {
   font-size: 13px;
   color: var(--muted, #888);
   margin: 0 0 16px;
@@ -21,13 +21,13 @@
   line-height: 1.5;
 }
 
-.fc-league-list {
+fc-league-list {
   display: grid;
   gap: 10px;
   margin-bottom: 14px;
 }
 
-.fc-league-item {
+fc-league-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -42,11 +42,11 @@
   font-family: 'Nunito', sans-serif;
 }
 
-.fc-league-item:hover {
+fc-league-item:hover {
   border-color: #1a7a3e;
 }
 
-.fc-league-dot {
+fc-league-dot {
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -57,12 +57,12 @@
   flex-shrink: 0;
 }
 
-.fc-league-info {
+fc-league-info {
   flex: 1;
   min-width: 0;
 }
 
-.fc-league-name {
+fc-league-name {
   font-size: 14px;
   font-weight: 800;
   color: var(--color-text-primary, #111);
@@ -71,14 +71,14 @@
   text-overflow: ellipsis;
 }
 
-.fc-league-meta {
+fc-league-meta {
   font-size: 12px;
   color: var(--muted, #888);
   margin-top: 2px;
   font-weight: 700;
 }
 
-.fc-badge-admin {
+fc-badge-admin {
   font-size: 10px;
   font-weight: 800;
   background: #fff4ea;
@@ -91,7 +91,7 @@
   border: 1px solid #f5c990;
 }
 
-.fc-badge-active {
+fc-badge-active {
   font-size: 10px;
   font-weight: 800;
   background: #1a7a3e;
@@ -103,7 +103,7 @@
   flex-shrink: 0;
 }
 
-.fc-btn-create {
+fc-btn-create {
   width: 100%;
   padding: 15px;
   background: #1a7a3e;
@@ -122,20 +122,20 @@
   text-decoration: none;
 }
 
-.fc-divider {
+fc-divider {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 18px;
 }
 
-.fc-divider-line {
+fc-divider-line {
   flex: 1;
   height: 1px;
   background: #e5e7eb;
 }
 
-.fc-divider-text {
+fc-divider-text {
   font-size: 11px;
   color: var(--muted, #888);
   text-transform: uppercase;
@@ -143,21 +143,21 @@
   font-weight: 800;
 }
 
-.fc-install-card {
+fc-install-card {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 16px;
 }
 
-.fc-install-header {
+fc-install-header {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
 }
 
-.fc-install-icon {
+fc-install-icon {
   width: 38px;
   height: 38px;
   background: #e07b1a;
@@ -168,27 +168,27 @@
   flex-shrink: 0;
 }
 
-.fc-install-title {
+fc-install-title {
   font-size: 14px;
   font-weight: 800;
   color: var(--color-text-primary, #111);
   margin: 0;
 }
 
-.fc-install-sub {
+fc-install-sub {
   font-size: 12px;
   color: var(--muted, #888);
   margin: 2px 0 0;
   font-weight: 700;
 }
 
-.fc-os-tab {
+fc-os-tab {
   display: flex;
   gap: 6px;
   margin-bottom: 14px;
 }
 
-.fc-os-btn {
+fc-os-btn {
   flex: 1;
   padding: 7px 0;
   font-size: 12px;
@@ -202,25 +202,25 @@
   transition: all 0.15s;
 }
 
-.fc-os-btn.active {
+fc-os-btn.active {
   background: #e07b1a;
   color: white;
   border-color: #e07b1a;
 }
 
-.fc-steps {
+fc-steps {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.fc-step {
+fc-step {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-.fc-step-num {
+fc-step-num {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -236,14 +236,14 @@
   font-family: 'Nunito', sans-serif;
 }
 
-.fc-step-label {
+fc-step-label {
   font-size: 13px;
   font-weight: 800;
   color: var(--color-text-primary, #111);
   margin: 0 0 2px;
 }
 
-.fc-step-desc {
+fc-step-desc {
   font-size: 12px;
   color: var(--muted, #888);
   margin: 0;
@@ -251,7 +251,7 @@
   font-weight: 700;
 }
 
-.fc-step-inline {
+fc-step-inline {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -265,21 +265,21 @@
   vertical-align: middle;
 }
 
-.fc-msg-success {
+fc-msg-success {
   margin-top: 12px;
   color: #1a7a3e;
   font-weight: 900;
   font-size: 14px;
 }
 
-.fc-msg-error {
+fc-msg-error {
   margin-top: 12px;
   color: #e07b1a;
   font-weight: 900;
   font-size: 14px;
 }
 
-.fc-empty {
+fc-empty {
   color: var(--muted, #888);
   font-weight: 800;
   font-size: 14px;
