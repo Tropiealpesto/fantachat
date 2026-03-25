@@ -74,9 +74,7 @@ export default function SelezionaLegaPage() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
-
+      <style>{
         .fc-page {
           font-family: 'Nunito', sans-serif;
           max-width: 480px;
@@ -364,7 +362,8 @@ export default function SelezionaLegaPage() {
           font-size: 14px;
           padding: 8px 0;
         }
-      `}</style>
+      }
+      </style>
 
       <AppBar
         league="FantaChat"
