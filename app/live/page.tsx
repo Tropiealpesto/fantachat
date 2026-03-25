@@ -40,13 +40,6 @@ export default function LivePage() {
   const [matchday, setMatchday] = useState<Matchday | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const [nyxMessage, setNyxMessage] = useState<string | null>(null);
-
-  const prevLeaderRef = useRef<string | null>(null);
-  const nyxTimerRef = useRef<number | null>(null);
-  const lastNyxAtRef = useRef<number>(0);
-  const lastNyxTypeRef = useRef<string | null>(null);
-
   async function refresh() {
     if (!activeLeagueId) return;
 
@@ -140,77 +133,6 @@ export default function LivePage() {
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, activeLeagueId]);
-
-  function canShowNyx() {
-    const now = Date.now();
-    return now - lastNyxAtRef.current > 120000; // 2 minuti
-  }
-
-  function showNyx(message: string, type: string) {
-    const now = Date.now();
-
-    if (!canShowNyx() && lastNyxTypeRef.current === type) return;
-
-    lastNyxAtRef.current = now;
-    lastNyxTypeRef.current = type;
-
-    setNyxMessage(message);
-
-    if (nyxTimerRef.current) {
-      window.clearTimeout(nyxTimerRef.current);
-    }
-
-    nyxTimerRef.current = window.setTimeout(() => {
-      setNyxMessage(null);
-    }, 2500);
-  }
-
-  useEffect(() => {
-    if (!rows || rows.length === 0) return;
-
-    const currentLeader = rows[0].team_id;
-    const prevLeader = prevLeaderRef.current;
-
-    // 1) Nuovo leader
-    if (prevLeader && currentLeader !== prevLeader) {
-      showNyx("Abbiamo un nuovo leader!", "leader");
-      prevLeaderRef.current = currentLeader;
-      return;
-    }
-
-    prevLeaderRef.current = currentLeader;
-
-    // 2) Bonus forte
-    const bestRow = rows[0];
-    if (bestRow && bestRow.live_score >= 6 && canShowNyx()) {
-      const bonusMessages = [
-        "Nyx osserva. Che bonus.",
-        "Nyx sorride. Qui si vola.",
-        "Nyx dice: giornata pesante.",
-      ];
-      const msg = bonusMessages[Math.floor(Math.random() * bonusMessages.length)];
-      showNyx(msg, "bonus");
-      return;
-    }
-
-    // 3) Malus forte
-    const worstRow = [...rows].sort((a, b) => a.live_score - b.live_score)[0];
-    if (worstRow && worstRow.live_score <= -3 && canShowNyx()) {
-      const malusMessages = [
-        "Nyx scuote la testa. Questo malus farà male.",
-        "Nyx ha visto di meglio.",
-        "Nyx dice: giornata complicata.",
-      ];
-      const msg = malusMessages[Math.floor(Math.random() * malusMessages.length)];
-      showNyx(msg, "malus");
-    }
-
-    return () => {
-      if (nyxTimerRef.current) {
-        window.clearTimeout(nyxTimerRef.current);
-      }
-    };
-  }, [rows]);
 
   const titleLabel = useMemo(() => {
     if (!matchday) return "Classifica campionato";
@@ -350,45 +272,6 @@ export default function LivePage() {
           </div>
         )}
       </main>
-
-      {nyxMessage && (
-        <div
-          style={{
-            position: "fixed",
-            top: "18%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 9999,
-            textAlign: "center",
-            pointerEvents: "none",
-            width: "min(86vw, 320px)",
-          }}
-        >
-          <img
-            src="/nyx.png"
-            alt="Nyx"
-            style={{
-              width: 170,
-              maxWidth: "60vw",
-              marginBottom: 8,
-            }}
-          />
-
-          <div
-            style={{
-              background: "rgba(255,255,255,.96)",
-              padding: "10px 16px",
-              borderRadius: 16,
-              fontWeight: 1000,
-              fontSize: 15,
-              color: "var(--text)",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
-            }}
-          >
-            {nyxMessage}
-          </div>
-        </div>
-      )}
 
       <BottomNav />
     </>
