@@ -169,7 +169,7 @@ Leghe
         <div style={styles.kpiCard}>
           <div style={styles.kpiLabel}>Posizione</div>
           <div style={{ ...styles.kpiValue, color: "#fbbf24" }}>
-            {stats ? `#${stats.rank || "—"}` : "—"}
+            {stats ? `${stats.rank || "—"}` : "—"}
           </div>
         </div>
         <div style={styles.kpiCard}>
