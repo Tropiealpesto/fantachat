@@ -61,7 +61,6 @@ if (!ready) return;
 if (!userId) { router.replace("/login"); return; }
 if (!activeLeagueId || !teamId) { router.replace("/seleziona-lega"); return; }
 
-```
 let cancelled = false;
 
 async function run() {
@@ -131,7 +130,6 @@ async function run() {
 
 run();
 return () => { cancelled = true; };
-```
 
 }, [ready, userId, activeLeagueId, teamId, router]);
 
@@ -157,7 +155,6 @@ Leghe
 }
 />
 
-```
   {/* ── HERO VERDE ── */}
   <div style={styles.hero}>
     <div style={styles.heroDots} />
@@ -347,7 +344,7 @@ Leghe
 
   <BottomNav />
 </>
-```
+
 
 );
 }
