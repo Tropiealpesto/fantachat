@@ -2,21 +2,31 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
+const TABS = [
+{ path: "/",          label: "Home",      icon: "🏠" },
+{ path: "/live",      label: "Live",      icon: "⚡" },
+{ path: "/rosa",      label: "Rosa",      icon: "👥" },
+{ path: "/classifica",label: "Classifica",icon: "🏆" },
+];
+
 export default function BottomNav() {
-  const pathname = usePathname();
-  const router = useRouter();
+const pathname = usePathname();
+const router = useRouter();
 
-  const go = (p: string) => router.push(p);
-  const active = (p: string) => (pathname === p ? "nav-btn active" : "nav-btn");
-
-  return (
-    <div className="bottom-nav">
-      <div className="tabs">
-        <button className={active("/")} onClick={() => go("/")}>Home</button>
-        <button className={active("/live")} onClick={() => go("/live")}>Live</button>
-        <button className={active("/rosa")} onClick={() => go("/rosa")}>Rosa</button>
-        <button className={active("/classifica")} onClick={() => go("/classifica")}>Classifica</button>
-      </div>
-    </div>
-  );
+return (
+<nav className="bottom-nav">
+<div className="tabs">
+{TABS.map((tab) => (
+<button
+key={tab.path}
+className={pathname === tab.path ? "nav-btn active" : "nav-btn"}
+data-icon={tab.icon}
+onClick={() => router.push(tab.path)}
+>
+{tab.label}
+</button>
+))}
+</div>
+</nav>
+);
 }
