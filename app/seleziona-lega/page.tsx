@@ -49,22 +49,26 @@ export default function SelezionaLegaPage() {
     run();
   }, [ready, userId, router]);
 
-  async function setLeague(leagueId: string) {
-    setErr(null);
-    setMsg(null);
+async function setLeague(leagueId: string) {
+  setErr(null);
+  setMsg(null);
 
-    const { error } = await supabase.rpc("set_active_league", {
-      p_league_id: leagueId,
-    });
+  const { error } = await supabase.rpc("set_active_league", {
+    p_league_id: leagueId,
+  });
 
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-
-    setMsg("Lega selezionata ✅");
-    setTimeout(() => router.replace("/"), 300);
+  if (error) {
+    setErr(error.message);
+    return;
   }
+
+  setMsg("Lega selezionata ✅");
+
+  setTimeout(() => {
+    window.location.href = "/";
+  }, 150);
+}
+
 
   async function logout() {
     await supabase.auth.signOut();
