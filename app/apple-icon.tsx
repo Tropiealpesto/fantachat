@@ -24,8 +24,8 @@ export default function AppleIcon() {
       >
         <div
           style={{
-            fontSize: 180,
-            fontWeight: 900,
+            fontSize: 140,
+            fontWeight: 1000,
             color: "#1a7a3c",
             lineHeight: 1,
           }}
@@ -35,8 +35,8 @@ export default function AppleIcon() {
 
         <div
           style={{
-            fontSize: 180,
-            fontWeight: 900,
+            fontSize: 140,
+            fontWeight: 1000,
             color: "#ff7a20",
             lineHeight: 1,
           }}
