@@ -42,15 +42,15 @@ export default function RosaPage() {
   const top6Names = useMemo(() => new Set(top6.map((t) => norm(t.real_team_name))), [top6]);
   const top6IdSet = useMemo(() => new Set(top6.map((t) => t.real_team_id)), [top6]);
  
-  function playerLabel(p: Player) {
+  const playerLabel = useMemo(() => (p: Player) => {
     const team = realTeams.get(p.real_team_id) || "";
     return team ? `${p.name} (${team})` : p.name;
-  }
+  }, [realTeams]);
  
-  const gkMap = useMemo(() => new Map(gks.map((p) => [playerLabel(p), p.id])), [gks, realTeams]);
-  const defMap = useMemo(() => new Map(defs.map((p) => [playerLabel(p), p.id])), [defs, realTeams]);
-  const midMap = useMemo(() => new Map(mids.map((p) => [playerLabel(p), p.id])), [mids, realTeams]);
-  const fwdMap = useMemo(() => new Map(fwds.map((p) => [playerLabel(p), p.id])), [fwds, realTeams]);
+  const gkMap = useMemo(() => new Map(gks.map((p) => [playerLabel(p), p.id])), [gks, playerLabel]);
+  const defMap = useMemo(() => new Map(defs.map((p) => [playerLabel(p), p.id])), [defs, playerLabel]);
+  const midMap = useMemo(() => new Map(mids.map((p) => [playerLabel(p), p.id])), [mids, playerLabel]);
+  const fwdMap = useMemo(() => new Map(fwds.map((p) => [playerLabel(p), p.id])), [fwds, playerLabel]);
  
   const idToRealTeam = useMemo(() => {
     const m = new Map<string, string>();
@@ -166,15 +166,19 @@ export default function RosaPage() {
         const all = [...a, ...b, ...c, ...d];
         const pm = new Map<string, Player>();
         all.forEach((p) => pm.set(p.id, p));
+        const labelFn = (p: Player) => {
+          const team = rtMap.get(p.real_team_id) || "";
+          return team ? `${p.name} (${team})` : p.name;
+        };
         const gkp = pm.get((pick as any).gk_player_id);
         const dep = pm.get((pick as any).def_player_id);
         const mip = pm.get((pick as any).mid_player_id);
         const fwp = pm.get((pick as any).fwd_player_id);
         setSavedNames({
-          gk: gkp ? playerLabel(gkp) : "—",
-          def: dep ? playerLabel(dep) : "—",
-          mid: mip ? playerLabel(mip) : "—",
-          fwd: fwp ? playerLabel(fwp) : "—",
+          gk: gkp ? labelFn(gkp) : "—",
+          def: dep ? labelFn(dep) : "—",
+          mid: mip ? labelFn(mip) : "—",
+          fwd: fwp ? labelFn(fwp) : "—",
         });
       } else {
         setSavedPick(null);
@@ -274,7 +278,7 @@ export default function RosaPage() {
                 <label className="rosa-field-label">Portiere</label>
                 <div className="rosa-field-row">
                   <div className="rosa-role-badge rosa-role-gk">P</div>
-                  <input list="dl_gk" autoComplete="off" value={gkText} onChange={(e) => setGkText(e.target.value)} placeholder="Cerca portiere..." className="rosa-input" />
+                  <input list="dl_gk" value={gkText} onChange={(e) => setGkText(e.target.value)} placeholder="Cerca portiere..." className="rosa-input" />
                   <datalist id="dl_gk">
                     {filterChoices(gks, gkText, gkMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
                   </datalist>
@@ -285,7 +289,7 @@ export default function RosaPage() {
                 <label className="rosa-field-label">Difensore</label>
                 <div className="rosa-field-row">
                   <div className="rosa-role-badge rosa-role-def">D</div>
-                  <input list="dl_def" autoComplete="off" value={defText} onChange={(e) => setDefText(e.target.value)} placeholder="Cerca difensore..." className="rosa-input" />
+                  <input list="dl_def" value={defText} onChange={(e) => setDefText(e.target.value)} placeholder="Cerca difensore..." className="rosa-input" />
                   <datalist id="dl_def">
                     {filterChoices(defs, defText, defMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
                   </datalist>
@@ -296,7 +300,7 @@ export default function RosaPage() {
                 <label className="rosa-field-label">Centrocampista</label>
                 <div className="rosa-field-row">
                   <div className="rosa-role-badge rosa-role-mid">C</div>
-                  <input list="dl_mid" autoComplete="off" value={midText} onChange={(e) => setMidText(e.target.value)} placeholder="Cerca centrocampista..." className="rosa-input" />
+                  <input list="dl_mid" value={midText} onChange={(e) => setMidText(e.target.value)} placeholder="Cerca centrocampista..." className="rosa-input" />
                   <datalist id="dl_mid">
                     {filterChoices(mids, midText, midMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
                   </datalist>
@@ -307,7 +311,7 @@ export default function RosaPage() {
                 <label className="rosa-field-label">Attaccante</label>
                 <div className="rosa-field-row">
                   <div className="rosa-role-badge rosa-role-fwd">A</div>
-                  <input list="dl_fwd" autoComplete="off" value={fwdText} onChange={(e) => setFwdText(e.target.value)} placeholder="Cerca attaccante..." className="rosa-input" />
+                  <input list="dl_fwd" value={fwdText} onChange={(e) => setFwdText(e.target.value)} placeholder="Cerca attaccante..." className="rosa-input" />
                   <datalist id="dl_fwd">
                     {filterChoices(fwds, fwdText, fwdMap).map((p) => <option key={p.id} value={playerLabel(p)} />)}
                   </datalist>
