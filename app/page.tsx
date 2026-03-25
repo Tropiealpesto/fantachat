@@ -404,7 +404,7 @@ borderRadius: 50, cursor: "pointer",
 /* ── HERO ── */
 hero: {
 background: "linear-gradient(160deg, #14532d 0%, #16a34a 100%)",
-padding: "0 0 28px", position: "relative", overflow: "hidden",
+padding: "16px 0 28px", position: "relative", overflow: "hidden",
 },
 heroDots: {
 position: "absolute", inset: 0,
@@ -441,7 +441,7 @@ legendItem: { display: "flex", alignItems: "center", gap: 4, fontSize: 10, color
 legendDot: { display: "inline-block", width: 7, height: 7, borderRadius: "50%" },
 
 /* ── CONTAINER ── */
-container: { padding: "16px 16px 20px", display: "flex", flexDirection: "column", gap: 14, maxWidth: 420, margin: "0 auto" },
+container: { padding: "16px 16px calc(64px + env(safe-area-inset-bottom, 0px) + 20px)", display: "flex", flexDirection: "column", gap: 14, maxWidth: 420, margin: "0 auto" },
 
 /* error */
 errorCard: { padding: 14, borderRadius: 14, border: "1px solid #fecaca", background: "#fff1f2", color: "#991b1b", fontWeight: 700, fontSize: 14 },
