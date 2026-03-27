@@ -313,6 +313,11 @@ Leghe
         <div style={styles.quickTitle}>Classifica</div>
         <div style={styles.quickSub}>Ranking campionato</div>
       </a>
+        <a href="/storico" style={styles.quickCard}>
+        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>🗓️</div>
+        <div style={styles.quickTitle}>Storico</div>
+        <div style={styles.quickSub}>Rivedi le giornate passate</div>
+      </a>
     </div>
 
     {/* ── ADMIN ── */}
