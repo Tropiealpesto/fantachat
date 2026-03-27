@@ -114,3 +114,220 @@ export default function StoricoPage() {
       const { data: matchdays, error: mdErr } = await supabase
         .from("matchdays")
         .select("id, number, status")
+        .eq("league_id", activeLeagueId)
+        .in("id", matchdayIds)
+        .order("number", { ascending: true });
+
+      if (mdErr) {
+        setErr(mdErr.message);
+        setLoading(false);
+        return;
+      }
+
+      const playerMap = new Map<string, string>();
+
+      if (playerIds.length > 0) {
+        const { data: players, error: pErr } = await supabase
+          .from("players")
+          .select("id, name")
+          .in("id", playerIds);
+
+        if (pErr) {
+          setErr(pErr.message);
+          setLoading(false);
+          return;
+        }
+
+        (players || []).forEach((p: any) => {
+          playerMap.set(String(p.id), String(p.name));
+        });
+      }
+
+      const mdMap = new Map<string, MatchdayRow>();
+      ((matchdays || []) as MatchdayRow[]).forEach((m) => {
+        mdMap.set(m.id, m);
+      });
+
+      const merged: StoricoCard[] = scoreRows
+        .map((r) => {
+          const md = mdMap.get(r.matchday_id);
+          if (!md) return null;
+
+          return {
+            matchday_id: r.matchday_id,
+            matchday_number: md.number,
+            status: md.status,
+            total_score: Number(r.total_score || 0),
+            gk_name: r.gk_player_id ? playerMap.get(r.gk_player_id) || "—" : "—",
+            gk_vote: r.gk_vote,
+            def_name: r.def_player_id ? playerMap.get(r.def_player_id) || "—" : "—",
+            def_vote: r.def_vote,
+            mid_name: r.mid_player_id ? playerMap.get(r.mid_player_id) || "—" : "—",
+            mid_vote: r.mid_vote,
+            fwd_name: r.fwd_player_id ? playerMap.get(r.fwd_player_id) || "—" : "—",
+            fwd_vote: r.fwd_vote,
+          };
+        })
+        .filter((x): x is StoricoCard => x !== null)
+        .sort((a, b) => a.matchday_number - b.matchday_number);
+
+      setRows(merged);
+      setLoading(false);
+    }
+
+    run();
+  }, [ready, userId, activeLeagueId, teamId, router]);
+
+  useEffect(() => {
+    if (!loading && rows.length > 0 && lastCardRef.current) {
+      lastCardRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [loading, rows]);
+
+  const subtitle = useMemo(() => {
+    if (rows.length === 0) return "Nessuna giornata disponibile";
+    return `Le tue giornate · ${rows.length} presenti`;
+  }, [rows]);
+
+  if (!ready || loading) {
+    return <main className="container">Caricamento...</main>;
+  }
+
+  return (
+    <>
+      <AppBar league={leagueName} team={teamName} />
+
+      <main className="container" style={{ paddingBottom: 100 }}>
+        <div className="card" style={{ padding: 16, marginTop: 12 }}>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Storico</div>
+          <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+            {subtitle}
+          </div>
+        </div>
+
+        {err && (
+          <div
+            className="card"
+            style={{
+              padding: 14,
+              marginTop: 12,
+              borderLeft: "6px solid var(--accent)",
+              fontWeight: 900,
+              color: "var(--accent-dark)",
+            }}
+          >
+            {err}
+          </div>
+        )}
+
+        {rows.length === 0 ? (
+          <div className="card" style={{ padding: 16, marginTop: 12 }}>
+            Nessuna formazione storica disponibile.
+          </div>
+        ) : (
+          <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+            {rows.map((r, idx) => {
+              const isLast = idx === rows.length - 1;
+
+              return (
+                <button
+                  key={r.matchday_id}
+                  ref={isLast ? lastCardRef : null}
+                  type="button"
+                  onClick={() => router.push(`/storico/${r.matchday_id}`)}
+                  className="card"
+                  style={{
+                    padding: 14,
+                    textAlign: "left",
+                    border: "1px solid var(--border)",
+                    background: "white",
+                  }}
+                >
+                  <div style={{ fontSize: 18, fontWeight: 1000 }}>
+                    Giornata {r.matchday_number}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 4,
+                      color: "var(--muted)",
+                      fontWeight: 800,
+                      fontSize: 14,
+                    }}
+                  >
+                    {statusLabel(r.status)} · totale {fmt(r.total_score)}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 12,
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <HistoricRow role="P" name={r.gk_name} vote={r.gk_vote} />
+                    <HistoricRow role="D" name={r.def_name} vote={r.def_vote} />
+                    <HistoricRow role="C" name={r.mid_name} vote={r.mid_vote} />
+                    <HistoricRow role="A" name={r.fwd_name} vote={r.fwd_vote} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
+      <BottomNav />
+    </>
+  );
+}
+
+function HistoricRow(props: { role: string; name: string; vote: number | null }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "18px 1fr auto",
+        gap: 8,
+        alignItems: "center",
+        fontWeight: 800,
+        fontSize: 14,
+      }}
+    >
+      <div style={{ color: "var(--muted)", fontWeight: 1000 }}>{props.role}</div>
+      <div
+        style={{
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {props.name}
+      </div>
+      <div style={{ fontWeight: 900 }}>{signedFmt(props.vote)}</div>
+    </div>
+  );
+}
+
+function fmt(n: number) {
+  if (!Number.isFinite(n)) return "0";
+  return (Math.round(n * 10) / 10).toString().replace(".", ",");
+}
+
+function signedFmt(n: number | null) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+  const v = Math.round(n * 10) / 10;
+  if (v > 0) return `+${String(v).replace(".", ",")}`;
+  return String(v).replace(".", ",");
+}
+
+function statusLabel(status: string) {
+  if (status === "open") return "aperta";
+  if (status === "closed") return "chiusa";
+  if (status === "final") return "finale";
+  return status || "—";
+}
