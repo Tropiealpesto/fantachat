@@ -6,6 +6,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import { useApp } from "../../components/AppContext";
+import LoadingScreen from "../../components/LoadingScreen";
  
 type Row = {
   team_id: string;
@@ -101,7 +102,7 @@ export default function StoricoDetailPage() {
   }, [ready, userId, activeLeagueId, teamId, matchdayId, router]);
  
   if (!ready || loading) {
-    return <main className="container" style={{ fontFamily: "'Nunito', sans-serif", padding: 20 }}>Caricamento...</main>;
+    return <LoadingScreen />;
   }
  
   return (
@@ -192,21 +193,14 @@ export default function StoricoDetailPage() {
                         }}>Tu</span>
                       )}
                     </div>
-                    <div style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      marginTop: 2,
-                      color: movement === "up" ? "#1a7a3e" : movement === "down" ? "#e07b1a" : "#5a8a6e",
-                    }}>
-                      {signedFmt(r.live_score)} questa giornata
-                    </div>
+ 
                   </div>
                   <div style={{
                     fontSize: 22,
                     fontWeight: 900,
                     color: isMe ? "#1a7a3e" : "#1a3d2a",
                   }}>
-                    {fmt(r.live_total)}
+                    {fmt(r.gk_vote + r.def_vote + r.mid_vote + r.fwd_vote || r.live_total)}
                   </div>
                 </div>
  
