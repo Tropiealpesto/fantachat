@@ -19,13 +19,13 @@ export default function AppleIcon() {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          borderRadius: 100,
+          borderRadius: 120,
         }}
       >
         <div
           style={{
-            fontSize: 140,
-            fontWeight: 1200,
+            fontSize: 150,
+            fontWeight: 900,
             color: "#1a7a3c",
             lineHeight: 1,
           }}
@@ -35,18 +35,17 @@ export default function AppleIcon() {
 
         <div
           style={{
-            fontSize: 140,
-            fontWeight: 1200,
+            fontSize: 150,
+            fontWeight: 900,
             color: "#ff7a20",
             lineHeight: 1,
+            marginTop: 8,
           }}
         >
           Chat
         </div>
       </div>
     ),
-    {
-      ...size,
-    }
+    { ...size }
   );
 }
