@@ -7,6 +7,7 @@ import AppBar from "./components/AppBar";
 import BottomNav from "./components/BottomNav";
 import SeasonBarChart from "./components/SeasonBarChart";
 import { useApp } from "./components/AppContext";
+import LoadingScreen from "./components/LoadingScreen";
 
 type SeasonStats = {
 rank: number;
@@ -134,11 +135,7 @@ return () => { cancelled = true; };
 }, [ready, userId, activeLeagueId, teamId, router]);
 
 if (!ready || !userId || !activeLeagueId || !teamId || loading) {
-return (
-<main style={styles.loadingWrap}>
-<div style={styles.loadingDot} />
-</main>
-);
+return <LoadingScreen />;
 }
 
 const ctaLabel = lineup ? "Vedi Rosa ✓" : "Invia Rosa";

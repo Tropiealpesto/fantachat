@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabaseClient";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
+import LoadingScreen from "../components/LoadingScreen";
 
 type LiveRow = {
   team_id: string;
@@ -141,8 +142,8 @@ export default function LivePage() {
       : `Classifica campionato · Ultima giornata ${matchday.number}`;
   }, [matchday]);
 
-  if (!ready) return <main className="container">Caricamento...</main>;
-  if (loading) return <main className="container">Caricamento...</main>;
+  if (!ready) return <LoadingScreen />;
+  if (loading) return <LoadingScreen />;
 
   return (
     <>

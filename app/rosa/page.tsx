@@ -7,6 +7,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
 import "./rosa.css";
+import LoadingScreen from "../components/LoadingScreen";
  
 type Player = { id: string; name: string; real_team_id: string };
 type Matchday = { id: string; number: number; status: string };
@@ -231,7 +232,7 @@ export default function RosaPage() {
   }
  
   if (!ready || !userId || !activeLeagueId || !teamId || loading)
-    return <main className="container" style={{ padding: 20, fontFamily: "'Nunito', sans-serif" }}>Caricamento...</main>;
+    return <LoadingScreen />;
  
   return (
     <>

@@ -7,6 +7,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import LoadingScreen from "../components/LoadingScreen";
 
 type RoleView = "total" | "gk" | "def" | "mid" | "fwd";
 type RangeView = "all" | "10" | "5";
@@ -139,8 +140,8 @@ export default function ClassificaPage() {
     return palette[h % palette.length];
   };
 
-  if (!ready || loading) return <main className="container">Caricamento...</main>;
-
+  if (!ready || loading) return <LoadingScreen />;
+  
   const myRank = table.findIndex((r) => r.team_id === teamId) + 1;
   const myStats = table.find((r) => r.team_id === teamId);
 
