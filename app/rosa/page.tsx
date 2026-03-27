@@ -7,6 +7,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
 import "./rosa.css";
+import LoadingScreen from "../components/LoadingScreen";
 
 type Player = { id: string; name: string; real_team_id: string };
 type Matchday = { id: string; number: number; status: string };
@@ -274,11 +275,7 @@ export default function RosaPage() {
   }
 
   if (!ready || !userId || !activeLeagueId || !teamId || loading) {
-    return (
-      <main className="container" style={{ padding: 20, fontFamily: "'Nunito', sans-serif" }}>
-        Caricamento...
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -318,6 +315,30 @@ export default function RosaPage() {
             <>
               <div className="rosa-title">Scegli i 4 giocatori</div>
               <div className="rosa-desc">Tocca il campo, scrivi per cercare e seleziona dalla lista.</div>
+
+              {!matchday && (
+  <div style={{
+    background: "#fff7ed",
+    border: "1.5px solid #fed7aa",
+    borderLeft: "4px solid #ea580c",
+    borderRadius: 12,
+    padding: 16,
+    display: "flex",
+    gap: 12,
+    alignItems: "flex-start",
+    marginBottom: 20,
+  }}>
+    <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
+    <div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#ea580c", marginBottom: 4 }}>
+        Nessuna giornata aperta
+      </div>
+      <div style={{ fontSize: 13, color: "#9a3412", lineHeight: 1.55, fontWeight: 500 }}>
+        Aspetta che il tuo admin apra una giornata per inserire la formazione.
+      </div>
+    </div>
+  </div>
+)}
 
               <PlayerPicker
                 wrapRef={gkWrapRef}
@@ -448,28 +469,9 @@ export default function RosaPage() {
           </div>
         </div>
 
-        {!matchday && (
-          <div className="rosa-alert rosa-alert-warn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b85c0a" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            Nessuna giornata aperta per questa lega.
-          </div>
-        )}
 
-        {msg && <div className="rosa-alert rosa-alert-success">{msg}</div>}
-        {err && (
-          <div className="rosa-alert rosa-alert-error">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b85c0a" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            {err}
-          </div>
-        )}
+        
+        
       </main>
 
       <BottomNav />
