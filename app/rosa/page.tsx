@@ -21,6 +21,7 @@ type PickRow = {
 };
  
 type FieldKey = "gk" | "def" | "mid" | "fwd" | null;
+type AvgRow = { player_id: string; avg_points: number | null };
  
 // ─── CAMPO DA CALCIO ──────────────────────────────────────────────────────────
 // Per modificare le dimensioni dei testi cerca i commenti con ← qui sotto
@@ -141,6 +142,7 @@ export default function RosaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [openField, setOpenField] = useState<FieldKey>(null);
+  const [avgMap, setAvgMap] = useState<Map<string, number>>(new Map());
  
   const gkWrapRef = useRef<HTMLDivElement | null>(null);
   const defWrapRef = useRef<HTMLDivElement | null>(null);
@@ -257,6 +259,15 @@ export default function RosaPage() {
       const rtMap = new Map<string, string>();
       (rt || []).forEach((x: any) => rtMap.set(x.id, x.name));
       setRealTeams(rtMap);
+
+      const { data: avgData, error: avgErr } = await supabase.rpc("get_player_avg_points");
+if (avgErr) throw avgErr;
+
+const avgPointsMap = new Map<string, number>();
+((avgData || []) as AvgRow[]).forEach((x) => {
+  avgPointsMap.set(x.player_id, Number(x.avg_points || 0));
+});
+setAvgMap(avgPointsMap);
  
       const { data: t6 } = await supabase.rpc("get_top6_for_matchday", { p_league_matchday_id: md.id } as any);
       setTop6((t6 || []) as any);
@@ -425,10 +436,10 @@ export default function RosaPage() {
                 </div>
               )}
  
-              <PlayerPicker wrapRef={gkWrapRef}  label="Portiere"      roleLetter="P" roleClass="rosa-role-gk"  value={gkText}  onChange={setGkText}  onFocus={() => setOpenField("gk")}  open={openField === "gk"}  choices={gkChoices}  playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} onSelect={(l) => { setGkText(l);  setOpenField(null); }} placeholder="Cerca portiere..." />
-              <PlayerPicker wrapRef={defWrapRef} label="Difensore"     roleLetter="D" roleClass="rosa-role-def" value={defText} onChange={setDefText} onFocus={() => setOpenField("def")} open={openField === "def"} choices={defChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} onSelect={(l) => { setDefText(l); setOpenField(null); }} placeholder="Cerca difensore..." />
-              <PlayerPicker wrapRef={midWrapRef} label="Centrocampista" roleLetter="C" roleClass="rosa-role-mid" value={midText} onChange={setMidText} onFocus={() => setOpenField("mid")} open={openField === "mid"} choices={midChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} onSelect={(l) => { setMidText(l); setOpenField(null); }} placeholder="Cerca centrocampista..." />
-              <PlayerPicker wrapRef={fwdWrapRef} label="Attaccante"    roleLetter="A" roleClass="rosa-role-fwd" value={fwdText} onChange={setFwdText} onFocus={() => setOpenField("fwd")} open={openField === "fwd"} choices={fwdChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} onSelect={(l) => { setFwdText(l); setOpenField(null); }} placeholder="Cerca attaccante..." />
+              <PlayerPicker wrapRef={gkWrapRef}  label="Portiere"      roleLetter="P" roleClass="rosa-role-gk"  value={gkText}  onChange={setGkText}  onFocus={() => setOpenField("gk")}  open={openField === "gk"}  choices={gkChoices}  playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} avgMap={avgMap} onSelect={(l) => { setGkText(l);  setOpenField(null); }} placeholder="Cerca portiere..." />
+              <PlayerPicker wrapRef={defWrapRef} label="Difensore"     roleLetter="D" roleClass="rosa-role-def" value={defText} onChange={setDefText} onFocus={() => setOpenField("def")} open={openField === "def"} choices={defChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} avgMap={avgMap} onSelect={(l) => { setDefText(l); setOpenField(null); }} placeholder="Cerca difensore..." />
+              <PlayerPicker wrapRef={midWrapRef} label="Centrocampista" roleLetter="C" roleClass="rosa-role-mid" value={midText} onChange={setMidText} onFocus={() => setOpenField("mid")} open={openField === "mid"} choices={midChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} avgMap={avgMap} onSelect={(l) => { setMidText(l); setOpenField(null); }} placeholder="Cerca centrocampista..." />
+              <PlayerPicker wrapRef={fwdWrapRef} label="Attaccante"    roleLetter="A" roleClass="rosa-role-fwd" value={fwdText} onChange={setFwdText} onFocus={() => setOpenField("fwd")} open={openField === "fwd"} choices={fwdChoices} playerLabel={playerLabel} realTeams={realTeams} top6IdSet={top6IdSet} avgMap={avgMap} onSelect={(l) => { setFwdText(l); setOpenField(null); }} placeholder="Cerca attaccante..." />
  
               <button className="rosa-btn" onClick={save} disabled={saving}>
                 {saving ? "Invio..." : "Invia rosa"}
@@ -507,11 +518,20 @@ export default function RosaPage() {
  
 function PlayerPicker(props: {
   wrapRef: React.RefObject<HTMLDivElement | null>;
-  label: string; roleLetter: string; roleClass: string;
-  value: string; onChange: (v: string) => void; onFocus: () => void;
-  open: boolean; choices: Player[]; playerLabel: (p: Player) => string;
-  realTeams: Map<string, string>; top6IdSet: Set<string>;
-  onSelect: (label: string) => void; placeholder: string;
+  label: string;
+  roleLetter: string;
+  roleClass: string;
+  value: string;
+  onChange: (value: string) => void;
+  onFocus: () => void;
+  open: boolean;
+  choices: Player[];
+  playerLabel: (p: Player) => string;
+  realTeams: Map<string, string>;
+  top6IdSet: Set<string>;
+  avgMap: Map<string, number>;
+  onSelect: (label: string) => void;
+  placeholder: string;
 }) {
   return (
     <div className="rosa-field" ref={props.wrapRef}>
@@ -528,39 +548,85 @@ function PlayerPicker(props: {
         />
       </div>
       {props.open && (
-        <div style={{
-          marginTop: 8, background: "white", border: "1px solid #e5e7eb",
-          borderRadius: 14, maxHeight: 220, overflowY: "auto",
-          boxShadow: "0 8px 24px rgba(0,0,0,.08)",
-        }}>
-          {props.choices.length === 0 ? (
-            <div style={{ padding: 12, color: "#6b7280", fontWeight: 700 }}>Nessun giocatore disponibile</div>
-          ) : (
-            props.choices.map((p) => {
-              const teamName = props.realTeams.get(p.real_team_id) || "";
-              const isTop6 = props.top6IdSet.has(p.real_team_id);
-              return (
-                <button
-                  key={p.id} type="button"
-                  onClick={() => props.onSelect(props.playerLabel(p))}
-                  style={{
-                    width: "100%", textAlign: "left", padding: "12px 14px",
-                    border: "none", background: "white", borderBottom: "1px solid #f1f5f9",
-                    display: "flex", justifyContent: "space-between", gap: 10,
-                    fontWeight: 800, fontFamily: "'Nunito', sans-serif", cursor: "pointer",
-                  }}
-                >
-                  <span style={{ minWidth: 0 }}>
-                    {p.name}
-                    {teamName ? <span style={{ color: "#6b7280", fontWeight: 700 }}> ({teamName})</span> : null}
-                  </span>
-                  {isTop6 ? <span style={{ flexShrink: 0 }}>⭐</span> : null}
-                </button>
-              );
-            })
-          )}
-        </div>
-      )}
+  <div
+    style={{
+      marginTop: 8,
+      background: "white",
+      border: "1px solid #e5e7eb",
+      borderRadius: 14,
+      maxHeight: 260,
+      overflowY: "auto",
+      boxShadow: "0 8px 24px rgba(0,0,0,.08)",
+    }}
+  >
+    <div
+      style={{
+        padding: "8px 14px",
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: 10,
+        fontSize: 12,
+        fontWeight: 900,
+        color: "#6b7280",
+        borderBottom: "1px solid #e5e7eb",
+        position: "sticky",
+        top: 0,
+        background: "white",
+        zIndex: 1,
+      }}
+    >
+      <span>Nome</span>
+      <span>Pt medio</span>
+    </div>
+
+    {props.choices.length === 0 ? (
+      <div style={{ padding: 12, color: "#6b7280", fontWeight: 700 }}>
+        Nessun giocatore disponibile
+      </div>
+    ) : (
+      props.choices.map((p) => {
+        const teamName = props.realTeams.get(p.real_team_id) || "";
+        const isTop6 = props.top6IdSet.has(p.real_team_id);
+        const avg = props.avgMap.get(p.id);
+        const avgText =
+          typeof avg === "number" && Number.isFinite(avg)
+            ? String(avg).replace(".", ",")
+            : "—";
+
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => props.onSelect(props.playerLabel(p))}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px 14px",
+              border: "none",
+              background: "white",
+              borderBottom: "1px solid #f1f5f9",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: 10,
+              alignItems: "center",
+              fontWeight: 800,
+            }}
+          >
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {p.name}
+              {teamName ? (
+                <span style={{ color: "#6b7280", fontWeight: 700 }}> ({teamName})</span>
+              ) : null}
+              {isTop6 ? <span style={{ marginLeft: 6 }}>⭐</span> : null}
+            </span>
+
+            <span style={{ flexShrink: 0, fontWeight: 900 }}>{avgText}</span>
+          </button>
+        );
+      })
+    )}
+  </div>
+)}
     </div>
   );
 }
