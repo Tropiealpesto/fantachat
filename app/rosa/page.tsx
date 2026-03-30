@@ -260,12 +260,16 @@ export default function RosaPage() {
       (rt || []).forEach((x: any) => rtMap.set(x.id, x.name));
       setRealTeams(rtMap);
 
-      const { data: avgData, error: avgErr } = await supabase.rpc("get_player_avg_points");
+const { data: avgData, error: avgErr } = await supabase
+  .from("player_league_stats")
+  .select("player_id, avg_points")
+  .eq("league_id", activeLeagueId);
+
 if (avgErr) throw avgErr;
 
 const avgPointsMap = new Map<string, number>();
 ((avgData || []) as AvgRow[]).forEach((x) => {
-  avgPointsMap.set(x.player_id, Number(x.avg_points || 0));
+  avgPointsMap.set(String(x.player_id), Number(x.avg_points || 0));
 });
 setAvgMap(avgPointsMap);
  
