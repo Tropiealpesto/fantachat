@@ -10,7 +10,7 @@ const TABS = [
 ];
 
 interface BottomNavProps {
-  onMenuOpen: () => void;
+  onMenuOpen?: () => void;
   unreadCount?: number;
 }
 
