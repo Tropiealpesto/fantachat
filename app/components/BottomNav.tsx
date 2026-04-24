@@ -11,10 +11,11 @@ const TABS = [
 ];
 
 interface BottomNavProps {
+  onMenuOpen?: () => void;
   unreadCount?: number;
 }
 
-export default function BottomNav({ unreadCount = 0 }: BottomNavProps) {
+export default function BottomNav({ onMenuOpen, unreadCount = 0 }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
 
