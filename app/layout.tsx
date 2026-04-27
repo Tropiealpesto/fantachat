@@ -1,6 +1,6 @@
-import "./globals.css";
+import "./global.css";
 import { AppProvider } from "./components/AppContext";
-import AppLayout from "./components/AppLayout";
+import SideDrawerWrapper from "./components/SideDrawerWrapper";
 
 export const metadata = {
   title: "FantaChat",
@@ -12,9 +12,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="it">
       <body>
         <AppProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
+          <SideDrawerWrapper />
+          {children}
         </AppProvider>
       </body>
     </html>

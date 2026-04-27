@@ -7,19 +7,18 @@ type AppRole = "player" | "admin";
 
 type AppCtxValue = {
   ready: boolean;
-
   userId: string | null;
   userEmail: string | null;
-
   activeLeagueId: string | null;
   leagueName: string;
-
   teamId: string | null;
   teamName: string;
-
   role: AppRole | null;
-
   refresh: () => Promise<void>;
+  // Drawer
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
 };
 
 const Ctx = createContext<AppCtxValue | null>(null);
@@ -32,17 +31,14 @@ export function useApp() {
 
 export function AppProvider(props: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
-
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
   const [leagueName, setLeagueName] = useState<string>("—");
-
   const [teamId, setTeamId] = useState<string | null>(null);
   const [teamName, setTeamName] = useState<string>("—");
-
   const [role, setRole] = useState<AppRole | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   async function refresh() {
     setReady(false);
@@ -63,7 +59,6 @@ export function AppProvider(props: { children: React.ReactNode }) {
     setUserId(auth.user.id);
     setUserEmail(auth.user.email ?? null);
 
-    // Lega attiva
     const { data: ctx } = await supabase
       .from("user_context")
       .select("active_league_id")
@@ -82,7 +77,6 @@ export function AppProvider(props: { children: React.ReactNode }) {
       return;
     }
 
-    // Membership per lega attiva
     const { data: mem } = await supabase
       .from("memberships")
       .select("team_id, role")
@@ -109,21 +103,15 @@ export function AppProvider(props: { children: React.ReactNode }) {
 
     setLeagueName(lg?.name ?? "—");
     setTeamName(tm?.name ?? "—");
-
     setReady(true);
   }
 
   useEffect(() => {
     refresh();
-
-    // Reagisci a login/logout senza refresh manuale
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       refresh();
     });
-
-    return () => {
-      sub.subscription.unsubscribe();
-    };
+    return () => { sub.subscription.unsubscribe(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -138,8 +126,11 @@ export function AppProvider(props: { children: React.ReactNode }) {
       teamName,
       role,
       refresh,
+      drawerOpen,
+      openDrawer: () => setDrawerOpen(true),
+      closeDrawer: () => setDrawerOpen(false),
     }),
-    [ready, userId, userEmail, activeLeagueId, leagueName, teamId, teamName, role]
+    [ready, userId, userEmail, activeLeagueId, leagueName, teamId, teamName, role, drawerOpen]
   );
 
   return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;

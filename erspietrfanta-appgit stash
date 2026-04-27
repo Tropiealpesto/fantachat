@@ -1,0 +1,84 @@
+[33m2402698[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m correzione bottom
+[33m4ae0a69[m Hamburger sistemato
+[33mecece26[m aggiunta sezione chat
+[33m0e32a52[m sistemato il bottomnav
+[33me53649e[m inserimento chat
+[33m6f92254[m statistiche added to bottomnav
+[33mdbc028f[m statistiche
+[33mfb33c5b[m fix rosa and giocatore id
+[33m6531f98[m show average points in rosa
+[33m995dc53[m update logo aplle
+[33m223211e[m aggiunta campo da calcio rosa
+[33m70c9331[m fix badge storico id
+[33m61d7623[m fix layout storico id
+[33m3220146[m sistemare layout storico
+[33m1a5a951[m fix Storico
+[33mbb10583[m add Storico
+[33mcd4a5d9[m aggiunta storico
+[33m9c3b281[m allarma rosa per giornata non inserita
+[33m20ba09c[m sistemazione pagin rosa
+[33m605fe96[m cambio pagina caricamento
+[33m866d087[m cambio logo fanta chat appbar
+[33m3603878[m cambio layout login
+[33mce8d14a[m elenco inserimento rosa
+[33meccc3a2[m sistemare elenco in inserimento rosa
+[33mc373c03[m cambio layout sez rosa
+[33m819dc6a[m togliere Nyx da live
+[33m20b078a[m sistemazione live ultima giornata
+[33ma5812e8[m logo con scritta più spessa
+[33me020824[m sistemare logo app
+[33m88f3cd3[m cambio icona app
+[33m2dfee7d[m nuovo grafico home
+[33me53d73c[m redesign classifica
+[33m6b9b092[m redesign: appbar bottom nav and global css
+[33m74778f2[m fix league selection
+[33ma9c5faf[m ultimo fix per seleziona leghe
+[33mff7d33a[m prova 5
+[33m081aefc[m prova 4
+[33m50154b6[m prova 3
+[33m7c82861[m prova 2
+[33m8dd2b05[m prova
+[33m047613b[m sistemazione finale seleziona leghe
+[33mda7ae66[m login sistemato
+[33m6c15baf[m fix problem on selezione leghe
+[33m883a9d3[m new layout seleziona leghe
+[33m5ef1138[m fix: chart + rank no hash
+[33m791fe40[m fixed every wrong symbol
+[33me56cd27[m fix the wrong term
+[33mbce3a77[m redesign home
+[33m78b3883[m add Nyx podcast admin and public pages
+[33mb336a12[m refine nyx home layout
+[33mb76bf65[m fix nyx home title and image
+[33m7b57ba8[m add Nyx home podcast
+[33m2a4d68c[m add nyx home card
+[33mc0c852d[m add nyx image
+[33m6f73374[m live campionato with live rankings and arrow
+[33m346437e[m add rules page with classic vs custom
+[33mb573838[m restrict top6 to super admin with redirect
+[33m614ff77[m split admin sections on home
+[33mb409bec[m super admin player statistics page
+[33m9c74905[m admin giornata show schedule status
+[33mf3f9fec[m compact classifica with role + range filters
+[33mf07d531[m switch to email+password login
+[33mc58fad9[m allow negative votes input
+[33md04c18e[m admin and giornale use AppContext
+[33m4570b37[m auto claim invites on selezione lega
+[33m70fc1c3[m admin giornata add reset pick box
+[33m1ddb284[m fix chosenTop6RealTeamId placement
+[33m3ab1ac9[m rosa hide taken players and prevent 2 top6
+[33m5c286d1[m live show player real team in labels
+[33m2b5d969[m rosa searchable inputs and compact fixtures/top6
+[33mfbcbf40[m compact elegant home layout
+[33mbd620a3[m update rosa layout
+[33m844988f[m update
+[33m01ac95a[m add fixtures in rosa
+[33me3e99ec[m add slot display in home
+[33m45758d9[m restore admin section on home
+[33m5891407[m matchdays per league frontend update
+[33mf1cf391[m fix magic link redirect to vercel
+[33m6263a0a[m fix suspense giornale page
+[33m1270206[m fix giornale dynamic rendering
+[33m914b808[m add supabaseServer file
+[33m12575cd[m fix supabaseServer import for production
+[33m38a2350[m fix supabaseServer import for production
+[33m61f90e9[m soft launch version
