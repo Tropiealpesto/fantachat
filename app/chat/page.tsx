@@ -5,7 +5,7 @@ import ChatPage from "../components/ChatPage";
 import BottomNav from "../components/BottomNav";
 
 export default function Chat() {
-  const { activeLeagueId, teamId, teamName } = useApp();
+  const { activeLeagueId, teamId, teamName, openDrawer } = useApp();
 
   if (!activeLeagueId || !teamId) {
     return (

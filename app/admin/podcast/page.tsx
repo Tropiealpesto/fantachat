@@ -24,7 +24,7 @@ type Summary = {
 
 export default function AdminPodcastPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);

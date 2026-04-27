@@ -4,7 +4,7 @@ import { useApp } from "./AppContext";
 import SideDrawer from "./SideDrawer";
 
 export default function SideDrawerWrapper() {
-  const { drawerOpen, closeDrawer, teamName, leagueName, role } = useApp();
+  const { drawerOpen, closeDrawer, teamName, leagueName, role, openDrawer } = useApp();
   const isAdmin = role === "admin";
 
   return (

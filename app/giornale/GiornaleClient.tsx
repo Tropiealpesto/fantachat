@@ -12,7 +12,7 @@ export default function GiornaleClient() {
   const params = useSearchParams();
   const matchdayFromQuery = params.get("matchday");
 
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<{ id: string; number: number }[]>([]);
@@ -79,7 +79,7 @@ export default function GiornaleClient() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>

@@ -15,7 +15,7 @@ type PodcastRow = {
 
 export default function PodcastPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [podcast, setPodcast] = useState<PodcastRow | null>(null);
@@ -73,7 +73,7 @@ export default function PodcastPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container">
         {!podcast ? (

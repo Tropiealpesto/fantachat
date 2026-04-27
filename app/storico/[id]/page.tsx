@@ -42,7 +42,7 @@ const roleColors: Record<string, { bg: string; color: string }> = {
 export default function StoricoDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, teamId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, teamId, leagueName, teamName, openDrawer } = useApp();
  
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
@@ -107,7 +107,7 @@ export default function StoricoDetailPage() {
  
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
  
       <main className="container" style={{ fontFamily: "'Nunito', sans-serif", paddingBottom: 100 }}>
  

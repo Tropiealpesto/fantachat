@@ -18,7 +18,7 @@ type Row = {
 
 export default function SelezionaLegaPage() {
   const router = useRouter();
-  const { ready, userId } = useApp();
+  const { ready, userId, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);

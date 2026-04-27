@@ -45,7 +45,7 @@ message: string;
 
 export default function Home() {
 const router = useRouter();
-const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
 const [loading, setLoading] = useState(true);
 const [matchdayId, setMatchdayId] = useState<string | null>(null);

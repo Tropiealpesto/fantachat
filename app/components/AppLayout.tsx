@@ -7,7 +7,7 @@ import SideDrawer from "./SideDrawer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { teamName, leagueName, role } = useApp();
+  const { teamName, leagueName, role, openDrawer } = useApp();
 
   const isAdmin = role === "admin";
 

@@ -11,7 +11,7 @@ type Matchday = { id: string; number: number; status: string };
 
 export default function AdminGiornalePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 

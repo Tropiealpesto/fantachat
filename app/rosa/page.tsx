@@ -120,7 +120,7 @@ function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: strin
  
 export default function RosaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
  
   const [loading, setLoading] = useState(true);
   const [matchday, setMatchday] = useState<Matchday | null>(null);
@@ -384,7 +384,7 @@ setAvgMap(avgPointsMap);
  
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
  
       <main className="container" style={{ fontFamily: "'Nunito', sans-serif", padding: "0 16px 100px" }}>
  

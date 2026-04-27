@@ -35,7 +35,7 @@ type SeriesRoleRow = {
 
 export default function ClassificaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string>("");
@@ -154,7 +154,7 @@ export default function ClassificaPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main style={s.container}>
 

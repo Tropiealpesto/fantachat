@@ -28,7 +28,7 @@ type PlayerCard = {
 export default function GiocatorePage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -146,7 +146,7 @@ export default function GiocatorePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container" style={{ paddingBottom: 100 }}>
         {err && (

@@ -20,7 +20,7 @@ type ScheduleRow = {
 
 export default function AdminGiornataPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 

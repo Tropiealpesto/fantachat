@@ -2544,7 +2544,7 @@ export default function ClassificaPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main style={s.container}>
 
@@ -4789,7 +4789,7 @@ export default function GiocatorePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container" style={{ paddingBottom: 100 }}>
         {err && (
@@ -4984,7 +4984,7 @@ export default function GiornaleClient() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>
@@ -5189,7 +5189,7 @@ export default function LivePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
@@ -5824,7 +5824,7 @@ export default function PodcastPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container">
         {!podcast ? (
@@ -6272,7 +6272,7 @@ setAvgMap(avgPointsMap);
  
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
  
       <main className="container" style={{ fontFamily: "'Nunito', sans-serif", padding: "0 16px 100px" }}>
  
@@ -6934,7 +6934,7 @@ export default function StatistichePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container" style={{ paddingBottom: 100 }}>
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
@@ -7245,7 +7245,7 @@ export default function StoricoDetailPage() {
  
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
  
       <main className="container" style={{ fontFamily: "'Nunito', sans-serif", paddingBottom: 100 }}>
  
@@ -7569,7 +7569,7 @@ export default function StoricoPage() {
  
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
  
       <main className="container" style={{ paddingBottom: 100, fontFamily: "'Nunito', sans-serif" }}>
  

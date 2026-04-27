@@ -37,7 +37,7 @@ const EMPTY: EventForm = {
 
 export default function AdminStatistichePage() {
   const router = useRouter();
-  const { ready, userId, userEmail } = useApp();
+  const { ready, userId, userEmail, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);

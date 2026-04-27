@@ -12,7 +12,7 @@ type RealTeam = { id: string; name: string };
 
 export default function AdminTop6Page() {
   const router = useRouter();
-  const { ready, userId, userEmail, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, userEmail, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 

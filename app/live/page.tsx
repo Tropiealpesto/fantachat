@@ -34,7 +34,7 @@ type Matchday = {
 
 export default function LivePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LiveRow[]>([]);
@@ -147,7 +147,7 @@ export default function LivePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={teamName} />
+      <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
