@@ -1,4 +1,4 @@
-import "./global.css";
+import "./globals.css";
 import { AppProvider } from "./components/AppContext";
 import SideDrawerWrapper from "./components/SideDrawerWrapper";
 
