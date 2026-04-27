@@ -2,6 +2,7 @@
 
 import { useApp } from "../components/AppContext";
 import ChatPage from "../components/ChatPage";
+import BottomNav from "../components/BottomNav";
 
 export default function Chat() {
   const { activeLeagueId, teamId, teamName } = useApp();
@@ -21,12 +22,15 @@ export default function Chat() {
   }
 
   return (
-    <div style={{ height: "calc(100dvh - 70px)" }}>
-      <ChatPage
-        leagueId={activeLeagueId}
-        currentTeamId={teamId}
-        currentTeamName={teamName}
-      />
-    </div>
+    <>
+      <div style={{ height: "calc(100dvh - 70px)" }}>
+        <ChatPage
+          leagueId={activeLeagueId}
+          currentTeamId={teamId}
+          currentTeamName={teamName}
+        />
+      </div>
+      <BottomNav />
+    </>
   );
 }

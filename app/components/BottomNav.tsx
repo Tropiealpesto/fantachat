@@ -3,11 +3,11 @@
 import { usePathname, useRouter } from "next/navigation";
 
 const TABS = [
-  { path: "/",           label: "Home",       icon: "🏠", color: "#16A34A" },
-  { path: "/live",       label: "Live",       icon: "⚡", color: "#F97316" },
-  { path: "/rosa",       label: "Rosa",       icon: "👥", color: "#16A34A" },
-  { path: "/chat",       label: "Chat",       icon: "💬", color: "#16A34A" },
-  { path: "/classifica", label: "Classifica", icon: "🏆", color: "#F97316" },
+{ path: "/",           label: "Home",       icon: "🏠", color: "#16A34A" },
+{ path: "/live",       label: "Live",       icon: "🔴", color: "#F97316" },
+{ path: "/rosa",       label: "Rosa",       icon: "👕", color: "#16A34A" },
+{ path: "/chat",       label: "Chat",       icon: "💬", color: "#16A34A" },
+{ path: "/classifica", label: "Classifica", icon: "🏆", color: "#F97316" },
 ];
 
 interface BottomNavProps {
