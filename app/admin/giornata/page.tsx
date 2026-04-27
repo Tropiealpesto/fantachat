@@ -259,7 +259,7 @@ export default function AdminGiornataPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} • ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
 
       <main className="container">
         {/* GIORNATA */}

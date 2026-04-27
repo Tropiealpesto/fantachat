@@ -12,7 +12,7 @@ type Matchday = { id: string; number: number; status: string };
 
 export default function AdminGiornalePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -131,7 +131,7 @@ export default function AdminGiornalePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin â€¢ Il Giornale FantaChat</div>
@@ -230,7 +230,7 @@ type ScheduleRow = {
 
 export default function AdminGiornataPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -469,7 +469,7 @@ export default function AdminGiornataPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
 
       <main className="container">
         {/* GIORNATA */}
@@ -890,7 +890,7 @@ type Summary = {
 
 export default function AdminPodcastPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
@@ -1104,7 +1104,7 @@ export default function AdminPodcastPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
@@ -1271,7 +1271,7 @@ const CLASSIC: Rules = {
 
 export default function AdminRegolePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<Mode>("classic");
@@ -1351,7 +1351,7 @@ export default function AdminRegolePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Regole</div>
@@ -1493,7 +1493,7 @@ const EMPTY: EventForm = {
 
 export default function AdminStatistichePage() {
   const router = useRouter();
-  const { ready, userId, userEmail } = useApp();
+  const { ready, userId, userEmail, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -1832,7 +1832,7 @@ type RealTeam = { id: string; name: string };
 
 export default function AdminTop6Page() {
   const router = useRouter();
-  const { ready, userId, userEmail, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, userEmail, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -2077,7 +2077,7 @@ type PickedPlayerRow = {
 
 export default function AdminVotiPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
@@ -2163,7 +2163,7 @@ export default function AdminVotiPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin â€¢ Voti</div>
@@ -2356,9 +2356,10 @@ Rispondi in JSON con campi: title, content.
 
 import { useApp } from "../components/AppContext";
 import ChatPage from "../components/ChatPage";
+import BottomNav from "../components/BottomNav";
 
 export default function Chat() {
-  const { activeLeagueId, teamId, teamName } = useApp();
+  const { activeLeagueId, teamId, teamName, openDrawer } = useApp();
 
   if (!activeLeagueId || !teamId) {
     return (
@@ -2375,13 +2376,16 @@ export default function Chat() {
   }
 
   return (
-    <div style={{ height: "calc(100dvh - 70px)" }}>
-      <ChatPage
-        leagueId={activeLeagueId}
-        currentTeamId={teamId}
-        currentTeamName={teamName}
-      />
-    </div>
+    <>
+      <div style={{ height: "calc(100dvh - 70px)" }}>
+        <ChatPage
+          leagueId={activeLeagueId}
+          currentTeamId={teamId}
+          currentTeamName={teamName}
+        />
+      </div>
+      <BottomNav />
+    </>
   );
 }
 
@@ -2425,7 +2429,7 @@ type SeriesRoleRow = {
 
 export default function ClassificaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string>("");
@@ -3044,7 +3048,7 @@ import SideDrawer from "./SideDrawer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { teamName, leagueName, role } = useApp();
+  const { teamName, leagueName, role, openDrawer } = useApp();
 
   const isAdmin = role === "admin";
 
@@ -3078,11 +3082,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 import { usePathname, useRouter } from "next/navigation";
 
 const TABS = [
-  { path: "/",           label: "Home",       icon: "ðŸ ", color: "#16A34A" },
-  { path: "/live",       label: "Live",       icon: "âš¡", color: "#F97316" },
-  { path: "/rosa",       label: "Rosa",       icon: "ðŸ‘¥", color: "#16A34A" },
-  { path: "/chat",       label: "Chat",       icon: "ðŸ’¬", color: "#16A34A" },
-  { path: "/classifica", label: "Classifica", icon: "ðŸ†", color: "#F97316" },
+{ path: "/",           label: "Home",       icon: "ðŸ ", color: "#16A34A" },
+{ path: "/live",       label: "Live",       icon: "ðŸ”´", color: "#F97316" },
+{ path: "/rosa",       label: "Rosa",       icon: "ðŸ‘•", color: "#16A34A" },
+{ path: "/chat",       label: "Chat",       icon: "ðŸ’¬", color: "#16A34A" },
+{ path: "/classifica", label: "Classifica", icon: "ðŸ†", color: "#F97316" },
 ];
 
 interface BottomNavProps {
@@ -4461,7 +4465,7 @@ import { useApp } from "./AppContext";
 import SideDrawer from "./SideDrawer";
 
 export default function SideDrawerWrapper() {
-  const { drawerOpen, closeDrawer, teamName, leagueName, role } = useApp();
+  const { drawerOpen, closeDrawer, teamName, leagueName, role, openDrawer } = useApp();
   const isAdmin = role === "admin";
 
   return (
@@ -4671,7 +4675,7 @@ type PlayerCard = {
 export default function GiocatorePage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -4917,7 +4921,7 @@ export default function GiornaleClient() {
   const params = useSearchParams();
   const matchdayFromQuery = params.get("matchday");
 
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<{ id: string; number: number }[]>([]);
@@ -5076,7 +5080,7 @@ type Matchday = {
 
 export default function LivePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LiveRow[]>([]);
@@ -5766,7 +5770,7 @@ type PodcastRow = {
 
 export default function PodcastPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [podcast, setPodcast] = useState<PodcastRow | null>(null);
@@ -6008,7 +6012,7 @@ function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: strin
  
 export default function RosaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
  
   const [loading, setLoading] = useState(true);
   const [matchday, setMatchday] = useState<Matchday | null>(null);
@@ -6559,7 +6563,7 @@ type Row = {
 
 export default function SelezionaLegaPage() {
   const router = useRouter();
-  const { ready, userId } = useApp();
+  const { ready, userId, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
@@ -6834,7 +6838,7 @@ type StatRow = {
 
 export default function StatistichePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -7180,7 +7184,7 @@ const roleColors: Record<string, { bg: string; color: string }> = {
 export default function StoricoDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, teamId, leagueName, teamName } = useApp();
+  const { ready, userId, activeLeagueId, teamId, leagueName, teamName, openDrawer } = useApp();
  
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
@@ -7472,7 +7476,7 @@ const roleColors: Record<string, { bg: string; color: string }> = {
  
 export default function StoricoPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
  
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -7934,7 +7938,7 @@ message: string;
 
 export default function Home() {
 const router = useRouter();
-const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role } = useApp();
+const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
 
 const [loading, setLoading] = useState(true);
 const [matchdayId, setMatchdayId] = useState<string | null>(null);

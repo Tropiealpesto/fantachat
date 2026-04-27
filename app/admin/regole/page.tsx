@@ -117,7 +117,7 @@ export default function AdminRegolePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} • ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Regole</div>
