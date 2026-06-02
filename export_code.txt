@@ -1,4 +1,4 @@
-﻿// FILE: C:\Users\pietr\fanta-app\app\admin\giornale\page.tsx
+﻿===== C:\Users\pietr\fanta-app\app\admin\giornale\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -74,7 +74,7 @@ export default function AdminGiornalePage() {
       .eq("matchday_id", mid)
       .maybeSingle();
 
-    setTitle(data?.title ?? `Il Giornale FantaChat â€“ Giornata ${matchdayNumber ?? ""}`.trim());
+    setTitle(data?.title ?? `Il Giornale FantaChat – Giornata ${matchdayNumber ?? ""}`.trim());
     setContent(data?.content ?? "");
   }
 
@@ -100,7 +100,7 @@ export default function AdminGiornalePage() {
   async function copyPrompt() {
     try {
       await navigator.clipboard.writeText(promptText);
-      setMsg("Prompt copiato âœ…");
+      setMsg("Prompt copiato ✅");
     } catch {
       setErr("Impossibile copiare. Copia manualmente.");
     }
@@ -122,7 +122,7 @@ export default function AdminGiornalePage() {
     setBusy(false);
 
     if (error) return setErr(error.message);
-    setMsg("Giornale salvato âœ…");
+    setMsg("Giornale salvato ✅");
     await loadSavedList();
   }
 
@@ -131,12 +131,12 @@ export default function AdminGiornalePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin â€¢ Il Giornale FantaChat</div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Il Giornale FantaChat</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Seleziona una giornata â†’ copia prompt â†’ ChatGPT â†’ incolla â†’ salva.
+            Seleziona una giornata → copia prompt → ChatGPT → incolla → salva.
           </div>
 
           <select
@@ -151,7 +151,7 @@ export default function AdminGiornalePage() {
             ))}
           </select>
 
-          <div style={{ marginTop: 12, fontWeight: 1000 }}>Prompt (Giornata {matchdayNumber ?? "â€”"})</div>
+          <div style={{ marginTop: 12, fontWeight: 1000 }}>Prompt (Giornata {matchdayNumber ?? "—"})</div>
           <textarea
             value={promptText}
             readOnly
@@ -206,8 +206,7 @@ export default function AdminGiornalePage() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\giornata\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\giornata\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -346,7 +345,7 @@ export default function AdminGiornataPage() {
     const { error } = await supabase.rpc("open_matchday", { p_number: numberToOpen });
     if (error) return setErr(error.message);
 
-    setMsg(`Giornata ${numberToOpen} aperta âœ…`);
+    setMsg(`Giornata ${numberToOpen} aperta ✅`);
     await refresh();
   }
 
@@ -363,7 +362,7 @@ export default function AdminGiornataPage() {
 
     if (error) return setErr(error.message);
 
-    setMsg(`Chiusa provv âœ… (snapshot: ${data})`);
+    setMsg(`Chiusa provv ✅ (snapshot: ${data})`);
     await loadSchedule(current.id);
   }
 
@@ -382,7 +381,7 @@ export default function AdminGiornataPage() {
 
     await supabase.from("matchdays").update({ status: "locked" }).eq("id", current.id);
 
-    setMsg(`Finalizzata âœ… (snapshot: ${data})`);
+    setMsg(`Finalizzata ✅ (snapshot: ${data})`);
     await refresh();
   }
 
@@ -405,7 +404,7 @@ export default function AdminGiornataPage() {
     if (error) return setErr(error.message);
 
     const tName = teams.find((t) => t.id === resetTeamId)?.name || "Squadra";
-    setMsg(`Rosa resettata âœ… (${tName})`);
+    setMsg(`Rosa resettata ✅ (${tName})`);
     await loadSchedule(current.id);
   }
 
@@ -452,13 +451,13 @@ export default function AdminGiornataPage() {
     }
 
     setRecapText(txt);
-    setMsg(`Recap pronto âœ… (${count} squadre)`);
+    setMsg(`Recap pronto ✅ (${count} squadre)`);
   }
 
   async function copyRecap() {
     try {
       await navigator.clipboard.writeText(recapText);
-      setMsg("Recap copiato âœ… Incollalo su WhatsApp.");
+      setMsg("Recap copiato ✅ Incollalo su WhatsApp.");
     } catch {
       setErr("Impossibile copiare automaticamente. Seleziona il testo e copia manualmente.");
     }
@@ -469,12 +468,12 @@ export default function AdminGiornataPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
 
       <main className="container">
         {/* GIORNATA */}
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin â€¢ Giornata</div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Giornata</div>
 
           <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 900 }}>
             {current ? `Open: Giornata ${current.number}` : "Nessuna giornata open"}
@@ -537,7 +536,7 @@ export default function AdminGiornataPage() {
             <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 800 }}>Caricamento...</div>
           ) : scheduleRows.length === 0 ? (
             <div style={{ marginTop: 10, color: "var(--muted)", fontWeight: 800 }}>
-              Nessuno schedule generato (premi â€œGenera recap WhatsAppâ€).
+              Nessuno schedule generato (premi “Genera recap WhatsApp”).
             </div>
           ) : (
             <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
@@ -598,7 +597,7 @@ export default function AdminGiornataPage() {
         <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
           <div style={{ fontWeight: 1000, fontSize: 18 }}>Slot inserimento Rosa (WhatsApp)</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-            Imposta fine slot e genera recap da copiare. (Salta 22:00â€“09:30)
+            Imposta fine slot e genera recap da copiare. (Salta 22:00–09:30)
           </div>
 
           <div style={{ marginTop: 12, fontWeight: 1000 }}>Fine slot (deadline_end_at)</div>
@@ -679,8 +678,7 @@ function suggestFriday20Local() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\partite\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\partite\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -758,14 +756,14 @@ export default function AdminPartitePage() {
       return;
     }
 
-    setMsg(`Salvate ${data} partite âœ…`);
+    setMsg(`Salvate ${data} partite ✅`);
   }
 
   if (loading) return <main className="container">Caricamento...</main>;
 
   return (
     <>
-      <AppBar league="FantaChat" team="Admin â€¢ Partite" />
+      <AppBar league="FantaChat" team="Admin • Partite" />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>
@@ -773,7 +771,7 @@ export default function AdminPartitePage() {
           </div>
 
           <div style={{ marginTop: 12, fontWeight: 900 }}>
-            Numero giornata stagione (1â€“38)
+            Numero giornata stagione (1–38)
           </div>
 
           <input
@@ -862,8 +860,7 @@ const inputStyle = {
 };
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\podcast\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\podcast\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -964,7 +961,7 @@ export default function AdminPodcastPage() {
       }
 
       const rows = (scores || []).map((r: any) => ({
-        teamName: String(r.teams?.name || "â€”"),
+        teamName: String(r.teams?.name || "—"),
         totalScore: Number(r.total_score || 0),
       }));
 
@@ -989,11 +986,11 @@ export default function AdminPodcastPage() {
       const leader: any = leaderRows?.[0];
 
       const s: Summary = {
-        topTeam: top?.teamName || "â€”",
+        topTeam: top?.teamName || "—",
         topScore: Number(top?.totalScore || 0),
-        bottomTeam: bottom?.teamName || "â€”",
+        bottomTeam: bottom?.teamName || "—",
         bottomScore: Number(bottom?.totalScore || 0),
-        leaderTeam: String(leader?.teams?.name || "â€”"),
+        leaderTeam: String(leader?.teams?.name || "—"),
         leaderTotal: Number(leader?.total_score || 0),
       };
 
@@ -1017,8 +1014,8 @@ export default function AdminPodcastPage() {
         "1) Titolo",
         "2) Testo completo del podcast",
         "",
-        "L'estratto iniziale della Home dovrÃ  poter suonare cosÃ¬ nello stile:",
-        `"${s.topTeam} si prende la scena con ${fmt(s.topScore)} punti, mentre ${s.bottomTeam} fa molta fatica e conclude con ${bottomPrefix(s.bottomScore)}${fmt(s.bottomScore)}.\n\nIn cima alla classifica câ€™Ã¨ ${s.leaderTeam} con ${fmt(s.leaderTotal)}."`,
+        "L'estratto iniziale della Home dovrà poter suonare così nello stile:",
+        `"${s.topTeam} si prende la scena con ${fmt(s.topScore)} punti, mentre ${s.bottomTeam} fa molta fatica e conclude con ${bottomPrefix(s.bottomScore)}${fmt(s.bottomScore)}.\n\nIn cima alla classifica c’è ${s.leaderTeam} con ${fmt(s.leaderTotal)}."`,
       ].join("\n");
 
       setPromptText(generatedPrompt);
@@ -1051,7 +1048,7 @@ export default function AdminPodcastPage() {
   async function copyPrompt() {
     try {
       await navigator.clipboard.writeText(promptText);
-      setMsg("Prompt copiato âœ…");
+      setMsg("Prompt copiato ✅");
     } catch {
       setErr("Non sono riuscito a copiare il prompt.");
     }
@@ -1096,7 +1093,7 @@ export default function AdminPodcastPage() {
       return;
     }
 
-    setMsg("Podcast salvato âœ…");
+    setMsg("Podcast salvato ✅");
   }
 
   if (!ready) return <main className="container">Caricamento...</main>;
@@ -1104,7 +1101,7 @@ export default function AdminPodcastPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
@@ -1136,7 +1133,7 @@ export default function AdminPodcastPage() {
         {summary && (
           <div className="card" style={{ padding: 16, marginTop: 12, borderLeft: "6px solid var(--accent)" }}>
             <div style={{ fontWeight: 1000, fontSize: 18 }}>
-              Dati base Â· Giornata {currentMatchdayNumber ?? "â€”"}
+              Dati base · Giornata {currentMatchdayNumber ?? "—"}
             </div>
 
             <div style={{ marginTop: 10, display: "grid", gap: 8, fontWeight: 900 }}>
@@ -1230,8 +1227,7 @@ function bottomPrefix(n: number) {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\regole\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\regole\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -1343,7 +1339,7 @@ export default function AdminRegolePage() {
     setSaving(false);
 
     if (error) return setErr(error.message);
-    setMsg("Regole salvate âœ…");
+    setMsg("Regole salvate ✅");
   }
 
   if (!ready) return <main className="container">Caricamento...</main>;
@@ -1351,7 +1347,7 @@ export default function AdminRegolePage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>Regole</div>
@@ -1371,7 +1367,7 @@ export default function AdminRegolePage() {
             />
             <Choice
               title="Regole personalizzate"
-              desc="âš ï¸ Non standard: responsabilitÃ  dellâ€™admin della lega."
+              desc="⚠️ Non standard: responsabilità dell’admin della lega."
               active={mode === "custom"}
               onClick={() => setMode("custom")}
               accent
@@ -1452,8 +1448,7 @@ function num(v: any, fallback: number) {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\statistiche\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\statistiche\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -1596,7 +1591,7 @@ export default function AdminStatistichePage() {
     setErr(null);
   }, [seasonMatchdayId, seasonMatchdays]);
 
-  // quando digiti/selezi un player (datalist), risolvi id e carica i valori giÃ  salvati
+  // quando digiti/selezi un player (datalist), risolvi id e carica i valori già salvati
   useEffect(() => {
     async function resolveAndLoad() {
       setMsg(null);
@@ -1618,7 +1613,7 @@ export default function AdminStatistichePage() {
         .maybeSingle();
 
       if (error) {
-        // se non esiste, non Ã¨ un errore: settiamo vuoto
+        // se non esiste, non è un errore: settiamo vuoto
         setForm({ ...EMPTY });
         return;
       }
@@ -1679,7 +1674,7 @@ export default function AdminStatistichePage() {
     setBusy(false);
 
     if (error) return setErr(error.message);
-    setMsg("Statistiche salvate âœ…");
+    setMsg("Statistiche salvate ✅");
   }
 
   if (!ready) return <main className="container">Caricamento...</main>;
@@ -1687,7 +1682,7 @@ export default function AdminStatistichePage() {
 
   return (
     <>
-      <AppBar league="FantaChat" team="Super Admin â€¢ Statistiche" />
+      <AppBar league="FantaChat" team="Super Admin • Statistiche" />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
@@ -1772,7 +1767,7 @@ function Stepper(props: { label: string; value: number; onMinus: () => void; onP
     <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 10, alignItems: "center" }}>
       <div style={{ fontWeight: 900 }}>{props.label}</div>
       <button className="btn" type="button" onClick={props.onMinus} style={{ border: "1px solid var(--border)" }}>
-        âˆ’
+        −
       </button>
       <div style={{ minWidth: 44, textAlign: "center", fontWeight: 1000 }}>{props.value}</div>
       <button className="btn" type="button" onClick={props.onPlus} style={{ border: "1px solid var(--border)" }}>
@@ -1816,8 +1811,7 @@ const selectStyle: any = {
 };
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\top6\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\top6\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -1846,7 +1840,7 @@ export default function AdminTop6Page() {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // âœ… redirect immediato se non super admin
+  // ✅ redirect immediato se non super admin
   useEffect(() => {
     async function checkSuperAdmin() {
       if (!ready) return;
@@ -1884,7 +1878,7 @@ export default function AdminTop6Page() {
     async function loadData() {
       if (!ready) return;
       if (!userId) return;
-      if (!activeLeagueId) return; // se non c'Ã¨ lega attiva, la home lo gestisce
+      if (!activeLeagueId) return; // se non c'è lega attiva, la home lo gestisce
 
       // matchdays per lega attiva
       const { data: mds } = await supabase
@@ -1908,7 +1902,7 @@ export default function AdminTop6Page() {
       setTeams((rts || []) as RealTeam[]);
     }
 
-    // carichiamo i dati solo quando la pagina Ã¨ â€œautorizzataâ€
+    // carichiamo i dati solo quando la pagina è “autorizzata”
     if (!loading) loadData();
   }, [ready, userId, activeLeagueId, loading]);
 
@@ -1959,7 +1953,7 @@ export default function AdminTop6Page() {
     setSaving(false);
 
     if (error) return setErr(error.message);
-    setMsg("Top6 salvata âœ…");
+    setMsg("Top6 salvata ✅");
   }
 
   if (!ready) return <main className="container">Caricamento...</main>;
@@ -1967,11 +1961,11 @@ export default function AdminTop6Page() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ SUPER ADMIN`} />
+      <AppBar league={leagueName} team={`${teamName} • SUPER ADMIN`} />
 
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>Super Admin â€¢ Top6</div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Super Admin • Top6</div>
           <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
             Imposta la Top6 globale (valida per tutte le leghe).
           </div>
@@ -2054,8 +2048,7 @@ export default function AdminTop6Page() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\admin\voti\page.tsx
+===== C:\Users\pietr\fanta-app\app\admin\voti\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -2154,7 +2147,7 @@ export default function AdminVotiPage() {
     setSaving(false);
 
     if (error) { setErr(error.message); return; }
-    setMsg(`Salvati ${data} voti âœ…`);
+    setMsg(`Salvati ${data} voti ✅`);
     await loadPicked(matchdayId);
   }
 
@@ -2163,10 +2156,10 @@ export default function AdminVotiPage() {
 
   return (
     <>
-      <AppBar league={leagueName} team={`${teamName} â€¢ ADMIN`} onMenuOpen={openDrawer} />
+      <AppBar league={leagueName} team={`${teamName} • ADMIN`} onMenuOpen={openDrawer} />
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
-          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin â€¢ Voti</div>
+          <div style={{ fontSize: 22, fontWeight: 1000 }}>Admin • Voti</div>
 
           <select
             value={matchdayId}
@@ -2194,7 +2187,7 @@ export default function AdminVotiPage() {
             {rows.map((r) => (
               <div key={r.player_id} className="card" style={{ padding: 12, boxShadow: "none" }}>
                 <div style={{ fontWeight: 1000 }}>
-                  {r.player_name} <span style={{ color: "var(--muted)" }}>Â· {r.real_team} Â· {r.role}</span>
+                  {r.player_name} <span style={{ color: "var(--muted)" }}>· {r.real_team} · {r.role}</span>
                 </div>
                 <div style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center" }}>
                   <input
@@ -2219,8 +2212,7 @@ export default function AdminVotiPage() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\api\generate-article\route.ts
+===== C:\Users\pietr\fanta-app\app\api\generate-article\route.ts =====
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabaseServer";
 
@@ -2232,7 +2224,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing league_id or matchday_id" }, { status: 400 });
     }
 
-    // 1) Prendiamo dati â€œsintesiâ€ dal DB per il prompt
+    // 1) Prendiamo dati “sintesi” dal DB per il prompt
     // Classifica giornata: dalla snapshot (se esiste), altrimenti dai live scores.
     const { data: scoresSnap } = await supabaseServer
       .from("matchday_team_scores")
@@ -2267,7 +2259,7 @@ export async function POST(req: Request) {
       ? { team: (table[0] as any).teams?.name ?? "?", total: Number((table[0] as any).total_score ?? 0) }
       : null;
 
-    // 2) Prompt â€œproâ€
+    // 2) Prompt “pro”
     const prompt = `
 Sei un giornalista sportivo italiano, ironico ma elegante.
 Scrivi un articolo breve (max ~300-450 parole) per il "Giornale FantaChat".
@@ -2284,10 +2276,10 @@ ${scores.slice(0, 6).map((x, i) => `${i + 1}) ${x.team} - ${x.score}`).join("\n"
 Linee guida:
 - Titolo in una riga
 - 3-5 paragrafi
-- Sezione â€œMVP di giornataâ€ (squadra)
-- Sezione â€œFlop di giornataâ€ (squadra)
-- Chiusura con battuta o teaser (â€œci vediamo alla prossimaâ€¦â€)
-Niente volgaritÃ , niente attacchi personali.
+- Sezione “MVP di giornata” (squadra)
+- Sezione “Flop di giornata” (squadra)
+- Chiusura con battuta o teaser (“ci vediamo alla prossima…”)
+Niente volgarità, niente attacchi personali.
 Rispondi in JSON con campi: title, content.
 `.trim();
 
@@ -2320,11 +2312,11 @@ Rispondi in JSON con campi: title, content.
     try {
       parsed = JSON.parse(raw);
     } catch {
-      // fallback: se non Ã¨ JSON
-      parsed = { title: `Giornale FantaChat â€“ Giornata ${matchdayNumber ?? ""}`.trim(), content: String(raw) };
+      // fallback: se non è JSON
+      parsed = { title: `Giornale FantaChat – Giornata ${matchdayNumber ?? ""}`.trim(), content: String(raw) };
     }
 
-    const title = String(parsed.title || `Giornale FantaChat â€“ Giornata ${matchdayNumber ?? ""}`).trim();
+    const title = String(parsed.title || `Giornale FantaChat – Giornata ${matchdayNumber ?? ""}`).trim();
     const content = String(parsed.content || "").trim();
 
     if (!content) {
@@ -2350,8 +2342,7 @@ Rispondi in JSON con campi: title, content.
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\chat\page.tsx
+===== C:\Users\pietr\fanta-app\app\chat\page.tsx =====
 "use client";
 
 import { useApp } from "../components/AppContext";
@@ -2389,9 +2380,7 @@ export default function Chat() {
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\classifica\page.tsx
+===== C:\Users\pietr\fanta-app\app\classifica\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -2540,9 +2529,9 @@ export default function ClassificaPage() {
   const myStats = table.find((r) => r.team_id === teamId);
 
   const rankMedal = (i: number) => {
-    if (i === 0) return "ðŸ¥‡";
-    if (i === 1) return "ðŸ¥ˆ";
-    if (i === 2) return "ðŸ¥‰";
+    if (i === 0) return "🥇";
+    if (i === 1) return "🥈";
+    if (i === 2) return "🥉";
     return String(i + 1);
   };
 
@@ -2552,7 +2541,7 @@ export default function ClassificaPage() {
 
       <main style={s.container}>
 
-        {/* â”€â”€ PAGE HEADER â”€â”€ */}
+        {/* ── PAGE HEADER ── */}
         <div style={s.pageHeader}>
           <div style={s.pageTitle}>Classifica</div>
           {updatedAt && (
@@ -2563,7 +2552,7 @@ export default function ClassificaPage() {
           )}
         </div>
 
-        {/* â”€â”€ CHART CARD â”€â”€ */}
+        {/* ── CHART CARD ── */}
         <div style={s.card}>
           <div style={s.chartTop}>
             <div>
@@ -2645,7 +2634,7 @@ export default function ClassificaPage() {
           )}
         </div>
 
-        {/* â”€â”€ TABLE CARD â”€â”€ */}
+        {/* ── TABLE CARD ── */}
         <div style={{ ...s.card, padding: 0, overflow: "hidden" }}>
           <div style={s.tableHeader}>
             <div style={s.tableTitle}>FantaChat Campionato</div>
@@ -2682,7 +2671,7 @@ export default function ClassificaPage() {
                   {rankMedal(idx)}
                 </div>
                 <div style={{ ...s.teamCell, flex: 1, color: isMine ? "#15803d" : isBottom ? "#ea580c" : "#111827", fontWeight: isMine ? 700 : 600 }}>
-                  {r.team_name}{isMine ? " âœ¦" : ""}
+                  {r.team_name}{isMine ? " ✦" : ""}
                 </div>
                 <div style={{ ...s.totCell, color: isMine ? "#15803d" : isBottom ? "#ea580c" : "#111827" }}>
                   {fmt(r.total_score)}
@@ -2703,7 +2692,7 @@ export default function ClassificaPage() {
   );
 }
 
-// â”€â”€â”€ SUB-COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SUB-COMPONENTS ───────────────────────────────────────
 
 function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -2741,7 +2730,7 @@ function RolePill({ active, onClick, children }: { active: boolean; onClick: () 
   );
 }
 
-// â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── HELPERS ──────────────────────────────────────────────
 
 function fmt(n: number) {
   const s = Math.round((Number(n) || 0) * 10) / 10;
@@ -2759,7 +2748,7 @@ function subStyle(v: number): React.CSSProperties {
   };
 }
 
-// â”€â”€â”€ STYLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── STYLES ───────────────────────────────────────────────
 
 const s: Record<string, React.CSSProperties> = {
   container: {
@@ -2842,8 +2831,7 @@ const s: Record<string, React.CSSProperties> = {
 };
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\components\AppBar.tsx
+===== C:\Users\pietr\fanta-app\app\components\AppBar.tsx =====
 "use client";
 
 export default function AppBar(props: {
@@ -2883,7 +2871,7 @@ export default function AppBar(props: {
             <span className="logo-chat">Chat</span>
           </div>
           <div className="appbar-sub">
-            {props.league} Â· {props.team}
+            {props.league} · {props.team}
           </div>
         </div>
 
@@ -2895,9 +2883,7 @@ export default function AppBar(props: {
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\AppContext.tsx
+===== C:\Users\pietr\fanta-app\app\components\AppContext.tsx =====
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -2934,9 +2920,9 @@ export function AppProvider(props: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState<string>("â€”");
+  const [leagueName, setLeagueName] = useState<string>("—");
   const [teamId, setTeamId] = useState<string | null>(null);
-  const [teamName, setTeamName] = useState<string>("â€”");
+  const [teamName, setTeamName] = useState<string>("—");
   const [role, setRole] = useState<AppRole | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -2948,9 +2934,9 @@ export function AppProvider(props: { children: React.ReactNode }) {
       setUserId(null);
       setUserEmail(null);
       setActiveLeagueId(null);
-      setLeagueName("â€”");
+      setLeagueName("—");
       setTeamId(null);
-      setTeamName("â€”");
+      setTeamName("—");
       setRole(null);
       setReady(true);
       return;
@@ -2969,9 +2955,9 @@ export function AppProvider(props: { children: React.ReactNode }) {
     setActiveLeagueId(lid);
 
     if (!lid) {
-      setLeagueName("â€”");
+      setLeagueName("—");
       setTeamId(null);
-      setTeamName("â€”");
+      setTeamName("—");
       setRole(null);
       setReady(true);
       return;
@@ -2985,9 +2971,9 @@ export function AppProvider(props: { children: React.ReactNode }) {
       .maybeSingle();
 
     if (!mem) {
-      setLeagueName("â€”");
+      setLeagueName("—");
       setTeamId(null);
-      setTeamName("â€”");
+      setTeamName("—");
       setRole(null);
       setReady(true);
       return;
@@ -3001,8 +2987,8 @@ export function AppProvider(props: { children: React.ReactNode }) {
       supabase.from("teams").select("name").eq("id", mem.team_id).single(),
     ]);
 
-    setLeagueName(lg?.name ?? "â€”");
-    setTeamName(tm?.name ?? "â€”");
+    setLeagueName(lg?.name ?? "—");
+    setTeamName(tm?.name ?? "—");
     setReady(true);
   }
 
@@ -3036,9 +3022,7 @@ export function AppProvider(props: { children: React.ReactNode }) {
   return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\AppLayout.tsx
+===== C:\Users\pietr\fanta-app\app\components\AppLayout.tsx =====
 "use client";
 
 import React, { useState } from "react";
@@ -3074,19 +3058,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\BottomNav.tsx
+===== C:\Users\pietr\fanta-app\app\components\BottomNav.tsx =====
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
 
 const TABS = [
-{ path: "/",           label: "Home",       icon: "ðŸ ", color: "#16A34A" },
-{ path: "/live",       label: "Live",       icon: "ðŸ”´", color: "#F97316" },
-{ path: "/rosa",       label: "Rosa",       icon: "ðŸ‘•", color: "#16A34A" },
-{ path: "/chat",       label: "Chat",       icon: "ðŸ’¬", color: "#16A34A" },
-{ path: "/classifica", label: "Classifica", icon: "ðŸ†", color: "#F97316" },
+{ path: "/",           label: "Home",       icon: "🏠", color: "#16A34A" },
+{ path: "/live",       label: "Live",       icon: "🔴", color: "#F97316" },
+{ path: "/rosa",       label: "Rosa",       icon: "👕", color: "#16A34A" },
+{ path: "/chat",       label: "Chat",       icon: "💬", color: "#16A34A" },
+{ path: "/classifica", label: "Classifica", icon: "🏆", color: "#F97316" },
 ];
 
 interface BottomNavProps {
@@ -3198,9 +3180,7 @@ export default function BottomNav({ onMenuOpen, unreadCount = 0 }: BottomNavProp
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\ChatPage.tsx
+===== C:\Users\pietr\fanta-app\app\components\ChatPage.tsx =====
 'use client';
 
 // components/ChatPage.tsx
@@ -3221,7 +3201,7 @@ import {
 } from '@/lib/chatHelpers';
 import type { ChatMessage, LineupData } from '@/lib/chat';
 
-// â”€â”€â”€ PROPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PROPS ────────────────────────────────────────────────────────────────
 interface ChatPageProps {
   leagueId: string;
   currentTeamId: string;
@@ -3229,7 +3209,7 @@ interface ChatPageProps {
   allTeamNames?: string[]; // per autocomplete @menzioni
 }
 
-// â”€â”€â”€ SUB-COMPONENTI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── SUB-COMPONENTI ───────────────────────────────────────────────────────
 
 // Card formazione compatta
 function LineupCard({ data, teamName }: { data: LineupData; teamName: string }) {
@@ -3258,7 +3238,7 @@ function LineupCard({ data, teamName }: { data: LineupData; teamName: string }) 
         alignItems: 'center',
       }}>
         <span style={{ color: 'white', fontSize: '12px', fontWeight: 700 }}>
-          ðŸ“‹ {teamName}
+          📋 {teamName}
         </span>
         <span style={{
           background: 'rgba(255,255,255,0.2)',
@@ -3374,7 +3354,7 @@ function MatchdayDivider({ matchdayNumber }: { matchdayNumber: number }) {
         whiteSpace: 'nowrap',
         boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
       }}>
-        âš½ Giornata {matchdayNumber}
+        ⚽ Giornata {matchdayNumber}
       </div>
       <div style={{ flex: 1, height: '2px', background: 'linear-gradient(to left, transparent, #16A34A)' }} />
     </div>
@@ -3496,7 +3476,7 @@ function MessageBubble({
   );
 }
 
-// â”€â”€â”€ COMPONENTE PRINCIPALE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── COMPONENTE PRINCIPALE ────────────────────────────────────────────────
 export default function ChatPage({
   leagueId,
   currentTeamId,
@@ -3696,7 +3676,7 @@ export default function ChatPage({
           justifyContent: 'center',
           fontSize: '18px',
         }}>
-          ðŸ’¬
+          💬
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: '15px', color: '#111827' }}>
@@ -3739,7 +3719,7 @@ export default function ChatPage({
             color: '#9CA3AF',
             gap: '12px',
           }}>
-            <div style={{ fontSize: '40px' }}>ðŸ’¬</div>
+            <div style={{ fontSize: '40px' }}>💬</div>
             <div style={{ fontSize: '14px', textAlign: 'center' }}>
               Nessun messaggio ancora.<br />
               Inizia la conversazione!
@@ -3944,9 +3924,7 @@ export default function ChatPage({
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\LoadingScreen.tsx
+===== C:\Users\pietr\fanta-app\app\components\LoadingScreen.tsx =====
 "use client";
 
 export default function LoadingScreen() {
@@ -4060,8 +4038,7 @@ const s: Record<string, React.CSSProperties> = {
 };
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\components\SeasonBarChart.tsx
+===== C:\Users\pietr\fanta-app\app\components\SeasonBarChart.tsx =====
 "use client";
 
 import React, { useMemo } from "react";
@@ -4105,8 +4082,8 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
     const isPos = value > 0;
 
     // Positivi: etichetta sopra la barra
-    // Negativi: p.y Ã¨ il top (zero line), p.height scende verso il basso
-    //           quindi il fondo Ã¨ p.y + p.height â†’ etichetta sotto il fondo
+    // Negativi: p.y è il top (zero line), p.height scende verso il basso
+    //           quindi il fondo è p.y + p.height → etichetta sotto il fondo
     const y = isPos ? p.y - 5 : p.y + p.height + 11;
 
     return (
@@ -4182,8 +4159,7 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\components\SideDrawer.tsx
+===== C:\Users\pietr\fanta-app\app\components\SideDrawer.tsx =====
 'use client';
 
 import React, { useEffect } from 'react';
@@ -4341,7 +4317,7 @@ function AdminButton({ href, icon, label, onClick }: {
 export default function SideDrawer({
   isOpen, onClose, teamName, leagueName, isAdmin = false, isSuperAdmin = false,
 }: SideDrawerProps) {
-  // â† useRouter va QUI, dentro il componente principale
+  // ← useRouter va QUI, dentro il componente principale
   const router = useRouter();
 
   useEffect(() => {
@@ -4381,7 +4357,7 @@ export default function SideDrawer({
               {leagueName && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>{leagueName}</div>}
               {teamName && (
                 <div style={{ fontSize: '16px', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span>ðŸ‘‹</span> {teamName}
+                  <span>👋</span> {teamName}
                 </div>
               )}
             </div>
@@ -4444,10 +4420,10 @@ export default function SideDrawer({
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EF4444'; e.currentTarget.style.color = '#EF4444'; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#6B7280'; }}
           >
-            ðŸšª Esci dalla lega
+            🚪 Esci dalla lega
           </button>
           <div style={{ fontSize: '11px', color: '#D1D5DB', textAlign: 'center' }}>
-            FantaChat Â© 2026
+            FantaChat © 2026
           </div>
         </div>
 
@@ -4456,9 +4432,7 @@ export default function SideDrawer({
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\components\SideDrawerWrapper.tsx
+===== C:\Users\pietr\fanta-app\app\components\SideDrawerWrapper.tsx =====
 "use client";
 
 import { useApp } from "./AppContext";
@@ -4480,9 +4454,7 @@ export default function SideDrawerWrapper() {
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\crea-lega\page.tsx
+===== C:\Users\pietr\fanta-app\app\crea-lega\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -4567,7 +4539,7 @@ export default function CreaLegaPage() {
 
     if (error) return setErr(error.message);
 
-    setMsg("Lega creata âœ…");
+    setMsg("Lega creata ✅");
     setTimeout(() => router.replace("/"), 700);
   }
 
@@ -4643,8 +4615,7 @@ export default function CreaLegaPage() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\giocatore\[id]\page.tsx
+===== C:\Users\pietr\fanta-app\app\giocatore\[id]\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -4820,7 +4791,7 @@ export default function GiocatorePage() {
               <div style={{ fontSize: 24, fontWeight: 1000 }}>{card.player_name}</div>
               <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
                 {roleLabel(card.role)}
-                {card.real_team_name ? ` Â· ${card.real_team_name}` : ""}
+                {card.real_team_name ? ` · ${card.real_team_name}` : ""}
               </div>
             </div>
 
@@ -4885,12 +4856,12 @@ function Kpi(props: { title: string; value: string }) {
 }
 
 function fmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "â€”";
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
   return (Math.round(n * 10) / 10).toString().replace(".", ",");
 }
 
 function signedFmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "â€”";
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
   const v = Math.round(n * 10) / 10;
   if (v > 0) return `+${String(v).replace(".", ",")}`;
   return String(v).replace(".", ",");
@@ -4901,12 +4872,11 @@ function roleLabel(role: string) {
   if (role === "DEF") return "Difensore";
   if (role === "MID") return "Centrocampista";
   if (role === "FWD") return "Attaccante";
-  return role || "â€”";
+  return role || "—";
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\giornale\GiornaleClient.tsx
+===== C:\Users\pietr\fanta-app\app\giornale\GiornaleClient.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -4992,7 +4962,7 @@ export default function GiornaleClient() {
       <main className="container">
         <div className="card" style={{ padding: 16, marginTop: 12 }}>
           <div style={{ fontSize: 22, fontWeight: 1000 }}>
-            {title}{matchdayNumber ? ` â€¢ Giornata ${matchdayNumber}` : ""}
+            {title}{matchdayNumber ? ` • Giornata ${matchdayNumber}` : ""}
           </div>
 
           <div style={{ marginTop: 12 }}>
@@ -5024,8 +4994,7 @@ export default function GiornaleClient() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\giornale\page.tsx
+===== C:\Users\pietr\fanta-app\app\giornale\page.tsx =====
 "use client";
 
 import { Suspense } from "react";
@@ -5042,8 +5011,7 @@ export default function Page() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\live\page.tsx
+===== C:\Users\pietr\fanta-app\app\live\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -5136,7 +5104,7 @@ export default function LivePage() {
 
     const normalized: LiveRow[] = (data || []).map((r: any) => ({
       team_id: String(r.team_id),
-      team_name: String(r.team_name || "â€”"),
+      team_name: String(r.team_name || "—"),
       base_total: Number(r.base_total || 0),
       live_score: Number(r.live_score || 0),
       live_total: Number(r.live_total || 0),
@@ -5184,8 +5152,8 @@ export default function LivePage() {
   const titleLabel = useMemo(() => {
     if (!matchday) return "Classifica campionato";
     return matchday.status === "open"
-      ? `Classifica campionato live Â· Giornata ${matchday.number}`
-      : `Classifica campionato Â· Ultima giornata ${matchday.number}`;
+      ? `Classifica campionato live · Giornata ${matchday.number}`
+      : `Classifica campionato · Ultima giornata ${matchday.number}`;
   }, [matchday]);
 
   if (!ready) return <LoadingScreen />;
@@ -5292,9 +5260,9 @@ export default function LivePage() {
 
                     <div style={{ width: 22, textAlign: "center", fontWeight: 1000, fontSize: 20 }}>
                       {movement === "up" ? (
-                        <span style={{ color: "var(--primary-dark)" }}>â†‘</span>
+                        <span style={{ color: "var(--primary-dark)" }}>↑</span>
                       ) : movement === "down" ? (
-                        <span style={{ color: "var(--accent-dark)" }}>â†“</span>
+                        <span style={{ color: "var(--accent-dark)" }}>↓</span>
                       ) : null}
                     </div>
                   </div>
@@ -5348,7 +5316,7 @@ function MiniPlayerRow(props: { role: string; name: string | null; vote: number 
           textOverflow: "ellipsis",
         }}
       >
-        {hasName ? props.name : "â€”"}
+        {hasName ? props.name : "—"}
       </div>
       <div style={{ fontWeight: 900 }}>{signedFmt(props.vote)}</div>
     </div>
@@ -5368,8 +5336,7 @@ function signedFmt(n: number) {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\login\page.tsx
+===== C:\Users\pietr\fanta-app\app\login\page.tsx =====
 "use client";
  
 import { useEffect, useMemo, useState } from "react";
@@ -5475,7 +5442,7 @@ export default function LoginPage() {
         lower.includes("already been registered") ||
         lower.includes("user already registered")
       ) {
-        setErr("Email giÃ  registrata.");
+        setErr("Email già registrata.");
       } else {
         setErr(error.message);
       }
@@ -5750,9 +5717,7 @@ const inputStyle: React.CSSProperties = {
   marginTop: 6,
 };
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\podcast\page.tsx
+===== C:\Users\pietr\fanta-app\app\podcast\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5888,8 +5853,7 @@ export default function PodcastPage() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\rosa\page.tsx
+===== C:\Users\pietr\fanta-app\app\rosa\page.tsx =====
 "use client";
  
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -5915,8 +5879,8 @@ type PickRow = {
 type FieldKey = "gk" | "def" | "mid" | "fwd" | null;
 type AvgRow = { player_id: string; avg_points: number | null };
  
-// â”€â”€â”€ CAMPO DA CALCIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Per modificare le dimensioni dei testi cerca i commenti con â† qui sotto
+// ─── CAMPO DA CALCIO ──────────────────────────────────────────────────────────
+// Per modificare le dimensioni dei testi cerca i commenti con ← qui sotto
  
 function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: string }) {
   const positions = [
@@ -5958,15 +5922,15 @@ function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: strin
           }}>
             {/* Badge ruolo */}
             <div style={{
-              width: 38,           // â† larghezza badge
-              height: 38,          // â† altezza badge
+              width: 38,           // ← larghezza badge
+              height: 38,          // ← altezza badge
               borderRadius: 9,
               background: pos.bg,
               color: pos.color,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 15,        // â† dimensione lettera nel badge
+              fontSize: 15,        // ← dimensione lettera nel badge
               fontWeight: 900,
               border: "2px solid rgba(255,255,255,0.6)",
               fontFamily: "'Nunito', sans-serif",
@@ -5977,12 +5941,12 @@ function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: strin
             <div style={{
               background: "rgba(0,0,0,0.65)",
               color: "white",
-              fontSize: 12,        // â† dimensione testo nome
+              fontSize: 12,        // ← dimensione testo nome
               fontWeight: 800,
               borderRadius: 6,
               padding: "3px 9px",
               whiteSpace: "nowrap",
-              maxWidth: 130,       // â† larghezza massima (tronca con ...)
+              maxWidth: 130,       // ← larghezza massima (tronca con ...)
               overflow: "hidden",
               textOverflow: "ellipsis",
               textAlign: "center",
@@ -6008,7 +5972,7 @@ function CampoDaCalcio(props: { gk: string; def: string; mid: string; fwd: strin
     </div>
   );
 }
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
  
 export default function RosaPage() {
   const router = useRouter();
@@ -6214,10 +6178,10 @@ setAvgMap(avgPointsMap);
         const mip = pm.get((pick as any).mid_player_id);
         const fwp = pm.get((pick as any).fwd_player_id);
         setSavedNames({
-          gk:  gkp ? labelFn(gkp) : "â€”",
-          def: dep ? labelFn(dep) : "â€”",
-          mid: mip ? labelFn(mip) : "â€”",
-          fwd: fwp ? labelFn(fwp) : "â€”",
+          gk:  gkp ? labelFn(gkp) : "—",
+          def: dep ? labelFn(dep) : "—",
+          mid: mip ? labelFn(mip) : "—",
+          fwd: fwp ? labelFn(fwp) : "—",
         });
       } else {
         setSavedPick(null);
@@ -6254,15 +6218,15 @@ setAvgMap(avgPointsMap);
  
     if (error) {
       const m = error.message || "Errore salvataggio";
-      if (m.includes("ALREADY_SUBMITTED"))    setErr("Hai giÃ  inviato la rosa per questa giornata.");
-      else if (m.includes("PLAYER_ALREADY_TAKEN")) setErr("Uno dei giocatori Ã¨ giÃ  stato preso da un'altra squadra.");
+      if (m.includes("ALREADY_SUBMITTED"))    setErr("Hai già inviato la rosa per questa giornata.");
+      else if (m.includes("PLAYER_ALREADY_TAKEN")) setErr("Uno dei giocatori è già stato preso da un'altra squadra.");
       else if (m.includes("DUPLICATE_REAL_TEAM"))  setErr("Non puoi scegliere due giocatori della stessa squadra.");
       else if (m.includes("TOO_MANY_TOP6"))        setErr("Puoi scegliere al massimo 1 giocatore da una squadra Top6.");
       else setErr(m);
       return;
     }
  
-    setMsg("Rosa inviata âœ…");
+    setMsg("Rosa inviata ✅");
     window.location.reload();
   }
  
@@ -6286,7 +6250,7 @@ setAvgMap(avgPointsMap);
           <div className="rosa-giornata-row">
             <div>
               <div className="rosa-giornata-label">Giornata corrente</div>
-              <div className="rosa-giornata-val">{matchday ? `${matchday.number} / 38` : "â€” / 38"}</div>
+              <div className="rosa-giornata-val">{matchday ? `${matchday.number} / 38` : "— / 38"}</div>
             </div>
             {matchday && (
               <span className="rosa-locked">
@@ -6322,7 +6286,7 @@ setAvgMap(avgPointsMap);
                   padding: 16, display: "flex", gap: 12,
                   alignItems: "flex-start", marginBottom: 20,
                 }}>
-                  <span style={{ fontSize: 20, flexShrink: 0 }}>âš ï¸</span>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>⚠️</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#ea580c", marginBottom: 4 }}>Nessuna giornata aperta</div>
                     <div style={{ fontSize: 13, color: "#9a3412", lineHeight: 1.55, fontWeight: 500 }}>
@@ -6343,7 +6307,7 @@ setAvgMap(avgPointsMap);
             </>
           )}
  
-          {/* â”€â”€ CAMPO DA CALCIO â”€â”€ sempre visibile */}
+          {/* ── CAMPO DA CALCIO ── sempre visibile */}
           <div style={{ marginTop: 16 }}>
             <div style={{
               fontSize: 11, fontWeight: 800, color: "#5a8a6e",
@@ -6487,7 +6451,7 @@ function PlayerPicker(props: {
         const avgText =
           typeof avg === "number" && Number.isFinite(avg)
             ? String(avg).replace(".", ",")
-            : "â€”";
+            : "—";
 
         return (
           <button
@@ -6513,7 +6477,7 @@ function PlayerPicker(props: {
               {teamName ? (
                 <span style={{ color: "#6b7280", fontWeight: 700 }}> ({teamName})</span>
               ) : null}
-              {isTop6 ? <span style={{ marginLeft: 6 }}>â­</span> : null}
+              {isTop6 ? <span style={{ marginLeft: 6 }}>⭐</span> : null}
             </span>
 
             <span style={{ flexShrink: 0, fontWeight: 900 }}>{avgText}</span>
@@ -6540,9 +6504,254 @@ function ReadonlyBox({ label, value, role }: { label: string; value: string; rol
   );
 }
 
+===== C:\Users\pietr\fanta-app\app\rosa\rosa.css =====
+.rosa-card {
+  background: var(--card-bg, #fff);
+  border: 0.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 12px;
+}
+ 
+.rosa-card-green {
+  border-color: #1a7a3e;
+}
+ 
+.rosa-giornata-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+ 
+.rosa-giornata-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+ 
+.rosa-giornata-val {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--color-text-primary, #111);
+}
+ 
+.rosa-locked {
+  font-size: 11px;
+  font-weight: 800;
+  background: #f3f4f6;
+  color: #888;
+  border-radius: 20px;
+  padding: 3px 10px;
+  border: 0.5px solid #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+ 
+.rosa-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--color-text-primary, #111);
+  margin: 0 0 4px;
+}
+ 
+.rosa-desc {
+  font-size: 12px;
+  color: var(--muted, #888);
+  font-weight: 700;
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+ 
+.rosa-field {
+  margin-bottom: 12px;
+}
+ 
+.rosa-field-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted, #888);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: block;
+}
+ 
+.rosa-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.rosa-role-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 900;
+  font-family: 'Nunito', sans-serif;
+}
+ 
+.rosa-role-gk {
+  background: #fefce8;
+  color: #a16207;
+}
+ 
+.rosa-role-def {
+  background: #e8f5ee;
+  color: #1a5c33;
+}
+ 
+.rosa-role-mid {
+  background: #e6f1fb;
+  color: #0c447c;
+}
+ 
+.rosa-role-fwd {
+  background: #fcebeb;
+  color: #a32d2d;
+}
+ 
+.rosa-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted, #888);
+  background: #f9fafb;
+  width: 100%;
+}
+ 
+.rosa-btn {
+  width: 100%;
+  padding: 14px;
+  background: #1a7a3e;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 4px;
+}
+ 
+.rosa-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+ 
+.rosa-stats-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+ 
+.rosa-stat {
+  background: var(--card-bg, #fff);
+  border: 1.5px solid #f5c990;
+  border-radius: 14px;
+  padding: 13px 14px;
+}
+ 
+.rosa-stat-label {
+  font-size: 13px;
+  font-weight: 900;
+  color: #e07b1a;
+  margin-bottom: 4px;
+}
+ 
+.rosa-stat-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #888);
+}
+ 
+.rosa-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+ 
+.rosa-table td {
+  padding: 5px 4px;
+  border-bottom: 1px solid #fde8d0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-primary, #111);
+}
+ 
+.rosa-table td.rank {
+  width: 20px;
+  color: #e07b1a;
+  font-weight: 900;
+}
+ 
+.rosa-alert {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+ 
+.rosa-alert-warn {
+  background: #fff4ea;
+  border: 1px solid #f5c990;
+  color: #b85c0a;
+}
+ 
+.rosa-alert-success {
+  background: #e8f5ee;
+  border: 1px solid #a3d9b8;
+  color: #1a5c33;
+}
+ 
+.rosa-alert-error {
+  background: #fff4ea;
+  border: 1px solid #f5c990;
+  color: #b85c0a;
+}
+ 
+.rosa-readonly-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+ 
+.rosa-readonly-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+ 
+.rosa-readonly-val {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--color-text-primary, #111);
+}
 
-
-// FILE: C:\Users\pietr\fanta-app\app\seleziona-lega\page.tsx
+===== C:\Users\pietr\fanta-app\app\seleziona-lega\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6607,7 +6816,7 @@ async function setLeague(leagueId: string) {
     return;
   }
 
-  setMsg("Lega selezionata âœ…");
+  setMsg("Lega selezionata ✅");
 
   setTimeout(() => {
     window.location.href = "/";
@@ -6678,7 +6887,7 @@ async function setLeague(leagueId: string) {
                     <div className="fc-league-meta">{r.teams?.name || "Squadra"}</div>
                   </div>
                   <span className="fc-badge-admin">{String(r.role).toUpperCase()}</span>
-                  <span style={{ color: "#aaa", fontSize: 16 }}>â€º</span>
+                  <span style={{ color: "#aaa", fontSize: 16 }}>›</span>
                 </button>
               ))
             )}
@@ -6781,7 +6990,7 @@ async function setLeague(leagueId: string) {
                   <div>
                     <p className="fc-step-label">Tocca il menu</p>
                     <p className="fc-step-desc">
-                      Premi i tre puntini <span className="fc-step-inline">â‹®</span> in alto a destra.
+                      Premi i tre puntini <span className="fc-step-inline">⋮</span> in alto a destra.
                     </p>
                   </div>
                 </div>
@@ -6805,9 +7014,296 @@ async function setLeague(leagueId: string) {
   );
 }
 
+===== C:\Users\pietr\fanta-app\app\seleziona-lega\seleziona-lega.css =====
+.fc-page {
+  font-family: 'Nunito', sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 100px;
+}
 
+.fc-section-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-text-primary, #111);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
 
-// FILE: C:\Users\pietr\fanta-app\app\statistiche\page.tsx
+.fc-section-desc {
+  font-size: 13px;
+  color: var(--muted, #888);
+  margin: 0 0 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.fc-league-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fc-league-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card-bg, #fff);
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 13px 15px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.fc-league-item:hover {
+  border-color: #1a7a3e;
+}
+
+.fc-league-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #e8f5ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fc-league-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fc-league-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-league-meta {
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.fc-badge-admin {
+  font-size: 10px;
+  font-weight: 800;
+  background: #fff4ea;
+  color: #e07b1a;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  border: 1px solid #f5c990;
+}
+
+.fc-badge-active {
+  font-size: 10px;
+  font-weight: 800;
+  background: #1a7a3e;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.fc-btn-create {
+  width: 100%;
+  padding: 15px;
+  background: #1a7a3e;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.fc-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.fc-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.fc-divider-text {
+  font-size: 11px;
+  color: var(--muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 800;
+}
+
+.fc-install-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.fc-install-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fc-install-icon {
+  width: 38px;
+  height: 38px;
+  background: #e07b1a;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fc-install-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary, #111);
+  margin: 0;
+}
+
+.fc-install-sub {
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin: 2px 0 0;
+  font-weight: 700;
+}
+
+.fc-os-tab {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.fc-os-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #888;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.15s;
+}
+
+.fc-os-btn.active {
+  background: #e07b1a;
+  color: white;
+  border-color: #e07b1a;
+}
+
+.fc-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fc-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.fc-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e07b1a;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.fc-step-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary, #111);
+  margin: 0 0 2px;
+}
+
+.fc-step-desc {
+  font-size: 12px;
+  color: var(--muted, #888);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.fc-step-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-text-primary, #111);
+  vertical-align: middle;
+}
+
+.fc-msg-success {
+  margin-top: 12px;
+  color: #1a7a3e;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.fc-msg-error {
+  margin-top: 12px;
+  color: #e07b1a;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.fc-empty {
+  color: var(--muted, #888);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+===== C:\Users\pietr\fanta-app\app\statistiche\page.tsx =====
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -6890,7 +7386,7 @@ export default function StatistichePage() {
           players: r.players
             ? {
                 id: String(r.players.id),
-                name: String(r.players.name || "â€”"),
+                name: String(r.players.name || "—"),
                 role: String(r.players.role || ""),
                 real_team_id: r.players.real_team_id ? String(r.players.real_team_id) : null,
                 real_teams: r.players.real_teams
@@ -7003,7 +7499,7 @@ export default function StatistichePage() {
 
         <StatsBlock
           title="Top Pt medio"
-          subtitle="I giocatori piÃ¹ affidabili della lega"
+          subtitle="I giocatori più affidabili della lega"
           rows={topAvg}
           statLabel="Pt medio"
           getValue={(r) => fmt(r.avg_points)}
@@ -7108,7 +7604,7 @@ function PlayerStatRow(props: {
         </div>
         <div style={{ marginTop: 2, color: "var(--muted)", fontWeight: 800, fontSize: 13 }}>
           {roleLabel(p.role)}
-          {p.real_teams?.name ? ` Â· ${p.real_teams.name}` : ""}
+          {p.real_teams?.name ? ` · ${p.real_teams.name}` : ""}
         </div>
       </div>
 
@@ -7125,7 +7621,7 @@ function PlayerStatRow(props: {
 }
 
 function fmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "â€”";
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
   return (Math.round(n * 10) / 10).toString().replace(".", ",");
 }
 
@@ -7134,12 +7630,11 @@ function roleLabel(role: string) {
   if (role === "DEF") return "Difensore";
   if (role === "MID") return "Centrocampista";
   if (role === "FWD") return "Attaccante";
-  return role || "â€”";
+  return role || "—";
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\storico\[id]\page.tsx
+===== C:\Users\pietr\fanta-app\app\storico\[id]\page.tsx =====
 "use client";
  
 import { useEffect, useState } from "react";
@@ -7395,7 +7890,7 @@ function PlayerRow({ role, name, vote }: { role: string; name: string | null; vo
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
       }}>
-        {name || "â€”"}
+        {name || "—"}
       </div>
       <div style={{
         fontSize: 13,
@@ -7420,9 +7915,7 @@ function signedFmt(n: number) {
   return String(v).replace(".", ",");
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\storico\page.tsx
+===== C:\Users\pietr\fanta-app\app\storico\page.tsx =====
 "use client";
  
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -7538,13 +8031,13 @@ export default function StoricoPage() {
             matchday_number: md.number,
             status: md.status,
             total_score: Number(r.total_score || 0),
-            gk_name: r.gk_player_id ? playerMap.get(r.gk_player_id) || "â€”" : "â€”",
+            gk_name: r.gk_player_id ? playerMap.get(r.gk_player_id) || "—" : "—",
             gk_vote: r.gk_vote,
-            def_name: r.def_player_id ? playerMap.get(r.def_player_id) || "â€”" : "â€”",
+            def_name: r.def_player_id ? playerMap.get(r.def_player_id) || "—" : "—",
             def_vote: r.def_vote,
-            mid_name: r.mid_player_id ? playerMap.get(r.mid_player_id) || "â€”" : "â€”",
+            mid_name: r.mid_player_id ? playerMap.get(r.mid_player_id) || "—" : "—",
             mid_vote: r.mid_vote,
-            fwd_name: r.fwd_player_id ? playerMap.get(r.fwd_player_id) || "â€”" : "â€”",
+            fwd_name: r.fwd_player_id ? playerMap.get(r.fwd_player_id) || "—" : "—",
             fwd_vote: r.fwd_vote,
           };
         })
@@ -7566,7 +8059,7 @@ export default function StoricoPage() {
  
   const subtitle = useMemo(() => {
     if (rows.length === 0) return "Nessuna giornata disponibile";
-    return `Le tue giornate Â· ${rows.length} presenti`;
+    return `Le tue giornate · ${rows.length} presenti`;
   }, [rows]);
  
   if (!ready || loading) return <LoadingScreen />;
@@ -7739,7 +8232,7 @@ function fmt(n: number) {
 }
  
 function signedFmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "â€”";
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
   const v = Math.round(n * 10) / 10;
   if (v > 0) return `+${String(v).replace(".", ",")}`;
   return String(v).replace(".", ",");
@@ -7749,12 +8242,10 @@ function statusLabel(status: string) {
   if (status === "open") return "aperta";
   if (status === "closed") return "chiusa";
   if (status === "final") return "finale";
-  return status || "â€”";
+  return status || "—";
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\apple-icon.tsx
+===== C:\Users\pietr\fanta-app\app\apple-icon.tsx =====
 import { ImageResponse } from "next/og";
 
 export const size = {
@@ -7808,8 +8299,258 @@ export default function AppleIcon() {
 }
 
 
+===== C:\Users\pietr\fanta-app\app\globals.css =====
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
 
-// FILE: C:\Users\pietr\fanta-app\app\icon.tsx
+:root {
+  --primary: #22c55e;
+  --primary-dark: #16a34a;
+  --accent: #f97316;
+  --accent-dark: #ea580c;
+
+  --text: #0f172a;
+  --muted: #64748b;
+  --bg: #f1f5f1;
+  --card: #ffffff;
+  --border: #e5e7eb;
+
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
+  --radius: 18px;
+  --radius-sm: 12px;
+
+  --nav-h: 64px;
+  --appbar-h: 68px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── CONTAINER ── */
+.container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px calc(var(--nav-h) + var(--safe-bottom) + 20px);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn:hover { background: #f9fafb; }
+.btn:active { transform: scale(.98); }
+
+.btn-primary {
+  border: none;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(22,163,74,0.30);
+}
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(22,163,74,0.38); }
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid rgba(34,197,94,.26);
+  background: rgba(34,197,94,.10);
+  color: #0f3d22;
+}
+
+.badge-admin {
+  border-color: rgba(249,115,22,.30);
+  background: rgba(249,115,22,.10);
+  color: #7c2d12;
+}
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* ── ACTIONS GRID ── */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.action {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  transition: all 0.18s;
+}
+.action:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.action small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.action.primary { border-color: rgba(34,197,94,.28); background: rgba(34,197,94,.07); }
+.action.accent  { border-color: rgba(249,115,22,.30); background: rgba(249,115,22,.07); }
+
+/* ── APPBAR ── */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+.appbar-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  height: var(--appbar-h);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.appbar-logo {
+  font-family: 'Nunito', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.appbar-logo .logo-fanta { color: #1a7a3e; }
+.appbar-logo .logo-chat  { color: #e07b1a; }
+
+.appbar-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.1px;
+}
+
+.appbar-right .btn {
+  background: transparent;
+  border: 1.5px solid var(--primary-dark);
+  color: var(--primary-dark);
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 50px;
+}
+.appbar-right .btn:hover {
+  background: var(--primary-dark);
+  color: white;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(15,23,42,0.07);
+  padding-bottom: var(--safe-bottom);
+}
+
+.bottom-nav .tabs {
+  max-width: 520px;
+  margin: 0 auto;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 8px 0;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.2px;
+}
+
+.nav-btn::before {
+  content: attr(data-icon);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.nav-btn.active {
+  color: var(--primary-dark);
+}
+
+.nav-btn.active::before {
+  background: rgba(34,197,94,0.12);
+  border-radius: 10px;
+  padding: 3px 14px;
+}
+
+
+
+===== C:\Users\pietr\fanta-app\app\icon.tsx =====
 import { ImageResponse } from "next/og";
 
 export const size = {
@@ -7864,8 +8605,7 @@ export default function Icon() {
 }
 
 
-
-// FILE: C:\Users\pietr\fanta-app\app\layout.tsx
+===== C:\Users\pietr\fanta-app\app\layout.tsx =====
 import "./globals.css";
 import { AppProvider } from "./components/AppContext";
 import SideDrawerWrapper from "./components/SideDrawerWrapper";
@@ -7888,9 +8628,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   );
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\app\page.tsx
+===== C:\Users\pietr\fanta-app\app\page.tsx =====
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8031,7 +8769,7 @@ if (!ready || !userId || !activeLeagueId || !teamId || loading) {
 return <LoadingScreen />;
 }
 
-const ctaLabel = lineup ? "Vedi Rosa âœ“" : "Invia Rosa";
+const ctaLabel = lineup ? "Vedi Rosa ✓" : "Invia Rosa";
 
 return (
 <>
@@ -8045,13 +8783,13 @@ Leghe
 }
 />
 
-  {/* â”€â”€ HERO VERDE â”€â”€ */}
+  {/* ── HERO VERDE ── */}
   <div style={styles.hero}>
     <div style={styles.heroDots} />
     <div style={styles.heroGlow} />
 
     <div style={styles.heroBody}>
-      <div style={styles.heroGreeting}>Ciao, benvenuto ðŸ‘‹</div>
+      <div style={styles.heroGreeting}>Ciao, benvenuto 👋</div>
       <div style={styles.heroTeam}>{teamName}</div>
 
       {/* KPI */}
@@ -8059,16 +8797,16 @@ Leghe
         <div style={styles.kpiCard}>
           <div style={styles.kpiLabel}>Posizione</div>
           <div style={{ ...styles.kpiValue, color: "#fbbf24" }}>
-            {stats ? `${stats.rank || "â€”"}` : "â€”"}
+            {stats ? `${stats.rank || "—"}` : "—"}
           </div>
         </div>
         <div style={styles.kpiCard}>
           <div style={styles.kpiLabel}>Totale</div>
-          <div style={styles.kpiValue}>{stats ? fmt(stats.total) : "â€”"}</div>
+          <div style={styles.kpiValue}>{stats ? fmt(stats.total) : "—"}</div>
         </div>
         <div style={styles.kpiCard}>
           <div style={styles.kpiLabel}>Media</div>
-          <div style={styles.kpiValue}>{stats ? fmt(stats.avg) : "â€”"}</div>
+          <div style={styles.kpiValue}>{stats ? fmt(stats.avg) : "—"}</div>
         </div>
       </div>
 
@@ -8091,7 +8829,7 @@ Leghe
       <div style={styles.errorCard}>Errore: {err}</div>
     )}
 
-    {/* â”€â”€ NYX PODCAST â”€â”€ */}
+    {/* ── NYX PODCAST ── */}
     {nyxCard && (
       <div style={styles.nyxCard}>
         <div style={styles.nyxBg} />
@@ -8102,7 +8840,7 @@ Leghe
         </div>
         <div style={styles.nyxInner}>
           <div style={styles.nyxHeaderRow}>
-            <div style={styles.nyxBadge}>ðŸŽ™ Podcast Â· Nyx</div>
+            <div style={styles.nyxBadge}>🎙 Podcast · Nyx</div>
             <div style={styles.nyxEp}>Giornata {nyxCard.matchday_number}</div>
           </div>
           <div style={styles.nyxContentRow}>
@@ -8122,23 +8860,23 @@ Leghe
               <span style={{ ...styles.chipDot, background: "#fb923c" }} />
               {nyxCard.bottom_team} {fmt(nyxCard.bottom_score)}
             </div>
-            <div style={styles.nyxChip}>ðŸ† {nyxCard.leader_team} {fmt(nyxCard.leader_total)}</div>
+            <div style={styles.nyxChip}>🏆 {nyxCard.leader_team} {fmt(nyxCard.leader_total)}</div>
           </div>
           <button style={styles.podcastBtn} onClick={() => router.push("/podcast")}>
-            <span style={styles.playIcon}>â–¶</span>
+            <span style={styles.playIcon}>▶</span>
             Ascolta la puntata intera
           </button>
         </div>
       </div>
     )}
 
-    {/* â”€â”€ GIORNATA â”€â”€ */}
+    {/* ── GIORNATA ── */}
     <div style={styles.giornataCard}>
       <div style={styles.giornataTop}>
         <div>
           <div style={styles.sectionLabel}>Giornata corrente</div>
           <div style={styles.giornataNum}>
-            {matchdayNum ? `${matchdayNum}` : "â€”"}
+            {matchdayNum ? `${matchdayNum}` : "—"}
             <span style={styles.giornataTotal}> / 38</span>
           </div>
         </div>
@@ -8150,7 +8888,7 @@ Leghe
 
       {mySlot && (
         <div style={styles.slotBadge}>
-          ðŸ• Slot: {formatSlot(mySlot.slot_start_at, mySlot.slot_end_at)}
+          🕐 Slot: {formatSlot(mySlot.slot_start_at, mySlot.slot_end_at)}
         </div>
       )}
 
@@ -8184,52 +8922,52 @@ Leghe
             })()}
           </>
         ) : (
-          <div style={styles.noRosa}>âš ï¸ Rosa non inviata per questa giornata.</div>
+          <div style={styles.noRosa}>⚠️ Rosa non inviata per questa giornata.</div>
         )}
       </div>
     </div>
 
-    {/* â”€â”€ QUICK LINKS â”€â”€ */}
+    {/* ── QUICK LINKS ── */}
     <div style={styles.quickGrid}>
       <a href="/rosa" style={styles.quickCard}>
-        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>ðŸ‘¥</div>
+        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>👥</div>
         <div style={styles.quickTitle}>Rosa</div>
         <div style={styles.quickSub}>Scegli i 4 giocatori</div>
       </a>
       <a href="/live" style={styles.quickCard}>
-        <div style={{ ...styles.quickIcon, background: "#fff7ed" }}>âš¡</div>
+        <div style={{ ...styles.quickIcon, background: "#fff7ed" }}>⚡</div>
         <div style={styles.quickTitle}>Live</div>
         <div style={styles.quickSub}>Campionato in diretta</div>
       </a>
       <a href="/classifica" style={styles.quickCard}>
-        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>ðŸ†</div>
+        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>🏆</div>
         <div style={styles.quickTitle}>Classifica</div>
         <div style={styles.quickSub}>Ranking campionato</div>
       </a>
         <a href="/storico" style={styles.quickCard}>
-        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>ðŸ—“ï¸</div>
+        <div style={{ ...styles.quickIcon, background: "#dcfce7" }}>🗓️</div>
         <div style={styles.quickTitle}>Storico</div>
         <div style={styles.quickSub}>Rivedi le giornate passate</div>
       </a>
     </div>
 
-    {/* â”€â”€ ADMIN â”€â”€ */}
+    {/* ── ADMIN ── */}
     {role === "admin" && (
       <div style={styles.adminCard}>
-        <div style={styles.adminTitle}>âš™ï¸ Admin</div>
+        <div style={styles.adminTitle}>⚙️ Admin</div>
         <div style={styles.adminSectionLabel}>Admin Lega</div>
         <div style={styles.adminBtns}>
-          <a style={styles.adminBtn} href="/admin/giornata">ðŸ“… Giornata</a>
-          <a style={styles.adminBtn} href="/admin/regole">ðŸ“‹ Regole Lega</a>
-          <a style={styles.adminBtn} href="/admin/podcast">ðŸŽ™ Podcast</a>
+          <a style={styles.adminBtn} href="/admin/giornata">📅 Giornata</a>
+          <a style={styles.adminBtn} href="/admin/regole">📋 Regole Lega</a>
+          <a style={styles.adminBtn} href="/admin/podcast">🎙 Podcast</a>
         </div>
         {isSuperAdmin && (
           <>
             <div style={{ ...styles.adminSectionLabel, marginTop: 14 }}>Super Admin</div>
             <div style={styles.adminBtns}>
-              <a style={styles.adminBtn} href="/admin/partite">âš½ Partite</a>
-              <a style={styles.adminBtn} href="/admin/top6">ðŸ… Top 6</a>
-              <a style={styles.adminBtn} href="/admin/statistiche">ðŸ“Š Statistiche</a>
+              <a style={styles.adminBtn} href="/admin/partite">⚽ Partite</a>
+              <a style={styles.adminBtn} href="/admin/top6">🏅 Top 6</a>
+              <a style={styles.adminBtn} href="/admin/statistiche">📊 Statistiche</a>
             </div>
           </>
         )}
@@ -8244,9 +8982,9 @@ Leghe
 );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // SUB-COMPONENTS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 
 function LineupRow({ role, name, vote }: { role: string; name: string; vote: number | null }) {
 const hasVote = typeof vote === "number" && Number.isFinite(vote);
@@ -8255,17 +8993,17 @@ return (
 <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontWeight: 600, fontSize: 14 }}>
 <span style={{ width: 22, color: "#9ca3af", fontWeight: 700 }}>{role}</span>
 <span style={{ flex: 1, color: "#111827" }}>{name}</span>
-<span style={{ color, fontWeight: 700 }}>{hasVote ? fmt(vote as number) : "â€”"}</span>
+<span style={{ color, fontWeight: 700 }}>{hasVote ? fmt(vote as number) : "—"}</span>
 </div>
 );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // HELPERS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 
 function fmt(n: number) {
-if (!Number.isFinite(n)) return "â€”";
+if (!Number.isFinite(n)) return "—";
 return String(Math.round(n * 10) / 10).replace(".", ",");
 }
 
@@ -8277,12 +9015,12 @@ const day = dayNames[start.getDay()];
 const pad = (n: number) => String(n).padStart(2, "0");
 const s = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
 const endStr = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
-return `${day} ${s}â€“${endStr}`;
+return `${day} ${s}–${endStr}`;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // STYLES
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 
 const styles: Record<string, React.CSSProperties> = {
 /* loading */
@@ -8296,7 +9034,7 @@ color: "#fff", fontSize: 13, fontWeight: 600, padding: "7px 16px",
 borderRadius: 50, cursor: "pointer",
 },
 
-/* â”€â”€ HERO â”€â”€ */
+/* ── HERO ── */
 hero: {
 background: "linear-gradient(160deg, #14532d 0%, #16a34a 100%)",
 padding: "16px 0 28px", position: "relative", overflow: "hidden",
@@ -8335,13 +9073,13 @@ legend: { display: "flex", gap: 10 },
 legendItem: { display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 500 },
 legendDot: { display: "inline-block", width: 7, height: 7, borderRadius: "50%" },
 
-/* â”€â”€ CONTAINER â”€â”€ */
+/* ── CONTAINER ── */
 container: { padding: "16px 16px calc(64px + env(safe-area-inset-bottom, 0px) + 20px)", display: "flex", flexDirection: "column", gap: 14, maxWidth: 420, margin: "0 auto" },
 
 /* error */
 errorCard: { padding: 14, borderRadius: 14, border: "1px solid #fecaca", background: "#fff1f2", color: "#991b1b", fontWeight: 700, fontSize: 14 },
 
-/* â”€â”€ NYX CARD â”€â”€ */
+/* ── NYX CARD ── */
 nyxCard: { borderRadius: 18, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", position: "relative", background: "#0f172a" },
 nyxBg: {
 position: "absolute", inset: 0,
@@ -8384,7 +9122,7 @@ width: 22, height: 22, background: "rgba(255,255,255,0.2)", borderRadius: "50%",
 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, flexShrink: 0,
 },
 
-/* â”€â”€ GIORNATA CARD â”€â”€ */
+/* ── GIORNATA CARD ── */
 giornataCard: {
 background: "#fff", borderRadius: 18, padding: 18,
 boxShadow: "0 4px 16px rgba(0,0,0,0.07)", border: "1px solid #e5e7eb", borderLeft: "4px solid #16a34a",
@@ -8407,7 +9145,7 @@ giornataBody: { borderTop: "1px solid #e5e7eb", paddingTop: 14 },
 totalRow: { marginTop: 14, padding: "12px 14px", borderRadius: 12, display: "flex", justifyContent: "space-between", alignItems: "center" },
 noRosa: { fontSize: 13, color: "#6b7280", fontWeight: 600 },
 
-/* â”€â”€ QUICK LINKS â”€â”€ */
+/* ── QUICK LINKS ── */
 quickGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
 quickCard: {
 background: "#fff", borderRadius: 12, padding: 16,
@@ -8418,7 +9156,7 @@ quickIcon: { width: 36, height: 36, borderRadius: 10, display: "flex", alignItem
 quickTitle: { fontSize: 14, fontWeight: 700, color: "#111827" },
 quickSub: { fontSize: 11, color: "#6b7280" },
 
-/* â”€â”€ ADMIN CARD â”€â”€ */
+/* ── ADMIN CARD ── */
 adminCard: {
 background: "#fff", borderRadius: 18, padding: 18,
 boxShadow: "0 1px 3px rgba(0,0,0,0.06)", border: "1px solid #e5e7eb", borderLeft: "4px solid #ea580c",
@@ -8434,8 +9172,7 @@ padding: "8px 14px", fontSize: 13, fontWeight: 600, color: "#111827", textDecora
 };
 
 
-
-// FILE: C:\Users\pietr\fanta-app\lib\chat.ts
+===== C:\Users\pietr\fanta-app\lib\chat.ts =====
 // types/chat.ts
 // Tipi TypeScript per il sistema di chat FantaChat
 
@@ -8483,16 +9220,14 @@ export interface SendMessagePayload {
   mentions?: string[];
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\lib\chatHelpers.ts
+===== C:\Users\pietr\fanta-app\lib\chatHelpers.ts =====
 // lib/chatHelpers.ts
 // Funzioni di supporto per la chat
 
 import { supabase } from './supabaseClient'; // adatta al tuo path
 import type { ChatMessage, SendMessagePayload, LineupData } from './chat';
 
-// â”€â”€â”€ FETCH messaggi (ultimi 100) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FETCH messaggi (ultimi 100) ───────────────────────────────────────────
 export async function fetchMessages(leagueId: string): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('chat_messages')
@@ -8508,7 +9243,7 @@ export async function fetchMessages(leagueId: string): Promise<ChatMessage[]> {
   return data as ChatMessage[];
 }
 
-// â”€â”€â”€ INVIA messaggio testo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── INVIA messaggio testo ─────────────────────────────────────────────────
 export async function sendTextMessage(
   payload: Omit<SendMessagePayload, 'message_type'> & { content: string }
 ): Promise<void> {
@@ -8524,7 +9259,7 @@ export async function sendTextMessage(
   if (error) throw error;
 }
 
-// â”€â”€â”€ INVIA card formazione (chiamata automatica quando si salva la rosa) â”€â”€â”€
+// ─── INVIA card formazione (chiamata automatica quando si salva la rosa) ───
 export async function sendLineupMessage(
   leagueId: string,
   teamId: string,
@@ -8544,7 +9279,7 @@ export async function sendLineupMessage(
   if (error) throw error;
 }
 
-// â”€â”€â”€ INVIA divisore nuova giornata (chiamata da admin quando apre giornata) â”€
+// ─── INVIA divisore nuova giornata (chiamata da admin quando apre giornata) ─
 export async function sendMatchdayDivider(
   leagueId: string,
   matchdayNumber: number
@@ -8562,7 +9297,7 @@ export async function sendMatchdayDivider(
   if (error) throw error;
 }
 
-// â”€â”€â”€ UTILITY: estrai menzioni dal testo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILITY: estrai menzioni dal testo ──────────────────────────────────
 export function extractMentions(text: string): string[] {
   const regex = /@([\w\s]+?)(?=\s@|\s[^@\w]|$)/g;
   const matches: string[] = [];
@@ -8573,7 +9308,7 @@ export function extractMentions(text: string): string[] {
   return [...new Set(matches)];
 }
 
-// â”€â”€â”€ UTILITY: formatta timestamp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILITY: formatta timestamp ──────────────────────────────────────────
 export function formatTime(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
@@ -8590,7 +9325,7 @@ export function formatDate(isoString: string): string {
   return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
 }
 
-// â”€â”€â”€ UTILITY: colore ruolo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILITY: colore ruolo ────────────────────────────────────────────────
 export function getRoleColor(role: 'P' | 'D' | 'C' | 'A'): string {
   const colors = {
     P: '#F59E0B',  // amber
@@ -8601,7 +9336,7 @@ export function getRoleColor(role: 'P' | 'D' | 'C' | 'A'): string {
   return colors[role];
 }
 
-// â”€â”€â”€ UTILITY: colore voto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── UTILITY: colore voto ─────────────────────────────────────────────────
 export function getVoteColor(vote: number): string {
   if (vote > 0) return '#10B981'; // verde
   if (vote < 0) return '#EF4444'; // rosso
@@ -8613,9 +9348,7 @@ export function formatVote(vote: number): string {
   return `${vote}`;
 }
 
-
-
-// FILE: C:\Users\pietr\fanta-app\lib\supabaseClient.ts
+===== C:\Users\pietr\fanta-app\lib\supabaseClient.ts =====
 import { createClient } from "@supabase/supabase-js";
 
 export const supabase = createClient(
@@ -8624,8 +9357,7 @@ export const supabase = createClient(
 );
 
 
-
-// FILE: C:\Users\pietr\fanta-app\lib\supabaseServer.ts
+===== C:\Users\pietr\fanta-app\lib\supabaseServer.ts =====
 import { createClient } from "@supabase/supabase-js";
 
 export const supabaseServer = createClient(
@@ -8635,8 +9367,7 @@ export const supabaseServer = createClient(
 
 
 
-
-// FILE: C:\Users\pietr\fanta-app\next-env.d.ts
+===== C:\Users\pietr\fanta-app\next-env.d.ts =====
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
 import "./.next/dev/types/routes.d.ts";
@@ -8645,8 +9376,7 @@ import "./.next/dev/types/routes.d.ts";
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
 
 
-
-// FILE: C:\Users\pietr\fanta-app\next.config.ts
+===== C:\Users\pietr\fanta-app\next.config.ts =====
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
