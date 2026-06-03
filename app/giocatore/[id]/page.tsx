@@ -6,6 +6,10 @@ import { supabase } from "../../../lib/supabaseClient";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import { useApp } from "../../components/AppContext";
+import { THEMES, DEFAULT_THEME } from "../../page";
+import type { CompetitionTheme } from "../../page";
+
+// ─── TIPI ─────────────────────────────────────────────────────────────────────
 
 type HistoryRow = {
   matchday_id: string;
@@ -17,18 +21,22 @@ type PlayerCard = {
   player_id: string;
   player_name: string;
   role: string;
-  real_team_name: string | null;
-  avg_points: number | null;
-  best_points: number | null;
-  worst_points: number | null;
+  team_name: string;
+  avg_points: number;
+  best_points: number;
+  worst_points: number;
   played_count: number;
   history: HistoryRow[];
 };
 
+// ─── COMPONENTE ───────────────────────────────────────────────────────────────
+
 export default function GiocatorePage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
+
+  const theme: CompetitionTheme = THEMES[competitionSlug ?? ""] ?? DEFAULT_THEME;
 
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -38,182 +46,149 @@ export default function GiocatorePage() {
 
   useEffect(() => {
     async function run() {
-      if (!ready) return;
-      if (!userId) return void router.replace("/login");
-      if (!activeLeagueId) return void router.replace("/seleziona-lega");
-      if (!playerId) return;
+      if (!ready || !userId || !activeLeagueId || !playerId) return;
 
       setLoading(true);
       setErr(null);
 
-      // 1) Dati base giocatore
-      const { data: playerRow, error: playerErr } = await supabase
-        .from("players")
-        .select("id, name, role, real_team_id, real_teams(name)")
-        .eq("id", playerId)
-        .maybeSingle();
+      try {
+        // 1) Info giocatore
+        const { data: playerRow } = await supabase
+          .from("real_players")
+          .select("id, name, role, team")
+          .eq("id", playerId)
+          .single();
 
-      if (playerErr) {
-        setErr(playerErr.message);
-        setLoading(false);
-        return;
-      }
+        if (!playerRow) { setCard(null); setLoading(false); return; }
 
-      if (!playerRow) {
-        setCard(null);
-        setLoading(false);
-        return;
-      }
+        // 2) Season dalla lega
+        const { data: leagueRow } = await supabase
+          .from("leagues")
+          .select("season_id")
+          .eq("id", activeLeagueId)
+          .single();
 
-      // 2) Statistiche aggregate per lega
-      const { data: statsRow, error: statsErr } = await supabase
-        .from("player_league_stats")
-        .select("player_id, avg_points, best_points, worst_points, played_count")
-        .eq("league_id", activeLeagueId)
-        .eq("player_id", playerId)
-        .maybeSingle();
+        const seasonId = leagueRow?.season_id;
 
-      if (statsErr) {
-        setErr(statsErr.message);
-        setLoading(false);
-        return;
-      }
-
-      // 3) Storico per giornata
-      const { data: historyRows, error: histErr } = await supabase
-        .from("player_league_matchday_stats")
-        .select("matchday_id, points")
-        .eq("league_id", activeLeagueId)
-        .eq("player_id", playerId);
-
-      if (histErr) {
-        setErr(histErr.message);
-        setLoading(false);
-        return;
-      }
-
-      const matchdayIds = (historyRows || []).map((x: any) => x.matchday_id);
-
-      let history: HistoryRow[] = [];
-
-      if (matchdayIds.length > 0) {
-        const { data: matchdays, error: mdErr } = await supabase
+        // 3) Giornate completate
+        const { data: matchdays } = await supabase
           .from("matchdays")
           .select("id, number")
-          .in("id", matchdayIds);
-
-        if (mdErr) {
-          setErr(mdErr.message);
-          setLoading(false);
-          return;
-        }
+          .eq("season_id", seasonId)
+          .in("status", ["completed", "locked"])
+          .order("number", { ascending: true });
 
         const mdMap = new Map<string, number>();
-        (matchdays || []).forEach((m: any) => {
-          mdMap.set(String(m.id), Number(m.number));
+        for (const md of (matchdays ?? []) as any[]) mdMap.set(md.id, md.number);
+
+        // 4) Scores di questo giocatore in questa lega
+        const { data: scores } = await supabase
+          .from("scores")
+          .select(`
+            points,
+            lineup_players!inner(
+              lineups!inner(matchday_id, league_id)
+            )
+          `)
+          .eq("real_player_id", playerId)
+          .eq("lineup_players.lineups.league_id", activeLeagueId);
+
+        const history: HistoryRow[] = [];
+        const allPoints: number[] = [];
+
+        for (const s of (scores ?? []) as any[]) {
+          const mdId = s.lineup_players?.lineups?.matchday_id;
+          const mdNum = mdMap.get(mdId);
+          if (!mdNum) continue;
+
+          const pts = Number(s.points ?? 0);
+          allPoints.push(pts);
+          history.push({ matchday_id: mdId, matchday_number: mdNum, points: pts });
+        }
+
+        history.sort((a, b) => b.matchday_number - a.matchday_number);
+
+        const played = allPoints.length;
+        const total = allPoints.reduce((s, p) => s + p, 0);
+        const avg = played > 0 ? total / played : 0;
+        const best = played > 0 ? Math.max(...allPoints) : 0;
+        const worst = played > 0 ? Math.min(...allPoints) : 0;
+
+        setCard({
+          player_id: playerRow.id,
+          player_name: playerRow.name,
+          role: playerRow.role,
+          team_name: playerRow.team ?? "",
+          avg_points: avg,
+          best_points: best,
+          worst_points: worst,
+          played_count: played,
+          history,
         });
 
-        history = (historyRows || [])
-          .map((x: any) => ({
-            matchday_id: String(x.matchday_id),
-            matchday_number: Number(mdMap.get(String(x.matchday_id)) || 0),
-            points: Number(x.points || 0),
-          }))
-          .sort((a, b) => b.matchday_number - a.matchday_number);
+        setLoading(false);
+      } catch (e: any) {
+        setErr(e?.message || String(e));
+        setLoading(false);
       }
-
-      setCard({
-        player_id: String(playerRow.id),
-        player_name: String(playerRow.name),
-        role: String(playerRow.role || ""),
-        real_team_name: (playerRow as any).real_teams?.name || null,
-        avg_points: statsRow ? Number(statsRow.avg_points ?? 0) : null,
-        best_points: statsRow ? Number(statsRow.best_points ?? 0) : null,
-        worst_points: statsRow ? Number(statsRow.worst_points ?? 0) : null,
-        played_count: statsRow ? Number(statsRow.played_count ?? 0) : 0,
-        history,
-      });
-
-      setLoading(false);
     }
 
     run();
   }, [ready, userId, activeLeagueId, playerId, router]);
 
-  if (!ready || loading) {
-    return <main className="container">Caricamento...</main>;
-  }
+  if (!ready || loading) return <main style={{ padding: 20 }}>Caricamento...</main>;
 
   return (
     <>
       <AppBar league={leagueName} team={teamName} onMenuOpen={openDrawer} />
 
-      <main className="container" style={{ paddingBottom: 100 }}>
-        {err && (
-          <div
-            className="card"
-            style={{
-              padding: 14,
-              marginTop: 12,
-              color: "var(--accent-dark)",
-              fontWeight: 900,
-            }}
-          >
-            {err}
-          </div>
-        )}
+      <main style={s.container}>
+        {err && <div style={s.errorMsg}>{err}</div>}
 
         {!card ? (
-          <div className="card" style={{ padding: 16, marginTop: 12 }}>
-            Giocatore non trovato.
-          </div>
+          <div style={s.card}>Giocatore non trovato.</div>
         ) : (
           <>
-            <div className="card" style={{ padding: 16, marginTop: 12 }}>
-              <div style={{ fontSize: 24, fontWeight: 1000 }}>{card.player_name}</div>
-              <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
-                {roleLabel(card.role)}
-                {card.real_team_name ? ` · ${card.real_team_name}` : ""}
+            {/* Info giocatore */}
+            <div style={s.card}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#111827" }}>{card.player_name}</div>
+              <div style={{ marginTop: 6, color: "#6b7280", fontWeight: 700 }}>
+                {roleLabel(card.role)}{card.team_name ? ` · ${card.team_name}` : ""}
               </div>
             </div>
 
-            <div className="kpi-grid" style={{ marginTop: 10 }}>
-              <Kpi title="Pt medio" value={fmt(card.avg_points)} />
-              <Kpi title="Migliore" value={fmt(card.best_points)} />
-              <Kpi title="Peggiore" value={fmt(card.worst_points)} />
+            {/* KPI */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+              <KpiCard label="Pt medio" value={fmt(card.avg_points)} theme={theme} />
+              <KpiCard label="Migliore" value={signedFmt(card.best_points)} positive />
+              <KpiCard label="Peggiore" value={signedFmt(card.worst_points)} negative />
             </div>
 
-            <div className="card" style={{ padding: 16, marginTop: 10 }}>
-              <div style={{ fontWeight: 1000, fontSize: 18 }}>Storico</div>
-              <div style={{ marginTop: 6, color: "var(--muted)", fontWeight: 800 }}>
+            {/* Storico */}
+            <div style={s.card}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "#111827" }}>Storico</div>
+              <div style={{ marginTop: 6, color: "#6b7280", fontWeight: 700, marginBottom: 12 }}>
                 {card.played_count} giornate giocate
               </div>
 
-              <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
+              <div style={{ display: "grid", gap: 8 }}>
                 {card.history.length === 0 ? (
-                  <div style={{ color: "var(--muted)", fontWeight: 800 }}>
-                    Nessun dato disponibile.
-                  </div>
+                  <div style={{ color: "#6b7280", fontWeight: 700 }}>Nessun dato disponibile.</div>
                 ) : (
                   card.history.map((h) => (
                     <button
                       key={h.matchday_id}
                       type="button"
                       onClick={() => router.push(`/storico/${h.matchday_id}`)}
-                      className="card"
-                      style={{
-                        padding: 12,
-                        textAlign: "left",
-                        border: "1px solid var(--border)",
-                        background: "white",
-                        display: "grid",
-                        gridTemplateColumns: "1fr auto",
-                        gap: 10,
-                        alignItems: "center",
-                      }}
+                      style={s.historyRow}
                     >
-                      <div style={{ fontWeight: 900 }}>Giornata {h.matchday_number}</div>
-                      <div style={{ fontWeight: 1000 }}>{signedFmt(h.points)}</div>
+                      <div style={{ fontWeight: 700, color: "#111827" }}>Giornata {h.matchday_number}</div>
+                      <div style={{
+                        fontWeight: 800,
+                        color: h.points > 0 ? "#15803d" : h.points < 0 ? "#c2410c" : "#6b7280",
+                      }}>
+                        {signedFmt(h.points)}
+                      </div>
                     </button>
                   ))
                 )}
@@ -228,31 +203,71 @@ export default function GiocatorePage() {
   );
 }
 
-function Kpi(props: { title: string; value: string }) {
+// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
+
+function KpiCard({ label, value, theme, positive, negative }: {
+  label: string; value: string; theme?: CompetitionTheme; positive?: boolean; negative?: boolean;
+}) {
+  let color = "#111827";
+  if (theme) color = theme.primary;
+  if (positive) color = "#15803d";
+  if (negative) color = "#c2410c";
+
   return (
-    <div className="card" style={{ padding: 14 }}>
-      <div style={{ color: "var(--muted)", fontWeight: 900 }}>{props.title}</div>
-      <div style={{ marginTop: 4, fontSize: 20, fontWeight: 1000 }}>{props.value}</div>
+    <div style={{
+      background: "#fff", borderRadius: 14, padding: 14,
+      border: "1px solid #e5e7eb",
+    }}>
+      <div style={{ color: "#6b7280", fontWeight: 700, fontSize: 12 }}>{label}</div>
+      <div style={{ marginTop: 4, fontSize: 20, fontWeight: 800, color }}>{value}</div>
     </div>
   );
 }
 
-function fmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
-  return (Math.round(n * 10) / 10).toString().replace(".", ",");
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function fmt(n: number) {
+  if (!Number.isFinite(n)) return "—";
+  return String(Math.round(n * 10) / 10).replace(".", ",");
 }
 
-function signedFmt(n: number | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+function signedFmt(n: number) {
+  if (!Number.isFinite(n)) return "—";
   const v = Math.round(n * 10) / 10;
   if (v > 0) return `+${String(v).replace(".", ",")}`;
   return String(v).replace(".", ",");
 }
 
 function roleLabel(role: string) {
-  if (role === "GK") return "Portiere";
-  if (role === "DEF") return "Difensore";
-  if (role === "MID") return "Centrocampista";
-  if (role === "FWD") return "Attaccante";
+  if (role === "P") return "Portiere";
+  if (role === "D") return "Difensore";
+  if (role === "C") return "Centrocampista";
+  if (role === "A") return "Attaccante";
   return role || "—";
 }
+
+// ─── STILI ────────────────────────────────────────────────────────────────────
+
+const s: Record<string, React.CSSProperties> = {
+  container: {
+    maxWidth: 520, margin: "0 auto",
+    padding: "16px 14px calc(64px + env(safe-area-inset-bottom, 0px) + 20px)",
+    display: "flex", flexDirection: "column", gap: 12,
+  },
+  card: {
+    background: "#fff", borderRadius: 18, padding: 16,
+    border: "1px solid #e5e7eb",
+  },
+  errorMsg: {
+    padding: 14, borderRadius: 14, border: "1px solid #fecaca",
+    background: "#fff1f2", color: "#991b1b", fontWeight: 700,
+  },
+  historyRow: {
+    display: "grid", gridTemplateColumns: "1fr auto",
+    gap: 10, alignItems: "center",
+    padding: 12, borderRadius: 12,
+    border: "1px solid #e5e7eb", background: "white",
+    cursor: "pointer", width: "100%", textAlign: "left",
+    fontFamily: "inherit",
+  },
+};

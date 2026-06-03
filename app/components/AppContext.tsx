@@ -76,6 +76,9 @@ export function AppProvider(props: { children: React.ReactNode }) {
       setReady(true);
       return;
     }
+// in AppContext.tsx, nella funzione refresh(), dopo aver caricato la lega:
+// aggiungi provvisoriamente:
+const competitionSlug = "serie-a"; // oppure "champions-league" o "mondiale-2026"
 
     const { data: mem } = await supabase
       .from("memberships")
