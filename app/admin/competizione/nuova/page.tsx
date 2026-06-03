@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabaseClient";
-import AppBar from ".../components/AppBar";
-import BottomNav from ".../components/BottomNav";
-import { useApp } from ".../components/AppContext";
+import AppBar from "../../components/AppBar";
+import BottomNav from "../../components/BottomNav";
+import { useApp } from "../../components/AppContext";
 
 // ─── TIPI ─────────────────────────────────────────────────────────────────────
 

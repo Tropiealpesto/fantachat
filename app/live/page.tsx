@@ -40,7 +40,7 @@ type Matchday = {
 
 export default function LivePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer, competitionSlug } = useApp();
+ const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LiveRow[]>([]);
@@ -210,7 +210,7 @@ export default function LivePage() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId || !userId) return router.replace("/seleziona-lega");
 
       await refresh();
       setLoading(false);
@@ -218,7 +218,7 @@ export default function LivePage() {
 
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, userId, activeLeagueId, teamId]);
+  }, [ready, userId, activeLeagueId, userId]);
 
   // Auto-refresh ogni 15 secondi
   useEffect(() => {
