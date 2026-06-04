@@ -39,13 +39,11 @@ export async function sendTextMessage(
 // ─── INVIA card formazione (chiamata automatica quando si salva la rosa) ───
 export async function sendLineupMessage(
   leagueId: string,
-  teamId: string,
   teamName: string,
   lineupData: LineupData
 ): Promise<void> {
   const { error } = await supabase.from('chat_messages').insert({
     league_id: leagueId,
-    team_id: teamId,
     team_name: teamName,
     message_type: 'lineup',
     lineup_data: lineupData,

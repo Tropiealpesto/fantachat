@@ -37,7 +37,7 @@ type SeriesRow = {
 
 export default function ClassificaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer, competitionSlug } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
 
   const theme: CompetitionTheme = THEMES[competitionSlug ?? ""] ?? DEFAULT_THEME;
 
@@ -51,7 +51,7 @@ export default function ClassificaPage() {
   useEffect(() => {
     if (!ready) return;
     if (!userId) return router.replace("/login");
-    if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+    if (!activeLeagueId) return router.replace("/seleziona-lega");
 
     let cancelled = false;
     let timer: any = null;
@@ -185,7 +185,7 @@ export default function ClassificaPage() {
     loadAll();
     timer = setInterval(loadAll, 20000);
     return () => { cancelled = true; if (timer) clearInterval(timer); };
-  }, [ready, userId, activeLeagueId, teamId, router]);
+  }, [ready, userId, activeLeagueId, router]);
 
   // ─── CHART DATA ─────────────────────────────────────────────────────────────
 

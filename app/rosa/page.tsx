@@ -29,7 +29,7 @@ type SavedLineup = {
 
 export default function RosaPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer, competitionSlug } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
 
   const theme: CompetitionTheme = THEMES[competitionSlug ?? ""] ?? DEFAULT_THEME;
 
@@ -119,7 +119,7 @@ export default function RosaPage() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
 
       setLoading(true);
       setErr(null);
@@ -219,7 +219,7 @@ export default function RosaPage() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, router]);
+  }, [ready, userId, activeLeagueId, router]);
 
   // ─── SALVATAGGIO ────────────────────────────────────────────────────────────
 
@@ -288,10 +288,10 @@ export default function RosaPage() {
   if (!ready || loading) return <LoadingScreen />;
 
   // Nomi per il campo da calcio
-  const fieldGk  = savedLineup?.gk?.name  ?? gkText.split("(")[0].trim()  || "";
-  const fieldDef = savedLineup?.def?.name ?? defText.split("(")[0].trim() || "";
-  const fieldMid = savedLineup?.mid?.name ?? midText.split("(")[0].trim() || "";
-  const fieldFwd = savedLineup?.fwd?.name ?? fwdText.split("(")[0].trim() || "";
+  const fieldGk  = savedLineup?.gk?.name  ?? (gkText.split("(")[0].trim()  || "");
+  const fieldDef = savedLineup?.def?.name ?? (defText.split("(")[0].trim() || "");
+  const fieldMid = savedLineup?.mid?.name ?? (midText.split("(")[0].trim() || "");
+  const fieldFwd = savedLineup?.fwd?.name ?? (fwdText.split("(")[0].trim() || "");
 
   // Colori per partite/top N (in Champions: blu, altrimenti arancione)
   const infoAccent = competitionSlug === "champions-league" ? "#1a4fd6" : "#e07b1a";

@@ -12,7 +12,7 @@ export default function GiornaleClient() {
   const params = useSearchParams();
   const matchdayFromQuery = params.get("matchday");
 
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<{ id: string; number: number }[]>([]);
@@ -25,7 +25,7 @@ export default function GiornaleClient() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
 
       const { data: mds } = await supabase
         .from("matchdays")
@@ -43,7 +43,7 @@ export default function GiornaleClient() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, matchdayFromQuery, router]);
+  }, [ready, userId, activeLeagueId, matchdayFromQuery, router]);
 
   useEffect(() => {
     async function loadArticle() {

@@ -20,7 +20,7 @@ type ScheduleRow = {
 
 export default function AdminGiornataPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -115,7 +115,7 @@ export default function AdminGiornataPage() {
       if (!ready) return;
 
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
       if (role !== "admin") return router.replace("/");
 
       setDeadlineEndLocal(suggestFriday20Local());
@@ -127,7 +127,7 @@ export default function AdminGiornataPage() {
 
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, userId, activeLeagueId, teamId, role]);
+  }, [ready, userId, activeLeagueId, role]);
 
   async function openDay() {
     setMsg(null);

@@ -11,7 +11,7 @@ type Matchday = { id: string; number: number; status: string };
 
 export default function AdminGiornalePage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +31,7 @@ export default function AdminGiornalePage() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
       if (role !== "admin") return router.replace("/");
 
       const { data: mds } = await supabase
@@ -50,7 +50,7 @@ export default function AdminGiornalePage() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, role, router]);
+  }, [ready, userId, activeLeagueId, role, router]);
 
   const matchdayNumber = useMemo(() => matchdays.find((x) => x.id === matchdayId)?.number, [matchdays, matchdayId]);
 

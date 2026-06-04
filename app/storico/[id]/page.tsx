@@ -38,7 +38,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
 export default function StoricoDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { ready, userId, activeLeagueId, teamId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
 
   const theme: CompetitionTheme = THEMES[competitionSlug ?? ""] ?? DEFAULT_THEME;
 
@@ -53,7 +53,7 @@ export default function StoricoDetailPage() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
       if (!matchdayId) return;
 
       setLoading(true);
@@ -137,7 +137,7 @@ export default function StoricoDetailPage() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, matchdayId, router]);
+  }, [ready, userId, activeLeagueId, matchdayId, router]);
 
   if (!ready || loading) return <LoadingScreen />;
 

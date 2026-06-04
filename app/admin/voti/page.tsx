@@ -19,7 +19,7 @@ type PickedPlayerRow = {
 
 export default function AdminVotiPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
@@ -36,7 +36,7 @@ export default function AdminVotiPage() {
     async function run() {
       if (!ready) return;
       if (!userId) return router.replace("/login");
-      if (!activeLeagueId || !teamId) return router.replace("/seleziona-lega");
+      if (!activeLeagueId) return router.replace("/seleziona-lega");
       if (role !== "admin") return router.replace("/");
 
       const { data: mds } = await supabase
@@ -54,7 +54,7 @@ export default function AdminVotiPage() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, role, router]);
+  }, [ready, userId, activeLeagueId, role, router]);
 
   async function loadPicked(mid: string) {
     setMsg(null); setErr(null);

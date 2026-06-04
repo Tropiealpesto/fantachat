@@ -194,7 +194,7 @@ export const DEFAULT_THEME = THEMES["serie-a"];
 
 export default function Home() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, role, openDrawer, competitionSlug } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, role, openDrawer, competitionSlug } = useApp();
 
   const [loading, setLoading] = useState(true);
   const [matchday, setMatchday] = useState<CurrentMatchday | null>(null);
@@ -208,7 +208,7 @@ export default function Home() {
   useEffect(() => {
     if (!ready) return;
     if (!userId) { router.replace("/login"); return; }
-    if (!activeLeagueId || !teamId) { router.replace("/seleziona-lega"); return; }
+    if (!activeLeagueId) { router.replace("/seleziona-lega"); return; }
 
     let cancelled = false;
 
@@ -268,7 +268,7 @@ export default function Home() {
 
     run();
     return () => { cancelled = true; };
-  }, [ready, userId, activeLeagueId, teamId, router]);
+  }, [ready, userId, activeLeagueId, router]);
 
   if (!ready || loading) return <LoadingScreen />;
 

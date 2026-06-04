@@ -38,7 +38,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
 
 export default function StoricoPage() {
   const router = useRouter();
-  const { ready, userId, activeLeagueId, leagueName, teamId, teamName, openDrawer, competitionSlug } = useApp();
+  const { ready, userId, activeLeagueId, leagueName, teamName, openDrawer, competitionSlug } = useApp();
 
   const theme: CompetitionTheme = THEMES[competitionSlug ?? ""] ?? DEFAULT_THEME;
 
@@ -52,7 +52,7 @@ export default function StoricoPage() {
     async function run() {
       if (!ready) return;
       if (!userId) { router.replace("/login"); return; }
-      if (!activeLeagueId || !teamId) { router.replace("/seleziona-lega"); return; }
+      if (!activeLeagueId) { router.replace("/seleziona-lega"); return; }
 
       setLoading(true);
       setErr(null);
@@ -146,7 +146,7 @@ export default function StoricoPage() {
     }
 
     run();
-  }, [ready, userId, activeLeagueId, teamId, router]);
+  }, [ready, userId, activeLeagueId, router]);
 
   // Scroll all'ultima giornata
   useEffect(() => {
