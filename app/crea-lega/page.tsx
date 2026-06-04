@@ -1,104 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 
-type Row = { team_name: string; email: string; role: "player" | "admin" };
-
 export default function CreaLegaPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [myEmail, setMyEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   const [leagueName, setLeagueName] = useState("");
-  const [rows, setRows] = useState<Row[]>([
-    { team_name: "La mia squadra", email: "", role: "admin" },
-    { team_name: "Squadra 2", email: "", role: "player" },
-  ]);
-
+  const [myTeamName, setMyTeamName] = useState("La mia squadra");
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
 
   useEffect(() => {
     async function run() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return router.replace("/login");
-
-      const e = (data.user.email || "").toLowerCase();
-      setMyEmail(e);
-      setRows((prev) => {
-        const copy = [...prev];
-        copy[0] = { ...copy[0], email: e, role: "admin" };
-        return copy;
-      });
+      setUserId(data.user.id);
       setLoading(false);
     }
     run();
   }, [router]);
 
-  function addRow() {
-    setRows((prev) => [...prev, { team_name: `Squadra ${prev.length + 1}`, email: "", role: "player" }]);
-  }
-
-  function removeRow(i: number) {
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  function updateRow(i: number, k: keyof Row, v: any) {
-    setRows((prev) => {
-      const copy = [...prev];
-      copy[i] = { ...copy[i], [k]: v };
-      return copy;
-    });
-  }
-
-  const canSubmit = useMemo(() => {
-    if (leagueName.trim().length < 2) return false;
-    if (rows.length < 2) return false;
-    if (!rows[0].email || rows[0].email.toLowerCase() !== myEmail) return false;
-    if (rows[0].role !== "admin") return false;
-    return true;
-  }, [leagueName, rows, myEmail]);
-
   async function createLeague() {
-    setErr(null); setMsg(null);
-    if (!canSubmit) return setErr("Controlla nome lega e prima riga (la tua email admin).");
+    setErr(null); setMsg(null); setInviteCode(null);
 
-    const emails = rows.map((r) => r.email.trim().toLowerCase()).filter(Boolean);
-    if (new Set(emails).size !== emails.length) return setErr("Hai inserito due volte la stessa email.");
+    if (leagueName.trim().length < 2) return setErr("Inserisci un nome per la lega.");
+    if (myTeamName.trim().length < 1) return setErr("Inserisci un nome per la tua squadra.");
+    if (!userId) return setErr("Non autenticato.");
 
     setBusy(true);
 
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("Non autenticato.");
-
-      // 1) Crea competizione default (Serie A)
-      const { data: comp, error: compErr } = await supabase
+      // 1) Competizione default
+      const { data: comp, error: e1 } = await supabase
         .from("competitions")
-        .insert({ name: "Serie A", slug: `serie-a-${Date.now()}` })
+        .insert({ name: "Serie A", slug: "serie-a-" + Date.now() })
         .select("id")
         .single();
-      if (compErr) throw compErr;
+      if (e1) throw e1;
 
-      // 2) Crea config default
-      await supabase.from("competition_config").insert({
-        competition_id: comp.id,
-        roles: [
-          { key: "P", label: "Portiere" },
-          { key: "D", label: "Difensore" },
-          { key: "C", label: "Centrocampista" },
-          { key: "A", label: "Attaccante" },
-        ],
-        players_per_role: { P: 1, D: 1, C: 1, A: 1 },
-      });
+      // 2) Config
+      const { error: e2 } = await supabase
+        .from("competition_config")
+        .insert({
+          competition_id: comp.id,
+          roles: [
+            { key: "P", label: "Portiere" },
+            { key: "D", label: "Difensore" },
+            { key: "C", label: "Centrocampista" },
+            { key: "A", label: "Attaccante" },
+          ],
+          players_per_role: { P: 1, D: 1, C: 1, A: 1 },
+        });
+      if (e2) throw e2;
 
-      // 3) Crea stagione
-      const { data: season, error: seasonErr } = await supabase
+      // 3) Stagione
+      const { data: season, error: e3 } = await supabase
         .from("seasons")
         .insert({
           competition_id: comp.id,
@@ -107,48 +71,53 @@ export default function CreaLegaPage() {
         })
         .select("id")
         .single();
-      if (seasonErr) throw seasonErr;
+      if (e3) throw e3;
 
-      // 4) Crea lega
-      const { data: league, error: leagueErr } = await supabase
+      // 4) Lega (invite_code generato automaticamente dal DB)
+      const { data: league, error: e4 } = await supabase
         .from("leagues")
         .insert({
           season_id: season.id,
           name: leagueName.trim(),
         })
-        .select("id")
+        .select("id, invite_code")
         .single();
-      if (leagueErr) throw leagueErr;
+      if (e4) throw e4;
 
-      // 5) Aggiungi i membri
-      // L'admin (prima riga) ha user_id = auth.user.id
-      // Gli altri per ora vengono aggiunti con user_id NULL (verranno claimati)
-      const memberInserts = rows.map((r, i) => ({
-        league_id: league.id,
-        user_id: i === 0 ? auth.user!.id : null, // solo l'admin ha user_id subito
-        team_name: r.team_name.trim(),
-        role: r.role,
-      }));
-
-      // Per l'inserimento con user_id null, serve una policy apposita
-      // Per ora inseriamo solo l'admin e gestiamo gli inviti dopo
-      const { error: memErr } = await supabase
+      // 5) Aggiungi me come admin
+      const { error: e5 } = await supabase
         .from("league_members")
-        .insert(memberInserts.filter((m) => m.user_id != null));
-      if (memErr) throw memErr;
-
-      // TODO: invia inviti via email agli altri membri
+        .insert({
+          league_id: league.id,
+          user_id: userId,
+          team_name: myTeamName.trim(),
+          role: "admin",
+        });
+      if (e5) throw e5;
 
       // 6) Imposta come lega attiva
-      await supabase.rpc("set_active_league", { p_league_id: league.id });
+      const { error: e6 } = await supabase.rpc("set_active_league", {
+        p_league_id: league.id,
+      });
+      if (e6) throw e6;
 
       setBusy(false);
-      setMsg("Lega creata ✅");
-      setTimeout(() => router.replace("/"), 700);
+      setInviteCode(league.invite_code);
+      setMsg("Lega creata ✅ Condividi il codice invito con i tuoi amici!");
 
     } catch (e: any) {
       setBusy(false);
       setErr(e?.message || String(e));
+    }
+  }
+
+  async function copyCode() {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setMsg("Codice copiato ✅");
+    } catch {
+      setErr("Copia manualmente il codice.");
     }
   }
 
@@ -160,62 +129,63 @@ export default function CreaLegaPage() {
       <main style={s.container}>
         <div style={s.card}>
           <div style={s.title}>Crea una nuova lega</div>
+          <div style={s.subtitle}>
+            Crea la lega, poi condividi il codice invito con i tuoi amici.
+          </div>
 
+          {/* Nome lega */}
           <div style={s.label}>Nome lega</div>
           <input
             value={leagueName}
             onChange={(e) => setLeagueName(e.target.value)}
-            placeholder="Es. Paro Ale e Leo"
+            placeholder="Es. Fantacalcio con gli amici"
             style={s.input}
           />
 
-          <div style={{ ...s.label, marginTop: 14 }}>Squadre & inviti</div>
+          {/* Nome mia squadra */}
+          <div style={{ ...s.label, marginTop: 14 }}>Nome della tua squadra</div>
+          <input
+            value={myTeamName}
+            onChange={(e) => setMyTeamName(e.target.value)}
+            placeholder="Es. Hapoel Kann"
+            style={s.input}
+          />
 
-          <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-            {rows.map((r, i) => (
-              <div key={i} style={s.memberCard}>
-                <input
-                  value={r.team_name}
-                  onChange={(e) => updateRow(i, "team_name", e.target.value)}
-                  placeholder="Nome squadra"
-                  style={s.input}
-                />
-                <input
-                  value={r.email}
-                  onChange={(e) => updateRow(i, "email", e.target.value)}
-                  placeholder="Email proprietario"
-                  style={{ ...s.input, marginTop: 8 }}
-                />
-                <div style={{ display: "flex", gap: 10, justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-                  <select
-                    value={r.role}
-                    onChange={(e) => updateRow(i, "role", e.target.value)}
-                    disabled={i === 0}
-                    style={s.select}
-                  >
-                    <option value="player">player</option>
-                    <option value="admin">admin</option>
-                  </select>
-                  {i > 1 && (
-                    <button style={s.removeBtn} onClick={() => removeRow(i)}>Rimuovi</button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button style={s.addBtn} onClick={addRow}>+ Aggiungi squadra</button>
-
+          {/* Bottone crea */}
           <button
-            style={{ ...s.submitBtn, opacity: canSubmit && !busy ? 1 : 0.6 }}
             onClick={createLeague}
-            disabled={!canSubmit || busy}
+            disabled={busy}
+            style={{
+              ...s.submitBtn,
+              opacity: busy ? 0.6 : 1,
+              cursor: busy ? "not-allowed" : "pointer",
+            }}
           >
             {busy ? "Creazione..." : "Crea lega"}
           </button>
 
-          {msg && <div style={{ marginTop: 12, fontWeight: 900, color: "#1a7a3e" }}>{msg}</div>}
-          {err && <div style={{ marginTop: 12, fontWeight: 900, color: "#c2410c" }}>{err}</div>}
+          {/* Codice invito */}
+          {inviteCode && (
+            <div style={s.inviteBox}>
+              <div style={s.inviteTitle}>Codice invito</div>
+              <div style={s.inviteCode}>{inviteCode}</div>
+              <div style={s.inviteHint}>
+                I tuoi amici dovranno registrarsi su FantaChat e inserire questo codice per unirsi alla lega.
+              </div>
+              <button onClick={copyCode} style={s.copyBtn}>
+                Copia codice
+              </button>
+              <button
+                onClick={() => router.replace("/")}
+                style={s.goBtn}
+              >
+                Vai alla Home →
+              </button>
+            </div>
+          )}
+
+          {msg && <div style={s.msgBox}>{msg}</div>}
+          {err && <div style={s.errBox}>{err}</div>}
         </div>
       </main>
       <BottomNav />
@@ -232,38 +202,56 @@ const s: Record<string, React.CSSProperties> = {
     background: "white", borderRadius: 18, padding: 16,
     border: "1px solid #e5e7eb",
   },
-  title: { fontSize: 22, fontWeight: 800, color: "#111827", marginBottom: 12 },
-  label: { fontWeight: 800, color: "#111827", fontSize: 14 },
+  title: { fontSize: 22, fontWeight: 800, color: "#111827" },
+  subtitle: { fontSize: 13, color: "#6b7280", fontWeight: 600, marginTop: 4, marginBottom: 16, lineHeight: 1.5 },
+  label: { fontWeight: 800, color: "#111827", fontSize: 14, marginBottom: 6 },
   input: {
     width: "100%", padding: 12, borderRadius: 12,
     border: "1px solid #e5e7eb", fontWeight: 700,
-    fontSize: 14, fontFamily: "inherit", boxSizing: "border-box",
-  },
-  select: {
-    padding: 10, borderRadius: 12, border: "1px solid #e5e7eb",
-    fontWeight: 700, fontFamily: "inherit",
-  },
-  memberCard: {
-    padding: 12, border: "1px solid #e5e7eb", borderRadius: 14,
-    background: "#f9fafb",
-  },
-  addBtn: {
-    marginTop: 12, width: "100%", padding: 12,
-    background: "white", border: "1.5px dashed #d1d5db",
-    borderRadius: 12, fontWeight: 700, cursor: "pointer",
-    fontSize: 14, color: "#6b7280", fontFamily: "inherit",
-  },
-  removeBtn: {
-    padding: "8px 14px", borderRadius: 10,
-    border: "1.5px solid #ea580c", background: "white",
-    fontWeight: 700, fontSize: 13, color: "#ea580c",
-    cursor: "pointer", fontFamily: "inherit",
+    fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" as const,
   },
   submitBtn: {
-    marginTop: 12, width: "100%", padding: 14,
+    marginTop: 16, width: "100%", padding: 14,
     background: "linear-gradient(135deg, #16a34a, #15803d)",
     color: "white", border: "none", borderRadius: 12,
-    fontSize: 15, fontWeight: 700, cursor: "pointer",
+    fontSize: 15, fontWeight: 700, fontFamily: "inherit",
+  },
+  inviteBox: {
+    marginTop: 16, padding: 16, borderRadius: 14,
+    background: "#f0fdf4", border: "1.5px solid #86efac",
+    textAlign: "center" as const,
+  },
+  inviteTitle: {
+    fontSize: 12, fontWeight: 700, color: "#6b7280",
+    textTransform: "uppercase" as const, letterSpacing: "0.5px", marginBottom: 8,
+  },
+  inviteCode: {
+    fontSize: 32, fontWeight: 900, color: "#15803d",
+    letterSpacing: 4, marginBottom: 10, fontFamily: "monospace",
+  },
+  inviteHint: {
+    fontSize: 12, color: "#6b7280", lineHeight: 1.5, marginBottom: 12,
+  },
+  copyBtn: {
+    width: "100%", padding: 12, background: "#16a34a",
+    color: "white", border: "none", borderRadius: 10,
+    fontSize: 14, fontWeight: 700, cursor: "pointer",
+    fontFamily: "inherit", marginBottom: 8,
+  },
+  goBtn: {
+    width: "100%", padding: 12, background: "white",
+    color: "#16a34a", border: "1.5px solid #16a34a", borderRadius: 10,
+    fontSize: 14, fontWeight: 700, cursor: "pointer",
     fontFamily: "inherit",
+  },
+  msgBox: {
+    marginTop: 12, background: "#f0fdf4", border: "1px solid #86efac",
+    borderRadius: 10, padding: "10px 14px", color: "#15803d",
+    fontWeight: 800, fontSize: 13,
+  },
+  errBox: {
+    marginTop: 12, background: "#fff4ea", border: "1px solid #f5c990",
+    borderRadius: 10, padding: "10px 14px", color: "#b85c0a",
+    fontWeight: 800, fontSize: 13,
   },
 };
