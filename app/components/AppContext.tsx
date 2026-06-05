@@ -2,32 +2,51 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-
-// ─── TIPI ─────────────────────────────────────────────────────────────────────
+import { DEFAULT_THEME, themeFromType, type CompetitionTheme } from "../../lib/competitionThemes";
 
 type AppRole = "player" | "admin" | "super_admin";
+
+type AppContextRow = {
+  user_id: string | null;
+  user_email: string | null;
+  active_league_id: string | null;
+  active_league_competition_id: string | null;
+  league_name: string | null;
+  team_name: string | null;
+  role: AppRole | null;
+  competition_id: string | null;
+  competition_name: string | null;
+  competition_type: string | null;
+  competition_slug: string | null;
+  season_id: string | null;
+};
 
 type AppCtxValue = {
   ready: boolean;
   userId: string | null;
   userEmail: string | null;
 
-  // Lega attiva
   activeLeagueId: string | null;
+  activeLeagueCompetitionId: string | null;
+
   leagueName: string;
   teamName: string;
   role: AppRole | null;
 
-  // Competizione attiva (per il tema)
-  competitionSlug: string | null;
+  competitionId: string | null;
   competitionName: string | null;
+  competitionType: string | null;
+  competitionSlug: string | null;
+  competitionTheme: CompetitionTheme;
   seasonId: string | null;
 
-  // Azioni
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+
   refresh: () => Promise<void>;
   setActiveLeague: (leagueId: string) => Promise<void>;
+  setActiveCompetition: (leagueCompetitionId: string) => Promise<void>;
 
-  // Drawer
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
@@ -36,156 +55,248 @@ type AppCtxValue = {
 const Ctx = createContext<AppCtxValue | null>(null);
 
 export function useApp() {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("useApp must be used within <AppProvider />");
-  return v;
+  const value = useContext(Ctx);
+  if (!value) throw new Error("useApp must be used within <AppProvider />");
+  return value;
 }
 
-// ─── PROVIDER ─────────────────────────────────────────────────────────────────
+const emptyCtx: AppContextRow = {
+  user_id: null,
+  user_email: null,
+  active_league_id: null,
+  active_league_competition_id: null,
+  league_name: null,
+  team_name: null,
+  role: null,
+  competition_id: null,
+  competition_name: null,
+  competition_type: null,
+  competition_slug: null,
+  season_id: null,
+};
 
-export function AppProvider(props: { children: React.ReactNode }) {
+function normalizeRpcRow(data: unknown): Partial<AppContextRow> | null {
+  if (!data) return null;
+
+  const row = Array.isArray(data) ? data[0] : data;
+
+  if (!row || typeof row !== "object") return null;
+
+  return row as Partial<AppContextRow>;
+}
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-
-  const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
-  const [leagueName, setLeagueName] = useState("—");
-  const [teamName, setTeamName] = useState("—");
-  const [role, setRole] = useState<AppRole | null>(null);
-
-  const [competitionSlug, setCompetitionSlug] = useState<string | null>(null);
-  const [competitionName, setCompetitionName] = useState<string | null>(null);
-  const [seasonId, setSeasonId] = useState<string | null>(null);
-
+  const [row, setRow] = useState<AppContextRow>(emptyCtx);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // ─── REFRESH ──────────────────────────────────────────────────────────────
 
   async function refresh() {
     setReady(false);
 
-    // 1) Auth
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) {
-      resetState();
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+
+      if (!auth.user) {
+        setRow(emptyCtx);
+        setReady(true);
+        return;
+      }
+
+      const fallback: AppContextRow = {
+        ...emptyCtx,
+        user_id: auth.user.id,
+        user_email: auth.user.email ?? null,
+      };
+
+      // 1. Tentativo principale tramite RPC
+      const { data, error } = await supabase.rpc("get_app_context");
+
+      const rpcRow = !error ? normalizeRpcRow(data) : null;
+
+      if (rpcRow) {
+        setRow({
+          ...fallback,
+          ...rpcRow,
+          user_id: rpcRow.user_id ?? auth.user.id,
+          user_email: rpcRow.user_email ?? auth.user.email ?? null,
+        });
+        setReady(true);
+        return;
+      }
+
+      if (error) {
+        console.warn("get_app_context fallback:", error.message);
+      }
+
+      // 2. Fallback compatibile se la RPC non risponde correttamente
+      const { data: ctx } = await supabase
+        .from("user_context")
+        .select("active_league_id, active_league_competition_id")
+        .eq("user_id", auth.user.id)
+        .maybeSingle();
+
+      const activeLeagueId = ctx?.active_league_id ?? null;
+
+      if (!activeLeagueId) {
+        setRow(fallback);
+        setReady(true);
+        return;
+      }
+
+      const { data: member } = await supabase
+        .from("league_members")
+        .select("team_name, role")
+        .eq("league_id", activeLeagueId)
+        .eq("user_id", auth.user.id)
+        .maybeSingle();
+
+      const { data: league } = await supabase
+        .from("leagues")
+        .select("name")
+        .eq("id", activeLeagueId)
+        .maybeSingle();
+
+      let leagueCompetitionId = ctx?.active_league_competition_id ?? null;
+      let competitionData: Partial<AppContextRow> = {};
+
+      // Se l'utente ha una lega attiva ma nessuna competizione attiva,
+      // prende la prima competizione attiva della lega.
+      if (!leagueCompetitionId) {
+        const { data: firstLc } = await supabase
+          .from("league_competitions")
+          .select("id")
+          .eq("league_id", activeLeagueId)
+          .eq("status", "active")
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        leagueCompetitionId = firstLc?.id ?? null;
+
+        if (leagueCompetitionId) {
+          await supabase
+            .from("user_context")
+            .upsert(
+              {
+                user_id: auth.user.id,
+                active_league_id: activeLeagueId,
+                active_league_competition_id: leagueCompetitionId,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+        }
+      }
+
+      if (leagueCompetitionId) {
+        const { data: lc } = await supabase
+          .from("league_competitions")
+          .select(`
+            id,
+            competition_id,
+            season_id,
+            competitions(name, slug, type),
+            seasons(name)
+          `)
+          .eq("id", leagueCompetitionId)
+          .maybeSingle();
+
+        const comp = (lc as any)?.competitions;
+
+        competitionData = {
+          active_league_competition_id: leagueCompetitionId,
+          competition_id: (lc as any)?.competition_id ?? null,
+          season_id: (lc as any)?.season_id ?? null,
+          competition_name: comp?.name ?? null,
+          competition_slug: comp?.slug ?? null,
+          competition_type: comp?.type ?? null,
+        };
+      }
+
+      setRow({
+        ...fallback,
+        active_league_id: activeLeagueId,
+        league_name: league?.name ?? "—",
+        team_name: member?.team_name ?? "—",
+        role: (member?.role as AppRole | undefined) ?? "player",
+        ...competitionData,
+      });
+
       setReady(true);
-      return;
-    }
+    } catch (e) {
+      console.error("AppContext refresh error:", e);
 
-    setUserId(auth.user.id);
-    setUserEmail(auth.user.email ?? null);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
 
-    // 2) Lega attiva dal user_context
-    const { data: ctx } = await supabase
-      .from("user_context")
-      .select("active_league_id")
-      .eq("user_id", auth.user.id)
-      .maybeSingle();
+        if (auth.user) {
+          setRow({
+            ...emptyCtx,
+            user_id: auth.user.id,
+            user_email: auth.user.email ?? null,
+          });
+        } else {
+          setRow(emptyCtx);
+        }
+      } catch {
+        setRow(emptyCtx);
+      }
 
-    const lid = ctx?.active_league_id ?? null;
-    setActiveLeagueId(lid);
-
-    if (!lid) {
-      setLeagueName("—");
-      setTeamName("—");
-      setRole(null);
-      setCompetitionSlug(null);
-      setCompetitionName(null);
-      setSeasonId(null);
       setReady(true);
-      return;
     }
-
-    // 3) Membership dell'utente in questa lega
-    const { data: member } = await supabase
-      .from("league_members")
-      .select("team_name, role")
-      .eq("league_id", lid)
-      .eq("user_id", auth.user.id)
-      .maybeSingle();
-
-    if (!member) {
-      // Utente non è membro di questa lega — reset
-      setLeagueName("—");
-      setTeamName("—");
-      setRole(null);
-      setCompetitionSlug(null);
-      setCompetitionName(null);
-      setSeasonId(null);
-      setReady(true);
-      return;
-    }
-
-    setTeamName(member.team_name ?? "—");
-    setRole(member.role as AppRole ?? "player");
-
-    // 4) Info lega + stagione + competizione
-    const { data: leagueData } = await supabase
-      .from("leagues")
-      .select(`
-        name,
-        season_id,
-        seasons!inner(
-          id,
-          name,
-          competitions!inner(
-            name,
-            slug
-          )
-        )
-      `)
-      .eq("id", lid)
-      .single();
-
-    if (leagueData) {
-      setLeagueName(leagueData.name ?? "—");
-
-      const season = (leagueData as any).seasons;
-      setSeasonId(season?.id ?? null);
-
-      const comp = season?.competitions;
-      setCompetitionSlug(comp?.slug ?? null);
-      setCompetitionName(comp?.name ?? null);
-    } else {
-      setLeagueName("—");
-      setSeasonId(null);
-      setCompetitionSlug(null);
-      setCompetitionName(null);
-    }
-
-    setReady(true);
   }
 
-  // ─── SET ACTIVE LEAGUE ────────────────────────────────────────────────────
-
-  async function setActiveLeagueAction(leagueId: string) {
+  async function setActiveLeague(leagueId: string) {
     const { error } = await supabase.rpc("set_active_league", {
       p_league_id: leagueId,
     });
 
     if (error) {
-      console.error("Errore set_active_league:", error.message);
-      return;
+      console.error("set_active_league error:", error.message);
+
+      const { data: auth } = await supabase.auth.getUser();
+
+      if (auth.user) {
+        await supabase
+          .from("user_context")
+          .upsert(
+            {
+              user_id: auth.user.id,
+              active_league_id: leagueId,
+              active_league_competition_id: null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          );
+      }
     }
 
     await refresh();
   }
 
-  // ─── RESET STATE ──────────────────────────────────────────────────────────
+  async function setActiveCompetition(leagueCompetitionId: string) {
+    const { error } = await supabase.rpc("set_active_competition", {
+      p_league_competition_id: leagueCompetitionId,
+    });
 
-  function resetState() {
-    setUserId(null);
-    setUserEmail(null);
-    setActiveLeagueId(null);
-    setLeagueName("—");
-    setTeamName("—");
-    setRole(null);
-    setCompetitionSlug(null);
-    setCompetitionName(null);
-    setSeasonId(null);
+    if (error) {
+      console.error("set_active_competition error:", error.message);
+
+      const { data: auth } = await supabase.auth.getUser();
+
+      if (auth.user) {
+        await supabase
+          .from("user_context")
+          .update({
+            active_league_competition_id: leagueCompetitionId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", auth.user.id);
+      }
+    }
+
+    await refresh();
   }
-
-  // ─── INIT + AUTH LISTENER ─────────────────────────────────────────────────
 
   useEffect(() => {
     refresh();
@@ -200,32 +311,57 @@ export function AppProvider(props: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── VALUE ────────────────────────────────────────────────────────────────
+  const isSuperAdmin = row.role === "super_admin";
+  const isAdmin = row.role === "admin" || row.role === "super_admin";
+
+  const competitionTheme = useMemo(() => {
+    try {
+      return themeFromType(row.competition_type ?? undefined);
+    } catch {
+      return DEFAULT_THEME;
+    }
+  }, [row.competition_type]);
 
   const value = useMemo<AppCtxValue>(
     () => ({
       ready,
-      userId,
-      userEmail,
-      activeLeagueId,
-      leagueName,
-      teamName,
-      role,
-      competitionSlug,
-      competitionName,
-      seasonId,
+      userId: row.user_id,
+      userEmail: row.user_email,
+
+      activeLeagueId: row.active_league_id,
+      activeLeagueCompetitionId: row.active_league_competition_id,
+
+      leagueName: row.league_name ?? "—",
+      teamName: row.team_name ?? "—",
+      role: row.role,
+
+      competitionId: row.competition_id,
+      competitionName: row.competition_name,
+      competitionType: row.competition_type,
+      competitionSlug: row.competition_slug,
+      competitionTheme,
+      seasonId: row.season_id,
+
+      isAdmin,
+      isSuperAdmin,
+
       refresh,
-      setActiveLeague: setActiveLeagueAction,
+      setActiveLeague,
+      setActiveCompetition,
+
       drawerOpen,
       openDrawer: () => setDrawerOpen(true),
       closeDrawer: () => setDrawerOpen(false),
     }),
     [
-      ready, userId, userEmail, activeLeagueId, leagueName,
-      teamName, role, competitionSlug, competitionName,
-      seasonId, drawerOpen,
+      ready,
+      row,
+      competitionTheme,
+      isAdmin,
+      isSuperAdmin,
+      drawerOpen,
     ]
   );
-
-  return <Ctx.Provider value={value}>{props.children}</Ctx.Provider>;
+  
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

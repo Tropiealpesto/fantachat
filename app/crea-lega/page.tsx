@@ -1,170 +1,137 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
+import { supabase } from "../../lib/supabaseClient";
 
-export default function CreaLegaPage() {
+export default function CreaLega() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
 
-  const [leagueName, setLeagueName] = useState("");
-  const [myTeamName, setMyTeamName] = useState("La mia squadra");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [team, setTeam] = useState("La mia squadra");
+
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
+  const [createdLeagueCompetitionId, setCreatedLeagueCompetitionId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function run() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return router.replace("/login");
-      setUserId(data.user.id);
-      setLoading(false);
-    }
-    run();
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) router.replace("/login");
+      else setUserId(data.user.id);
+    });
   }, [router]);
 
-  async function createLeague() {
-    setErr(null); setMsg(null); setInviteCode(null);
+  async function create() {
+    setErr(null);
+    setMsg(null);
+    setInviteCode(null);
+    setCreatedLeagueId(null);
+    setCreatedLeagueCompetitionId(null);
 
-    if (leagueName.trim().length < 2) return setErr("Inserisci un nome per la lega.");
-    if (myTeamName.trim().length < 1) return setErr("Inserisci un nome per la tua squadra.");
-    if (!userId) return setErr("Non autenticato.");
+    if (!userId) return setErr("Utente non autenticato.");
+    if (!name.trim() || !team.trim()) return setErr("Inserisci nome lega e squadra.");
 
     setBusy(true);
 
-    try {
-      // 1) Competizione default
-      const { data: comp, error: e1 } = await supabase
-        .from("competitions")
-        .insert({ name: "Serie A", slug: "serie-a-" + Date.now() })
-        .select("id")
-        .single();
-      if (e1) throw e1;
+    const { data, error } = await supabase.rpc("create_league_with_default_competition", {
+      p_league_name: name.trim(),
+      p_team_name: team.trim(),
+    });
 
-      // 2) Config
-      const { error: e2 } = await supabase
-        .from("competition_config")
-        .insert({
-          competition_id: comp.id,
-          roles: [
-            { key: "P", label: "Portiere" },
-            { key: "D", label: "Difensore" },
-            { key: "C", label: "Centrocampista" },
-            { key: "A", label: "Attaccante" },
-          ],
-          players_per_role: { P: 1, D: 1, C: 1, A: 1 },
+    setBusy(false);
+
+    if (error) return setErr(error.message);
+
+    const result = Array.isArray(data) ? data[0] : data;
+
+    const leagueId = result?.league_id ?? null;
+    const leagueCompetitionId = result?.league_competition_id ?? null;
+    const code = result?.invite_code ?? null;
+
+    setCreatedLeagueId(leagueId);
+    setCreatedLeagueCompetitionId(leagueCompetitionId);
+    setInviteCode(code);
+
+    setMsg("Lega creata ✅ Condividi il codice invito con i tuoi amici.");
+
+    // La RPC dovrebbe già aggiornare user_context.
+    // Facciamo comunque un refresh lato DB per sicurezza.
+    if (leagueId) {
+      try {
+        await supabase.rpc("set_active_league", {
+          p_league_id: leagueId,
         });
-      if (e2) throw e2;
-
-      // 3) Stagione
-      const { data: season, error: e3 } = await supabase
-        .from("seasons")
-        .insert({
-          competition_id: comp.id,
-          name: "2025/26",
-          total_matchdays: 38,
-        })
-        .select("id")
-        .single();
-      if (e3) throw e3;
-
-      // 4) Lega (invite_code generato automaticamente dal DB)
-      const { data: league, error: e4 } = await supabase
-        .from("leagues")
-        .insert({
-          season_id: season.id,
-          name: leagueName.trim(),
-        })
-        .select("id, invite_code")
-        .single();
-      if (e4) throw e4;
-
-      // 5) Aggiungi me come admin
-      const { error: e5 } = await supabase
-        .from("league_members")
-        .insert({
-          league_id: league.id,
-          user_id: userId,
-          team_name: myTeamName.trim(),
-          role: "admin",
-        });
-      if (e5) throw e5;
-
-      // 6) Imposta come lega attiva
-      const { error: e6 } = await supabase.rpc("set_active_league", {
-        p_league_id: league.id,
-      });
-      if (e6) throw e6;
-
-      setBusy(false);
-      setInviteCode(league.invite_code);
-      setMsg("Lega creata ✅ Condividi il codice invito con i tuoi amici!");
-
-    } catch (e: any) {
-      setBusy(false);
-      setErr(e?.message || String(e));
+      } catch {}
     }
+
+    if (leagueCompetitionId) {
+      try {
+        await supabase.rpc("set_active_competition", {
+          p_league_competition_id: leagueCompetitionId,
+        });
+      } catch {}
+    }
+
+    // NON facciamo redirect automatico: prima mostriamo il codice.
   }
 
   async function copyCode() {
     if (!inviteCode) return;
+
     try {
       await navigator.clipboard.writeText(inviteCode);
       setMsg("Codice copiato ✅");
     } catch {
-      setErr("Copia manualmente il codice.");
+      setErr("Non riesco a copiarlo automaticamente. Copialo manualmente.");
     }
   }
 
-  if (loading) return <main style={{ padding: 20 }}>Caricamento...</main>;
+  function goHome() {
+    router.replace("/");
+  }
 
   return (
     <>
-      <AppBar league="FantaChat" team="Crea nuova lega" />
+      <AppBar league="FantaChat" team="Crea lega" />
+
       <main style={s.container}>
         <div style={s.card}>
-          <div style={s.title}>Crea una nuova lega</div>
-          <div style={s.subtitle}>
-            Crea la lega, poi condividi il codice invito con i tuoi amici.
-          </div>
+          <h1 style={s.title}>Crea una nuova lega</h1>
+          <p style={s.subtitle}>
+            La lega è la community. Le competizioni interne si aggiungono dopo.
+          </p>
 
-          {/* Nome lega */}
-          <div style={s.label}>Nome lega</div>
+          <label style={s.label}>Nome lega</label>
           <input
-            value={leagueName}
-            onChange={(e) => setLeagueName(e.target.value)}
-            placeholder="Es. Fantacalcio con gli amici"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             style={s.input}
+            disabled={!!inviteCode}
+            placeholder="Es. Fantacalcio amici"
           />
 
-          {/* Nome mia squadra */}
-          <div style={{ ...s.label, marginTop: 14 }}>Nome della tua squadra</div>
+          <label style={s.label}>Nome squadra</label>
           <input
-            value={myTeamName}
-            onChange={(e) => setMyTeamName(e.target.value)}
-            placeholder="Es. Hapoel Kann"
+            value={team}
+            onChange={(e) => setTeam(e.target.value)}
             style={s.input}
+            disabled={!!inviteCode}
+            placeholder="Es. La mia squadra"
           />
 
-          {/* Bottone crea */}
-          <button
-            onClick={createLeague}
-            disabled={busy}
-            style={{
-              ...s.submitBtn,
-              opacity: busy ? 0.6 : 1,
-              cursor: busy ? "not-allowed" : "pointer",
-            }}
-          >
-            {busy ? "Creazione..." : "Crea lega"}
-          </button>
+          {!inviteCode && (
+            <button onClick={create} disabled={busy} style={s.btn}>
+              {busy ? "Creazione..." : "Crea lega"}
+            </button>
+          )}
 
-          {/* Codice invito */}
           {inviteCode && (
             <div style={s.inviteBox}>
               <div style={s.inviteTitle}>Codice invito</div>
@@ -172,22 +139,28 @@ export default function CreaLegaPage() {
               <div style={s.inviteHint}>
                 I tuoi amici dovranno registrarsi su FantaChat e inserire questo codice per unirsi alla lega.
               </div>
+
               <button onClick={copyCode} style={s.copyBtn}>
                 Copia codice
               </button>
-              <button
-                onClick={() => router.replace("/")}
-                style={s.goBtn}
-              >
+
+              <button onClick={goHome} style={s.goBtn}>
                 Vai alla Home →
               </button>
             </div>
           )}
 
-          {msg && <div style={s.msgBox}>{msg}</div>}
-          {err && <div style={s.errBox}>{err}</div>}
+          {msg && <div style={s.ok}>{msg}</div>}
+          {err && <div style={s.err}>{err}</div>}
+
+          {createdLeagueId && (
+            <div style={s.debugSmall}>
+              Lega creata e impostata come attiva.
+            </div>
+          )}
         </div>
       </main>
+
       <BottomNav />
     </>
   );
@@ -195,63 +168,130 @@ export default function CreaLegaPage() {
 
 const s: Record<string, React.CSSProperties> = {
   container: {
-    maxWidth: 520, margin: "0 auto",
-    padding: "16px 14px calc(64px + env(safe-area-inset-bottom, 0px) + 20px)",
+    maxWidth: 520,
+    margin: "0 auto",
+    padding: "16px 14px 100px",
   },
   card: {
-    background: "white", borderRadius: 18, padding: 16,
+    background: "white",
     border: "1px solid #e5e7eb",
+    borderRadius: 18,
+    padding: 16,
+    display: "grid",
+    gap: 10,
   },
-  title: { fontSize: 22, fontWeight: 800, color: "#111827" },
-  subtitle: { fontSize: 13, color: "#6b7280", fontWeight: 600, marginTop: 4, marginBottom: 16, lineHeight: 1.5 },
-  label: { fontWeight: 800, color: "#111827", fontSize: 14, marginBottom: 6 },
+  title: {
+    fontSize: 22,
+    fontWeight: 900,
+    color: "#111827",
+    margin: 0,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: "#6b7280",
+    fontWeight: 700,
+    lineHeight: 1.5,
+    margin: 0,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#374151",
+    marginTop: 4,
+  },
   input: {
-    width: "100%", padding: 12, borderRadius: 12,
-    border: "1px solid #e5e7eb", fontWeight: 700,
-    fontSize: 14, fontFamily: "inherit", boxSizing: "border-box" as const,
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
+    fontWeight: 800,
+    fontFamily: "inherit",
+    fontSize: 14,
   },
-  submitBtn: {
-    marginTop: 16, width: "100%", padding: 14,
-    background: "linear-gradient(135deg, #16a34a, #15803d)",
-    color: "white", border: "none", borderRadius: 12,
-    fontSize: 15, fontWeight: 700, fontFamily: "inherit",
+  btn: {
+    padding: 14,
+    border: 0,
+    borderRadius: 12,
+    background: "#16a34a",
+    color: "white",
+    fontWeight: 900,
+    fontFamily: "inherit",
+    fontSize: 15,
+    cursor: "pointer",
   },
   inviteBox: {
-    marginTop: 16, padding: 16, borderRadius: 14,
-    background: "#f0fdf4", border: "1.5px solid #86efac",
-    textAlign: "center" as const,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 14,
+    background: "#f0fdf4",
+    border: "1.5px solid #86efac",
+    textAlign: "center",
   },
   inviteTitle: {
-    fontSize: 12, fontWeight: 700, color: "#6b7280",
-    textTransform: "uppercase" as const, letterSpacing: "0.5px", marginBottom: 8,
+    fontSize: 12,
+    fontWeight: 900,
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.6px",
+    marginBottom: 8,
   },
   inviteCode: {
-    fontSize: 32, fontWeight: 900, color: "#15803d",
-    letterSpacing: 4, marginBottom: 10, fontFamily: "monospace",
+    fontSize: 34,
+    fontWeight: 1000,
+    color: "#15803d",
+    letterSpacing: 4,
+    fontFamily: "monospace",
+    marginBottom: 10,
   },
   inviteHint: {
-    fontSize: 12, color: "#6b7280", lineHeight: 1.5, marginBottom: 12,
+    fontSize: 12,
+    color: "#6b7280",
+    lineHeight: 1.5,
+    fontWeight: 700,
+    marginBottom: 12,
   },
   copyBtn: {
-    width: "100%", padding: 12, background: "#16a34a",
-    color: "white", border: "none", borderRadius: 10,
-    fontSize: 14, fontWeight: 700, cursor: "pointer",
-    fontFamily: "inherit", marginBottom: 8,
+    width: "100%",
+    padding: 12,
+    border: 0,
+    borderRadius: 10,
+    background: "#16a34a",
+    color: "white",
+    fontWeight: 900,
+    fontFamily: "inherit",
+    marginBottom: 8,
+    cursor: "pointer",
   },
   goBtn: {
-    width: "100%", padding: 12, background: "white",
-    color: "#16a34a", border: "1.5px solid #16a34a", borderRadius: 10,
-    fontSize: 14, fontWeight: 700, cursor: "pointer",
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    border: "1.5px solid #16a34a",
+    background: "white",
+    color: "#16a34a",
+    fontWeight: 900,
     fontFamily: "inherit",
+    cursor: "pointer",
   },
-  msgBox: {
-    marginTop: 12, background: "#f0fdf4", border: "1px solid #86efac",
-    borderRadius: 10, padding: "10px 14px", color: "#15803d",
-    fontWeight: 800, fontSize: 13,
+  ok: {
+    color: "#15803d",
+    fontWeight: 900,
+    background: "#f0fdf4",
+    border: "1px solid #86efac",
+    borderRadius: 10,
+    padding: "10px 12px",
   },
-  errBox: {
-    marginTop: 12, background: "#fff4ea", border: "1px solid #f5c990",
-    borderRadius: 10, padding: "10px 14px", color: "#b85c0a",
-    fontWeight: 800, fontSize: 13,
+  err: {
+    color: "#b85c0a",
+    fontWeight: 900,
+    background: "#fff7ed",
+    border: "1px solid #fed7aa",
+    borderRadius: 10,
+    padding: "10px 12px",
+  },
+  debugSmall: {
+    fontSize: 11,
+    color: "#9ca3af",
+    fontWeight: 700,
+    textAlign: "center",
   },
 };
