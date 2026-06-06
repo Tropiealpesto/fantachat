@@ -1,26 +1,13 @@
 ﻿"use client";
 
-import type { ReactNode } from "react";
-import { useApp } from "./AppContext";
-
 export default function AppBar(props: {
   league: string;
   team: string;
-  right?: ReactNode;
+  right?: React.ReactNode;
   onMenuOpen?: () => void;
 }) {
-  const { competitionTheme } = useApp();
-  const isDark = competitionTheme.key === "champions";
-
   return (
-    <div
-      className="appbar fc-themed-appbar"
-      style={{
-        background: competitionTheme.appbarBg,
-        borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.10)" : competitionTheme.border}`,
-        color: isDark ? "white" : competitionTheme.text,
-      }}
-    >
+    <div className="appbar">
       <div className="appbar-inner">
         <button
           onClick={props.onMenuOpen}
@@ -28,13 +15,14 @@ export default function AppBar(props: {
           style={{
             background: "none",
             border: "none",
-            cursor: "pointer",
+            cursor: props.onMenuOpen ? "pointer" : "default",
             padding: "4px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
-            color: isDark ? "white" : "#374151",
+            color: "#374151",
+            opacity: props.onMenuOpen ? 1 : 0.45,
           }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -46,22 +34,11 @@ export default function AppBar(props: {
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="appbar-logo">
-            <span style={{ color: competitionTheme.key === "champions" ? "#ffffff" : competitionTheme.primaryDark }}>
-              Fanta
-            </span>
-            <span style={{ color: competitionTheme.key === "champions" ? competitionTheme.primary : competitionTheme.accent }}>
-              Chat
-            </span>
+            <span className="logo-fanta">Fanta</span>
+            <span className="logo-chat">Chat</span>
           </div>
-          <div
-            className="appbar-sub"
-            style={{
-              color: isDark ? "rgba(255,255,255,0.66)" : "var(--muted)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
+
+          <div className="appbar-sub">
             {props.league} · {props.team}
           </div>
         </div>

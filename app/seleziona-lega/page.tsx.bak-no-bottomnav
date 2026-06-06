@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
+import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -94,7 +95,7 @@ async function select(id: string) {
 
     if (error) return setErr(error.message);
 
-    setMsg("Sei entrato nella lega âœ…");
+    setMsg("Sei entrato nella lega ✅");
     setCode("");
     setTeam("");
 
@@ -141,7 +142,7 @@ async function select(id: string) {
                 <small style={s.meta}>
                   {r.team_name}
                   {typeof r.competition_count === "number"
-                    ? ` Â· ${r.competition_count} competizioni`
+                    ? ` · ${r.competition_count} competizioni`
                     : ""}
                 </small>
               </div>
@@ -177,7 +178,7 @@ async function select(id: string) {
         </div>
       </main>
 
-      
+      <BottomNav />
     </>
   );
 }
@@ -186,7 +187,7 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "16px 14px 28px",
+    padding: "16px 14px 100px",
     display: "grid",
     gap: 10,
   },
