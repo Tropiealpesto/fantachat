@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+:root {
+  --primary: #22c55e;
+  --primary-dark: #16a34a;
+  --accent: #f97316;
+  --accent-dark: #ea580c;
+
+  --text: #0f172a;
+  --muted: #64748b;
+  --bg: #f1f5f1;
+  --card: #ffffff;
+  --border: #e5e7eb;
+
+  --shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
+  --radius: 18px;
+  --radius-sm: 12px;
+
+  --nav-h: 64px;
+  --appbar-h: 68px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px calc(var(--nav-h) + var(--safe-bottom) + 20px);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 9px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn:hover { background: #f9fafb; }
+.btn:active { transform: scale(.98); }
+
+.btn-primary {
+  border: none;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(22,163,74,0.30);
+}
+
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+.appbar-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  height: var(--appbar-h);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.appbar-logo {
+  font-family: 'Nunito', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.appbar-logo .logo-fanta { color: #1a7a3e; }
+.appbar-logo .logo-chat  { color: #e07b1a; }
+
+.appbar-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.1px;
+}
+
+.appbar-right .btn {
+  background: transparent;
+  border: 1.5px solid var(--primary-dark);
+  color: var(--primary-dark);
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 50px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

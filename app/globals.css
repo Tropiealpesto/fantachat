@@ -131,3 +131,127 @@ a { color: inherit; text-decoration: none; }
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
+
+/* FantaChat competition themes v2 */
+html {
+  background: var(--fc-page-bg, var(--bg));
+}
+
+body {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--fc-primary, #16a34a) 12%, transparent), transparent 32%),
+    var(--fc-page-bg, var(--bg));
+  color: var(--fc-text, var(--text));
+}
+
+.card {
+  background: var(--fc-card-bg, var(--card));
+  border-color: var(--fc-border, var(--border));
+  box-shadow: var(--fc-shadow, var(--shadow));
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--fc-primary, #16a34a), var(--fc-primary-dark, #15803d));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--fc-primary, #16a34a) 34%, transparent);
+}
+
+.appbar-logo {
+  letter-spacing: -0.7px;
+}
+
+html[data-competition-theme="champions"] body {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(59,130,246,0.22), transparent 28%),
+    radial-gradient(circle at 20% 12%, rgba(200,162,74,0.08), transparent 20%),
+    #edf3ff;
+}
+
+html[data-competition-theme="champions"] .card {
+  border-color: rgba(59,130,246,0.20);
+}
+
+html[data-competition-theme="champions"] .appbar {
+  color: white;
+}
+
+html[data-competition-theme="champions"] .appbar-right .btn,
+html[data-competition-theme="champions"] .appbar-right button {
+  background: rgba(59,130,246,0.16) !important;
+  border-color: rgba(147,197,253,0.32) !important;
+  color: #dbeafe !important;
+}
+
+html[data-competition-theme="champions"] main::before {
+  content: "";
+  position: fixed;
+  top: 84px;
+  right: -70px;
+  width: 210px;
+  height: 210px;
+  pointer-events: none;
+  opacity: 0.10;
+  background:
+    linear-gradient(36deg, transparent 43%, #2563eb 44%, #2563eb 46%, transparent 47%),
+    linear-gradient(108deg, transparent 43%, #60a5fa 44%, #60a5fa 46%, transparent 47%);
+  transform: rotate(12deg);
+  z-index: -1;
+}
+
+html[data-competition-theme="mondiale"] body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(17,24,39,0.10), transparent 22%),
+    radial-gradient(circle at 92% 8%, rgba(212,160,23,0.22), transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f7f7f2 42%, #f2efe6 100%);
+}
+
+html[data-competition-theme="mondiale"] .card {
+  border-color: rgba(17,24,39,0.12);
+}
+
+html[data-competition-theme="mondiale"] .appbar-right .btn,
+html[data-competition-theme="mondiale"] .appbar-right button {
+  background: #fff7d6 !important;
+  border-color: rgba(212,160,23,0.35) !important;
+  color: #9a6b00 !important;
+}
+
+html[data-competition-theme="mondiale"] main::before {
+  content: "";
+  position: fixed;
+  top: 72px;
+  left: -95px;
+  width: 230px;
+  height: 230px;
+  pointer-events: none;
+  opacity: 0.13;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, transparent 0 45%, #111827 46% 51%, transparent 52%),
+    conic-gradient(from 18deg, #111827 0 18deg, #d4a017 18deg 35deg, #0ea5e9 35deg 50deg, #dc2626 50deg 64deg, #16a34a 64deg 78deg, transparent 78deg 360deg);
+  z-index: -1;
+}
+
+html[data-competition-theme="mondiale"] main::after {
+  content: "";
+  position: fixed;
+  top: 72px;
+  right: -130px;
+  width: 260px;
+  height: 260px;
+  pointer-events: none;
+  opacity: 0.10;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, transparent 0 48%, #111827 49% 52%, transparent 53%),
+    conic-gradient(from -18deg, #d4a017 0 20deg, #111827 20deg 40deg, #0ea5e9 40deg 56deg, #dc2626 56deg 72deg, #16a34a 72deg 88deg, transparent 88deg 360deg);
+  z-index: -1;
+}
+
+html[data-competition-theme="champions"] .fc-themed-bottom-nav,
+html[data-competition-theme="champions"] .fc-themed-appbar {
+  color: white;
+}
+
+html[data-competition-theme="mondiale"] .fc-themed-bottom-nav {
+  color: #111827;
+}

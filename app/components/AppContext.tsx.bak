@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
@@ -216,8 +216,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setRow({
         ...fallback,
         active_league_id: activeLeagueId,
-        league_name: league?.name ?? "â€”",
-        team_name: member?.team_name ?? "â€”",
+        league_name: league?.name ?? "—",
+        team_name: member?.team_name ?? "—",
         role: (member?.role as AppRole | undefined) ?? "player",
         ...competitionData,
       });
@@ -322,23 +322,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [row.competition_type]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const theme = competitionTheme;
-
-    root.dataset.competitionTheme = theme.key;
-
-    root.style.setProperty("--fc-primary", theme.primary);
-    root.style.setProperty("--fc-primary-dark", theme.primaryDark);
-    root.style.setProperty("--fc-accent", theme.accent);
-    root.style.setProperty("--fc-page-bg", theme.pageBg);
-    root.style.setProperty("--fc-card-bg", theme.cardBg);
-    root.style.setProperty("--fc-border", theme.border);
-    root.style.setProperty("--fc-text", theme.text);
-    root.style.setProperty("--fc-muted", theme.muted);
-    root.style.setProperty("--fc-soft", theme.soft);
-    root.style.setProperty("--fc-shadow", theme.shadow);
-  }, [competitionTheme]);
   const value = useMemo<AppCtxValue>(
     () => ({
       ready,
@@ -348,8 +331,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       activeLeagueId: row.active_league_id,
       activeLeagueCompetitionId: row.active_league_competition_id,
 
-      leagueName: row.league_name ?? "â€”",
-      teamName: row.team_name ?? "â€”",
+      leagueName: row.league_name ?? "—",
+      teamName: row.team_name ?? "—",
       role: row.role,
 
       competitionId: row.competition_id,
