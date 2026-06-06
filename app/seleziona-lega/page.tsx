@@ -106,13 +106,7 @@ export default function SelezionaLega() {
   return (
     <main style={s.page}>
       <div style={s.topBar}>
-        <button type="button" onClick={() => router.push("/")} style={s.iconBtn} aria-label="Menu">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-            <line x1="4" y1="7" x2="20" y2="7" />
-            <line x1="4" y1="12" x2="20" y2="12" />
-            <line x1="4" y1="17" x2="20" y2="17" />
-          </svg>
-        </button>
+        <div style={s.topSpacer} />
 
         <div style={s.logoWrap}>
           <div style={s.logo}>
@@ -289,15 +283,9 @@ const s: Record<string, React.CSSProperties> = {
     position: "relative",
     zIndex: 2,
   },
-  iconBtn: {
+  topSpacer: {
     width: 42,
     height: 42,
-    border: "none",
-    background: "transparent",
-    color: "#111827",
-    display: "grid",
-    placeItems: "center",
-    cursor: "pointer",
   },
   avatarBtn: {
     width: 38,
@@ -316,27 +304,27 @@ const s: Record<string, React.CSSProperties> = {
   },
   logo: {
     fontFamily: "'Nunito', system-ui, sans-serif",
-    fontSize: 34,
+    fontSize: 24,
     fontWeight: 1000,
-    letterSpacing: -1.2,
+    letterSpacing: -0.7,
     lineHeight: 1,
   },
   logoFanta: {
-    color: "#0f5132",
+    color: "#1a7a3e",
   },
   logoChat: {
-    color: "#f97316",
+    color: "#e07b1a",
   },
   payoff: {
-    marginTop: 7,
-    fontSize: 11,
+    marginTop: 5,
+    fontSize: 9,
     color: "#6b7280",
     fontWeight: 900,
-    letterSpacing: "1.7px",
+    letterSpacing: "1.2px",
   },
   hero: {
     textAlign: "center",
-    padding: "34px 10px 32px",
+    padding: "32px 10px 28px",
     position: "relative",
     zIndex: 2,
   },
