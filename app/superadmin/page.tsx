@@ -1,12 +1,13 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import CompetitionBadge from "../components/CompetitionBadge";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
+
+type Tab = "competizioni" | "statistiche" | "top" | "partite";
 
 type Competition = {
   id: string;
@@ -19,11 +20,10 @@ type Competition = {
   default_total_matchdays: number;
   default_top_n: number;
   scope: string | null;
-  description: string | null;
-  rules_summary: string | null;
   active_season_id: string | null;
   active_season_name: string | null;
   players_count: number;
+  teams_count: number;
 };
 
 type Player = {
@@ -31,6 +31,12 @@ type Player = {
   name: string;
   role: string;
   team_name: string;
+};
+
+type Team = {
+  id: string;
+  name: string;
+  country: string;
 };
 
 type Stats = {
@@ -42,6 +48,23 @@ type Stats = {
   pen_saved: number;
   pen_missed: number;
   clean_sheet: boolean;
+};
+
+type TopTeam = {
+  id: string;
+  real_team_id: string;
+  team_name: string;
+  rank: number;
+};
+
+type Fixture = {
+  id: string;
+  home_team_id: string;
+  home_team_name: string;
+  away_team_id: string;
+  away_team_name: string;
+  starts_at: string | null;
+  status: string;
 };
 
 const EMPTY_STATS: Stats = {
@@ -57,53 +80,42 @@ const EMPTY_STATS: Stats = {
 
 export default function SuperadminPage() {
   const app = useApp();
-  const router = useRouter();
 
+  const [tab, setTab] = useState<Tab>("competizioni");
   const [checking, setChecking] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
 
   const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [selectedCompetitionId, setSelectedCompetitionId] = useState("");
+  const [competitionId, setCompetitionId] = useState("");
   const [matchday, setMatchday] = useState(1);
 
-  const [query, setQuery] = useState("");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-
-  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
-  const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const selectedCompetition = useMemo(
-    () => competitions.find((c) => c.id === selectedCompetitionId) ?? null,
-    [competitions, selectedCompetitionId]
+    () => competitions.find((c) => c.id === competitionId) ?? null,
+    [competitions, competitionId]
   );
 
   useEffect(() => {
-    async function check() {
+    async function init() {
       if (!app.ready) return;
-
-      if (!app.userId) {
-        router.replace("/login");
-        return;
-      }
 
       const { data, error } = await supabase.rpc("is_current_user_superadmin");
 
       if (error || data !== true) {
-        setIsSuperadmin(false);
         setChecking(false);
+        setIsSuperadmin(false);
         return;
       }
 
       setIsSuperadmin(true);
       setChecking(false);
-      loadCompetitions();
+      await loadCompetitions();
     }
 
-    check();
-  }, [app.ready, app.userId, router]);
+    init();
+  }, [app.ready]);
 
   async function loadCompetitions() {
     setErr(null);
@@ -119,19 +131,21 @@ export default function SuperadminPage() {
 
     setCompetitions(list);
 
-    if (!selectedCompetitionId && list.length) {
+    if (!competitionId && list.length) {
       const first = list.find((c) => c.visibility_status === "active") ?? list[0];
-      setSelectedCompetitionId(first.id);
-      setMatchday(1);
+      setCompetitionId(first.id);
     }
   }
 
-  async function setStatus(competitionId: string, status: "active" | "wip" | "archived") {
-    setErr(null);
+  async function setCompetitionStatus(
+    id: string,
+    status: "active" | "wip" | "archived"
+  ) {
     setMsg(null);
+    setErr(null);
 
     const { error } = await supabase.rpc("superadmin_set_competition_status", {
-      p_competition_id: competitionId,
+      p_competition_id: id,
       p_visibility_status: status,
       p_active: status !== "archived",
     });
@@ -145,48 +159,238 @@ export default function SuperadminPage() {
     await loadCompetitions();
   }
 
-  async function searchPlayers() {
-    setErr(null);
-    setMsg(null);
-    setSelectedPlayer(null);
+  if (!app.ready || checking) {
+    return <Shell app={app}><div style={s.card}>Caricamento superadmin...</div></Shell>;
+  }
 
-    if (!selectedCompetitionId) {
-      setErr("Seleziona una competizione.");
-      return;
-    }
+  if (!isSuperadmin) {
+    return (
+      <Shell app={app}>
+        <div style={s.card}>
+          <h1>Accesso negato</h1>
+          <p>Questa sezione è riservata al superadmin.</p>
+        </div>
+      </Shell>
+    );
+  }
+
+  return (
+    <Shell app={app}>
+      <div style={s.hero}>
+        <h1 style={s.title}>Superadmin</h1>
+        <p style={s.subtitle}>
+          Gestisci competizioni globali, statistiche, top squadre e partite.
+        </p>
+      </div>
+
+      {err && <div style={s.err}>{err}</div>}
+      {msg && <div style={s.ok}>{msg}</div>}
+
+      <div style={s.tabs}>
+        <TabButton active={tab === "competizioni"} onClick={() => setTab("competizioni")}>Competizioni</TabButton>
+        <TabButton active={tab === "statistiche"} onClick={() => setTab("statistiche")}>Statistiche</TabButton>
+        <TabButton active={tab === "top"} onClick={() => setTab("top")}>Top squadre</TabButton>
+        <TabButton active={tab === "partite"} onClick={() => setTab("partite")}>Partite</TabButton>
+      </div>
+
+      {tab !== "competizioni" && (
+        <Selector
+          competitions={competitions}
+          competitionId={competitionId}
+          setCompetitionId={setCompetitionId}
+          matchday={matchday}
+          setMatchday={setMatchday}
+          selectedCompetition={selectedCompetition}
+        />
+      )}
+
+      {tab === "competizioni" && (
+        <CompetizioniTab
+          competitions={competitions}
+          onStatus={setCompetitionStatus}
+        />
+      )}
+
+      {tab === "statistiche" && selectedCompetition && (
+        <StatisticheTab
+          competition={selectedCompetition}
+          matchday={matchday}
+          setErr={setErr}
+          setMsg={setMsg}
+        />
+      )}
+
+      {tab === "top" && selectedCompetition && (
+        <TopSquadreTab
+          competition={selectedCompetition}
+          matchday={matchday}
+          setErr={setErr}
+          setMsg={setMsg}
+        />
+      )}
+
+      {tab === "partite" && selectedCompetition && (
+        <PartiteTab
+          competition={selectedCompetition}
+          matchday={matchday}
+          setErr={setErr}
+          setMsg={setMsg}
+        />
+      )}
+    </Shell>
+  );
+}
+
+function Shell(props: { app: ReturnType<typeof useApp>; children: React.ReactNode }) {
+  return (
+    <>
+      <AppBar
+        league="FantaChat"
+        team="SUPERADMIN"
+        onMenuOpen={props.app.openDrawer}
+      />
+      <main style={s.container}>{props.children}</main>
+      <BottomNav />
+    </>
+  );
+}
+
+function TabButton(props: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={props.onClick}
+      style={{
+        ...s.tab,
+        background: props.active ? "#16a34a" : "white",
+        color: props.active ? "white" : "#374151",
+        borderColor: props.active ? "#16a34a" : "#e5e7eb",
+      }}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+function Selector(props: {
+  competitions: Competition[];
+  competitionId: string;
+  setCompetitionId: (id: string) => void;
+  matchday: number;
+  setMatchday: (n: number) => void;
+  selectedCompetition: Competition | null;
+}) {
+  return (
+    <div style={s.card}>
+      <label style={s.label}>Competizione</label>
+      <select
+        value={props.competitionId}
+        onChange={(e) => props.setCompetitionId(e.target.value)}
+        style={s.input}
+      >
+        {props.competitions.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+
+      <label style={s.label}>Giornata</label>
+      <input
+        type="number"
+        min={1}
+        max={props.selectedCompetition?.default_total_matchdays ?? 99}
+        value={props.matchday}
+        onChange={(e) => props.setMatchday(Number(e.target.value) || 1)}
+        style={s.input}
+      />
+    </div>
+  );
+}
+
+function CompetizioniTab(props: {
+  competitions: Competition[];
+  onStatus: (id: string, status: "active" | "wip" | "archived") => void;
+}) {
+  return (
+    <section style={s.card}>
+      <h2 style={s.cardTitle}>Competizioni globali</h2>
+      <p style={s.muted}>
+        Qui vedi solo le competizioni generiche del catalogo, non quelle create dalle singole leghe.
+      </p>
+
+      <div style={s.list}>
+        {props.competitions.map((c) => (
+          <div key={c.id} style={s.compRow}>
+            <div>
+              <CompetitionBadge name={c.name} type={c.type} />
+              <div style={s.compName}>{c.name}</div>
+              <div style={s.compMeta}>
+                {c.visibility_status} · {c.default_total_matchdays} giornate · Top {c.default_top_n} · {c.players_count} giocatori · {c.teams_count} squadre
+              </div>
+            </div>
+
+            <div style={s.actions3}>
+              <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "active")}>Attiva</button>
+              <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "wip")}>WIP</button>
+              <button style={s.dangerBtn} onClick={() => props.onStatus(c.id, "archived")}>Chiudi</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function StatisticheTab(props: {
+  competition: Competition;
+  matchday: number;
+  setErr: (x: string | null) => void;
+  setMsg: (x: string | null) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selected, setSelected] = useState<Player | null>(null);
+  const [stats, setStats] = useState<Stats>(EMPTY_STATS);
+  const [saving, setSaving] = useState(false);
+
+  async function searchPlayers() {
+    props.setErr(null);
+    props.setMsg(null);
+    setSelected(null);
 
     const { data, error } = await supabase.rpc("superadmin_search_players_for_vote", {
-      p_competition_id: selectedCompetitionId,
+      p_competition_id: props.competition.id,
       p_query: query.trim(),
     });
 
     if (error) {
-      setErr(error.message);
+      props.setErr(error.message);
       return;
     }
 
     setPlayers((data ?? []) as Player[]);
   }
 
-  async function pickPlayer(player: Player) {
-    setSelectedPlayer(player);
-    setMsg(null);
-    setErr(null);
+  async function pickPlayer(p: Player) {
+    setSelected(p);
+    props.setErr(null);
+    props.setMsg(null);
 
-    if (!selectedCompetition?.active_season_id) {
-      setErr("Questa competizione non ha una season attiva.");
+    if (!props.competition.active_season_id) {
+      props.setErr("Questa competizione non ha una season attiva.");
       return;
     }
 
     const { data, error } = await supabase.rpc("superadmin_get_player_stats", {
-      p_competition_id: selectedCompetition.id,
-      p_season_id: selectedCompetition.active_season_id,
-      p_matchday_number: matchday,
-      p_real_player_id: player.id,
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+      p_real_player_id: p.id,
     });
 
     if (error) {
-      setErr(error.message);
+      props.setErr(error.message);
       return;
     }
 
@@ -203,33 +407,30 @@ export default function SuperadminPage() {
   }
 
   function setStat<K extends keyof Stats>(key: K, value: Stats[K]) {
-    setStats((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setStats((prev) => ({ ...prev, [key]: value }));
   }
 
   async function saveStats() {
-    setErr(null);
-    setMsg(null);
+    props.setErr(null);
+    props.setMsg(null);
 
-    if (!selectedCompetition?.active_season_id) {
-      setErr("Competizione senza season attiva.");
+    if (!selected) {
+      props.setErr("Seleziona un giocatore.");
       return;
     }
 
-    if (!selectedPlayer) {
-      setErr("Seleziona un giocatore.");
+    if (!props.competition.active_season_id) {
+      props.setErr("Competizione senza season attiva.");
       return;
     }
 
     setSaving(true);
 
     const { data, error } = await supabase.rpc("superadmin_upsert_player_stats", {
-      p_competition_id: selectedCompetition.id,
-      p_season_id: selectedCompetition.active_season_id,
-      p_matchday_number: matchday,
-      p_real_player_id: selectedPlayer.id,
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+      p_real_player_id: selected.id,
       p_goals: stats.goals,
       p_assists: stats.assists,
       p_yellow: stats.yellow,
@@ -243,215 +444,414 @@ export default function SuperadminPage() {
     setSaving(false);
 
     if (error) {
-      setErr(error.message);
+      props.setErr(error.message);
       return;
     }
 
-    setMsg(`Statistiche salvate ✅ Totale: ${data?.total_points_base ?? 0}`);
-  }
-
-  if (!app.ready || checking) {
-    return (
-      <main style={s.container}>
-        <div style={s.card}>Caricamento superadmin...</div>
-      </main>
-    );
-  }
-
-  if (!isSuperadmin) {
-    return (
-      <main style={s.container}>
-        <div style={s.card}>
-          <h1>Accesso negato</h1>
-          <p>Questa sezione è riservata al superadmin.</p>
-        </div>
-      </main>
-    );
+    props.setMsg(`Statistiche salvate ✅ Totale: ${data?.total_points_base ?? 0}`);
   }
 
   return (
-    <>
-      <AppBar
-        league="FantaChat"
-        team="SUPERADMIN"
-        onMenuOpen={app.openDrawer}
+    <section style={s.card}>
+      <h2 style={s.cardTitle}>Statistiche giocatore</h2>
+      <p style={s.muted}>
+        Cerca e seleziona il giocatore esatto dal database. Le statistiche saranno salvate sul suo ID reale.
+      </p>
+
+      <div style={s.searchRow}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Scrivi nome giocatore o squadra"
+          style={s.input}
+        />
+        <button type="button" onClick={searchPlayers} style={s.searchBtn}>
+          Cerca
+        </button>
+      </div>
+
+      <div style={s.list}>
+        {players.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => pickPlayer(p)}
+            style={{
+              ...s.playerRow,
+              borderColor: selected?.id === p.id ? "#16a34a" : "#e5e7eb",
+              background: selected?.id === p.id ? "#f0fdf4" : "white",
+            }}
+          >
+            <b>{p.name} {p.team_name ? `(${p.team_name})` : ""}</b>
+            <span>{p.role}</span>
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <div style={s.statsBox}>
+          <h3 style={s.selectedTitle}>
+            {selected.name}
+            <small>{selected.role} · {selected.team_name || "—"}</small>
+          </h3>
+
+          <div style={s.statsGrid}>
+            <NumberField label="Gol" value={stats.goals} onChange={(v) => setStat("goals", v)} />
+            <NumberField label="Assist" value={stats.assists} onChange={(v) => setStat("assists", v)} />
+            <NumberField label="Giallo" value={stats.yellow} onChange={(v) => setStat("yellow", v)} />
+            <NumberField label="Rosso" value={stats.red} onChange={(v) => setStat("red", v)} />
+            <NumberField label="Rigore sbagliato" value={stats.pen_missed} onChange={(v) => setStat("pen_missed", v)} />
+
+            {selected.role === "P" && (
+              <>
+                <NumberField label="Gol subito" value={stats.goals_conceded} onChange={(v) => setStat("goals_conceded", v)} />
+                <NumberField label="Rigore parato" value={stats.pen_saved} onChange={(v) => setStat("pen_saved", v)} />
+              </>
+            )}
+          </div>
+
+          {(selected.role === "P" || selected.role === "D") && (
+            <label style={s.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={stats.clean_sheet}
+                onChange={(e) => setStat("clean_sheet", e.target.checked)}
+              />
+              Clean sheet
+            </label>
+          )}
+
+          <button type="button" onClick={saveStats} disabled={saving} style={s.saveBtn}>
+            {saving ? "Salvataggio..." : "Salva statistiche"}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TopSquadreTab(props: {
+  competition: Competition;
+  matchday: number;
+  setErr: (x: string | null) => void;
+  setMsg: (x: string | null) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [top, setTop] = useState<TopTeam[]>([]);
+  const [rank, setRank] = useState(1);
+
+  useEffect(() => {
+    loadTop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.competition.id, props.matchday]);
+
+  async function loadTop() {
+    if (!props.competition.active_season_id) return;
+
+    const { data, error } = await supabase.rpc("superadmin_get_top_teams", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+    });
+
+    if (!error) setTop((data ?? []) as TopTeam[]);
+  }
+
+  async function searchTeams() {
+    const { data, error } = await supabase.rpc("superadmin_search_teams", {
+      p_competition_id: props.competition.id,
+      p_query: query.trim(),
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    setTeams((data ?? []) as Team[]);
+  }
+
+  async function addTeam(team: Team) {
+    props.setErr(null);
+    props.setMsg(null);
+
+    if (!props.competition.active_season_id) {
+      props.setErr("Competizione senza season attiva.");
+      return;
+    }
+
+    const { error } = await supabase.rpc("superadmin_upsert_top_team", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+      p_real_team_id: team.id,
+      p_rank: rank,
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg("Squadra top salvata ✅");
+    setRank(rank + 1);
+    await loadTop();
+  }
+
+  async function clearTop() {
+    if (!props.competition.active_season_id) return;
+
+    const { error } = await supabase.rpc("superadmin_clear_top_n", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    setRank(1);
+    props.setMsg("Top squadre svuotata ✅");
+    await loadTop();
+  }
+
+  return (
+    <section style={s.card}>
+      <h2 style={s.cardTitle}>Top squadre</h2>
+
+      <div style={s.searchRow}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Cerca squadra"
+          style={s.input}
+        />
+        <button type="button" onClick={searchTeams} style={s.searchBtn}>
+          Cerca
+        </button>
+      </div>
+
+      <label style={s.label}>Posizione Top</label>
+      <input
+        type="number"
+        min={1}
+        value={rank}
+        onChange={(e) => setRank(Number(e.target.value) || 1)}
+        style={s.input}
       />
 
-      <main style={s.container}>
-        <div style={s.hero}>
-          <h1 style={s.title}>Superadmin</h1>
-          <p style={s.subtitle}>
-            Gestisci disponibilità competizioni e statistiche giocatori.
-          </p>
-        </div>
+      <div style={s.list}>
+        {teams.map((t) => (
+          <button key={t.id} type="button" style={s.playerRow} onClick={() => addTeam(t)}>
+            <b>{t.name}</b>
+            <span>{t.country || "—"}</span>
+          </button>
+        ))}
+      </div>
 
-        {err && <div style={s.err}>{err}</div>}
-        {msg && <div style={s.ok}>{msg}</div>}
+      <div style={s.actionsBetween}>
+        <h3 style={s.smallTitle}>Top inserita</h3>
+        <button type="button" onClick={clearTop} style={s.dangerBtn}>Svuota</button>
+      </div>
 
-        <section style={s.card}>
-          <h2 style={s.cardTitle}>Competizioni</h2>
-          <p style={s.muted}>
-            Attiva o archivia le competizioni disponibili agli admin delle leghe.
-          </p>
-
-          <div style={s.compList}>
-            {competitions.map((c) => (
-              <div key={c.id} style={s.compRow}>
-                <div style={{ minWidth: 0 }}>
-                  <CompetitionBadge name={c.name} type={c.type} />
-                  <div style={s.compName}>{c.name}</div>
-                  <div style={s.compMeta}>
-                    {c.visibility_status} · {c.default_total_matchdays} giornate · Top {c.default_top_n} · {c.players_count} giocatori
-                  </div>
-                </div>
-
-                <div style={s.compActions}>
-                  <button
-                    type="button"
-                    style={s.smallBtn}
-                    onClick={() => setStatus(c.id, "active")}
-                  >
-                    Attiva
-                  </button>
-                  <button
-                    type="button"
-                    style={s.smallBtn}
-                    onClick={() => setStatus(c.id, "wip")}
-                  >
-                    WIP
-                  </button>
-                  <button
-                    type="button"
-                    style={s.smallBtnDanger}
-                    onClick={() => setStatus(c.id, "archived")}
-                  >
-                    Archivia
-                  </button>
-                </div>
-              </div>
-            ))}
+      <div style={s.list}>
+        {top.map((t) => (
+          <div key={t.id} style={s.topRow}>
+            <b>#{t.rank}</b>
+            <span>{t.team_name}</span>
           </div>
-        </section>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-        <section style={s.card}>
-          <h2 style={s.cardTitle}>Statistiche giocatore</h2>
-          <p style={s.muted}>
-            Scegli competizione, giornata e giocatore. Salva le statistiche reali.
-          </p>
+function PartiteTab(props: {
+  competition: Competition;
+  matchday: number;
+  setErr: (x: string | null) => void;
+  setMsg: (x: string | null) => void;
+}) {
+  const [homeQuery, setHomeQuery] = useState("");
+  const [awayQuery, setAwayQuery] = useState("");
+  const [homeResults, setHomeResults] = useState<Team[]>([]);
+  const [awayResults, setAwayResults] = useState<Team[]>([]);
+  const [home, setHome] = useState<Team | null>(null);
+  const [away, setAway] = useState<Team | null>(null);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
 
-          <label style={s.label}>Competizione</label>
-          <select
-            value={selectedCompetitionId}
-            onChange={(e) => {
-              setSelectedCompetitionId(e.target.value);
-              setPlayers([]);
-              setSelectedPlayer(null);
-              setStats(EMPTY_STATS);
-              setMsg(null);
-              setErr(null);
-            }}
-            style={s.input}
-          >
-            {competitions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.visibility_status})
-              </option>
-            ))}
-          </select>
+  useEffect(() => {
+    loadFixtures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.competition.id, props.matchday]);
 
-          <label style={s.label}>Giornata</label>
-          <input
-            type="number"
-            min={1}
-            max={selectedCompetition?.default_total_matchdays ?? 38}
-            value={matchday}
-            onChange={(e) => {
-              setMatchday(Number(e.target.value) || 1);
-              setSelectedPlayer(null);
-              setStats(EMPTY_STATS);
-            }}
-            style={s.input}
-          />
+  async function loadFixtures() {
+    if (!props.competition.active_season_id) return;
 
-          <label style={s.label}>Cerca giocatore</label>
-          <div style={s.searchRow}>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Nome giocatore o squadra"
-              style={s.input}
-            />
-            <button type="button" onClick={searchPlayers} style={s.searchBtn}>
-              Cerca
+    const { data, error } = await supabase.rpc("superadmin_get_fixtures", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+    });
+
+    if (!error) setFixtures((data ?? []) as Fixture[]);
+  }
+
+  async function searchTeams(q: string, setter: (x: Team[]) => void) {
+    const { data, error } = await supabase.rpc("superadmin_search_teams", {
+      p_competition_id: props.competition.id,
+      p_query: q.trim(),
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    setter((data ?? []) as Team[]);
+  }
+
+  async function addFixture() {
+    props.setErr(null);
+    props.setMsg(null);
+
+    if (!props.competition.active_season_id) {
+      props.setErr("Competizione senza season attiva.");
+      return;
+    }
+
+    if (!home || !away) {
+      props.setErr("Seleziona squadra casa e squadra trasferta.");
+      return;
+    }
+
+    const { error } = await supabase.rpc("superadmin_upsert_fixture", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+      p_home_team_id: home.id,
+      p_away_team_id: away.id,
+      p_starts_at: null,
+      p_status: "scheduled",
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg("Partita salvata ✅");
+    setHome(null);
+    setAway(null);
+    setHomeQuery("");
+    setAwayQuery("");
+    setHomeResults([]);
+    setAwayResults([]);
+    await loadFixtures();
+  }
+
+  async function deleteFixture(id: string) {
+    const { error } = await supabase.rpc("superadmin_delete_fixture", {
+      p_fixture_id: id,
+    });
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg("Partita eliminata ✅");
+    await loadFixtures();
+  }
+
+  return (
+    <section style={s.card}>
+      <h2 style={s.cardTitle}>Partite</h2>
+
+      <label style={s.label}>Squadra casa</label>
+      <div style={s.searchRow}>
+        <input
+          value={homeQuery}
+          onChange={(e) => setHomeQuery(e.target.value)}
+          placeholder="Cerca squadra casa"
+          style={s.input}
+        />
+        <button type="button" style={s.searchBtn} onClick={() => searchTeams(homeQuery, setHomeResults)}>
+          Cerca
+        </button>
+      </div>
+
+      <TeamResults results={homeResults} selected={home} onPick={setHome} />
+
+      <label style={s.label}>Squadra trasferta</label>
+      <div style={s.searchRow}>
+        <input
+          value={awayQuery}
+          onChange={(e) => setAwayQuery(e.target.value)}
+          placeholder="Cerca squadra trasferta"
+          style={s.input}
+        />
+        <button type="button" style={s.searchBtn} onClick={() => searchTeams(awayQuery, setAwayResults)}>
+          Cerca
+        </button>
+      </div>
+
+      <TeamResults results={awayResults} selected={away} onPick={setAway} />
+
+      <div style={s.fixturePreview}>
+        <b>{home?.name ?? "Casa"}</b>
+        <span>vs</span>
+        <b>{away?.name ?? "Trasferta"}</b>
+      </div>
+
+      <button type="button" onClick={addFixture} style={s.saveBtn}>
+        Aggiungi partita
+      </button>
+
+      <h3 style={s.smallTitle}>Partite inserite</h3>
+
+      <div style={s.list}>
+        {fixtures.map((f) => (
+          <div key={f.id} style={s.fixtureRow}>
+            <span>
+              <b>{f.home_team_name}</b> - <b>{f.away_team_name}</b>
+            </span>
+            <button type="button" onClick={() => deleteFixture(f.id)} style={s.removeBtn}>
+              Elimina
             </button>
           </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-          <div style={s.playersList}>
-            {players.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => pickPlayer(p)}
-                style={{
-                  ...s.playerRow,
-                  borderColor: selectedPlayer?.id === p.id ? "#16a34a" : "#e5e7eb",
-                  background: selectedPlayer?.id === p.id ? "#f0fdf4" : "white",
-                }}
-              >
-                <b>{p.name}</b>
-                <span>{p.role} · {p.team_name || "—"}</span>
-              </button>
-            ))}
-          </div>
-
-          {selectedPlayer && (
-            <div style={s.statsBox}>
-              <h3 style={s.selectedTitle}>
-                {selectedPlayer.name}
-                <small>{selectedPlayer.role} · {selectedPlayer.team_name || "—"}</small>
-              </h3>
-
-              <div style={s.statsGrid}>
-                <NumberField label="Gol" value={stats.goals} onChange={(v) => setStat("goals", v)} />
-                <NumberField label="Assist" value={stats.assists} onChange={(v) => setStat("assists", v)} />
-                <NumberField label="Giallo" value={stats.yellow} onChange={(v) => setStat("yellow", v)} />
-                <NumberField label="Rosso" value={stats.red} onChange={(v) => setStat("red", v)} />
-                <NumberField label="Rigore sbagliato" value={stats.pen_missed} onChange={(v) => setStat("pen_missed", v)} />
-
-                {selectedPlayer.role === "P" && (
-                  <>
-                    <NumberField label="Gol subito" value={stats.goals_conceded} onChange={(v) => setStat("goals_conceded", v)} />
-                    <NumberField label="Rigore parato" value={stats.pen_saved} onChange={(v) => setStat("pen_saved", v)} />
-                  </>
-                )}
-              </div>
-
-              {(selectedPlayer.role === "P" || selectedPlayer.role === "D") && (
-                <label style={s.checkboxRow}>
-                  <input
-                    type="checkbox"
-                    checked={stats.clean_sheet}
-                    onChange={(e) => setStat("clean_sheet", e.target.checked)}
-                  />
-                  Clean sheet
-                </label>
-              )}
-
-              <button
-                type="button"
-                onClick={saveStats}
-                disabled={saving}
-                style={s.saveBtn}
-              >
-                {saving ? "Salvataggio..." : "Salva statistiche"}
-              </button>
-            </div>
-          )}
-        </section>
-      </main>
-
-      <BottomNav />
-    </>
+function TeamResults(props: {
+  results: Team[];
+  selected: Team | null;
+  onPick: (team: Team) => void;
+}) {
+  return (
+    <div style={s.list}>
+      {props.results.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => props.onPick(t)}
+          style={{
+            ...s.playerRow,
+            borderColor: props.selected?.id === t.id ? "#16a34a" : "#e5e7eb",
+            background: props.selected?.id === t.id ? "#f0fdf4" : "white",
+          }}
+        >
+          <b>{t.name}</b>
+          <span>{t.country || "—"}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -494,9 +894,22 @@ const s: Record<string, React.CSSProperties> = {
   },
   subtitle: {
     margin: "8px 0 0",
-    color: "rgba(255,255,255,0.75)",
+    color: "rgba(255,255,255,0.78)",
     fontWeight: 700,
     lineHeight: 1.4,
+  },
+  tabs: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 8,
+  },
+  tab: {
+    padding: 11,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
+    fontWeight: 1000,
+    fontFamily: "inherit",
+    cursor: "pointer",
   },
   card: {
     background: "white",
@@ -520,9 +933,9 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     lineHeight: 1.45,
   },
-  compList: {
+  list: {
     display: "grid",
-    gap: 10,
+    gap: 8,
   },
   compRow: {
     border: "1px solid #e5e7eb",
@@ -543,7 +956,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 12,
     fontWeight: 800,
   },
-  compActions: {
+  actions3: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr 1fr",
     gap: 8,
@@ -557,7 +970,7 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: "inherit",
     cursor: "pointer",
   },
-  smallBtnDanger: {
+  dangerBtn: {
     border: "1px solid #fed7aa",
     borderRadius: 10,
     background: "#fff7ed",
@@ -595,10 +1008,6 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 1000,
     fontFamily: "inherit",
     cursor: "pointer",
-  },
-  playersList: {
-    display: "grid",
-    gap: 8,
   },
   playerRow: {
     display: "grid",
@@ -650,6 +1059,58 @@ const s: Record<string, React.CSSProperties> = {
     color: "white",
     padding: 14,
     fontWeight: 1000,
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+  topRow: {
+    display: "grid",
+    gridTemplateColumns: "42px 1fr",
+    gap: 10,
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 13,
+    background: "#f9fafb",
+    fontWeight: 900,
+  },
+  actionsBetween: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+  },
+  smallTitle: {
+    margin: 0,
+    fontSize: 16,
+    fontWeight: 1000,
+    color: "#111827",
+  },
+  fixturePreview: {
+    display: "grid",
+    gridTemplateColumns: "1fr 34px 1fr",
+    gap: 8,
+    alignItems: "center",
+    textAlign: "center",
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    borderRadius: 14,
+    padding: 12,
+  },
+  fixtureRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 78px",
+    gap: 8,
+    alignItems: "center",
+    padding: 12,
+    border: "1px solid #e5e7eb",
+    borderRadius: 13,
+  },
+  removeBtn: {
+    border: "1px solid #fed7aa",
+    background: "#fff7ed",
+    color: "#ea580c",
+    borderRadius: 10,
+    padding: 8,
+    fontWeight: 900,
     fontFamily: "inherit",
     cursor: "pointer",
   },
