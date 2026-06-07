@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
@@ -22,6 +21,23 @@ type Matchday = {
   status: string;
 };
 
+type LineupData = {
+  id?: string;
+  submitted_at?: string;
+  players?: {
+    role: string;
+    real_player_id: string;
+  }[];
+};
+
+type FormData = {
+  is_participant: boolean;
+  matchday: Matchday | null;
+  players_per_role: Record<string, number>;
+  players: Player[];
+  lineup: LineupData | null;
+};
+
 const ROLE_LABELS: Record<string, string> = {
   P: "Portiere",
   D: "Difensore",
@@ -30,20 +46,25 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
-  P: { bg: "#fefce8", color: "#a16207" },
+  P: { bg: "#fef9c3", color: "#a16207" },
   D: { bg: "#dcfce7", color: "#15803d" },
   C: { bg: "#dbeafe", color: "#1d4ed8" },
   A: { bg: "#fee2e2", color: "#dc2626" },
 };
 
+const EMPTY_FORM: FormData = {
+  is_participant: false,
+  matchday: null,
+  players_per_role: { P: 1, D: 1, C: 1, A: 1 },
+  players: [],
+  lineup: null,
+};
+
 export default function RosaPage() {
   const app = useRequireApp(false);
-  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [matchday, setMatchday] = useState<Matchday | null>(null);
-  const [playersPerRole, setPlayersPerRole] = useState<Record<string, number>>({ P: 1, D: 1, C: 1, A: 1 });
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -51,8 +72,11 @@ export default function RosaPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   const roles = useMemo(
-    () => Object.entries(playersPerRole).filter(([, n]) => Number(n) > 0),
-    [playersPerRole]
+    () =>
+      Object.entries(form.players_per_role ?? {})
+        .filter(([, n]) => Number(n) > 0)
+        .sort(([a], [b]) => roleOrder(a) - roleOrder(b)),
+    [form.players_per_role]
   );
 
   const selectedIds = useMemo(
@@ -60,109 +84,36 @@ export default function RosaPage() {
     [selected]
   );
 
+  const totalPlayers = useMemo(
+    () => roles.reduce((sum, [, n]) => sum + Number(n || 0), 0),
+    [roles]
+  );
+
   useEffect(() => {
     async function load() {
-      if (!app.ready || !app.activeLeagueId || !app.activeLeagueCompetitionId || !app.competitionId) return;
+      if (!app.ready || !app.activeLeagueCompetitionId) return;
 
       setLoading(true);
       setErr(null);
+      setMsg(null);
 
       try {
-        const { data: cfg } = await supabase
-          .from("competition_config")
-          .select("players_per_role")
-          .eq("league_competition_id", app.activeLeagueCompetitionId)
-          .maybeSingle();
-
-        const configRoles = (cfg as any)?.players_per_role ?? { P: 1, D: 1, C: 1, A: 1 };
-        setPlayersPerRole(configRoles);
-
-        const initialSelected: Record<string, string[]> = {};
-        Object.entries(configRoles).forEach(([role, count]) => {
-          initialSelected[role] = Array.from({ length: Number(count) || 0 }, () => "");
+        const { data, error } = await supabase.rpc("get_lineup_form_data", {
+          p_league_competition_id: app.activeLeagueCompetitionId,
         });
 
-        const { data: md } = await supabase
-          .from("matchdays")
-          .select("id,number,status")
-          .eq("league_competition_id", app.activeLeagueCompetitionId)
-          .eq("status", "open")
-          .order("number", { ascending: true })
-          .limit(1)
-          .maybeSingle();
+        if (error) throw error;
 
-        setMatchday((md as Matchday) ?? null);
+        const nextForm = normalizeFormData(data);
+        setForm(nextForm);
 
-        let loadedPlayers: Player[] = [];
+        const initial = buildInitialSelected(
+          nextForm.players_per_role,
+          nextForm.lineup
+        );
 
-        const { data: cp, error: cpErr } = await supabase
-          .from("competition_players")
-          .select("real_players(id,name,role,team,real_teams(name))")
-          .eq("competition_id", app.competitionId)
-          .eq("active", true);
-
-        if (!cpErr && cp) {
-          loadedPlayers = (cp as any[]).map((x) => {
-            const p = x.real_players;
-            return {
-              id: p?.id,
-              name: p?.name ?? "—",
-              role: p?.role ?? "",
-              team: p?.real_teams?.name ?? p?.team ?? "",
-            };
-          }).filter((p) => p.id);
-        }
-
-        if (loadedPlayers.length === 0) {
-          const { data: rp } = await supabase
-            .from("real_players")
-            .select("id,name,role,team")
-            .eq("competition_id", app.competitionId)
-            .eq("active", true)
-            .order("name", { ascending: true });
-
-          loadedPlayers = ((rp ?? []) as any[]).map((p) => ({
-            id: p.id,
-            name: p.name,
-            role: p.role,
-            team: p.team ?? "",
-          }));
-        }
-
-        setPlayers(loadedPlayers);
-
-        if (md?.id) {
-          const { data: lineup } = await supabase
-            .from("lineups")
-            .select("id,lineup_players(role,real_player_id)")
-            .eq("league_competition_id", app.activeLeagueCompetitionId)
-            .eq("matchday_id", md.id)
-            .eq("user_id", app.userId)
-            .maybeSingle();
-
-          if (lineup && (lineup as any).lineup_players?.length) {
-            const byRole: Record<string, string[]> = {};
-            Object.entries(configRoles).forEach(([role, count]) => {
-              byRole[role] = Array.from({ length: Number(count) || 0 }, () => "");
-            });
-
-            for (const lp of (lineup as any).lineup_players) {
-              if (!byRole[lp.role]) byRole[lp.role] = [];
-              const emptyIndex = byRole[lp.role].findIndex((x) => !x);
-              if (emptyIndex >= 0) byRole[lp.role][emptyIndex] = lp.real_player_id;
-              else byRole[lp.role].push(lp.real_player_id);
-            }
-
-            setSelected(byRole);
-            setSaved(true);
-          } else {
-            setSelected(initialSelected);
-            setSaved(false);
-          }
-        } else {
-          setSelected(initialSelected);
-          setSaved(false);
-        }
+        setSelected(initial);
+        setSaved(Boolean(nextForm.lineup?.id));
       } catch (e: any) {
         setErr(e?.message ?? String(e));
       } finally {
@@ -171,10 +122,10 @@ export default function RosaPage() {
     }
 
     load();
-  }, [app.ready, app.activeLeagueId, app.activeLeagueCompetitionId, app.competitionId, app.userId]);
+  }, [app.ready, app.activeLeagueCompetitionId]);
 
   function playersForRole(role: string, currentId?: string) {
-    return players
+    return form.players
       .filter((p) => p.role === role)
       .filter((p) => p.id === currentId || !selectedIds.includes(p.id))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -209,55 +160,36 @@ export default function RosaPage() {
     setErr(null);
     setMsg(null);
 
-    if (!app.activeLeagueId || !app.activeLeagueCompetitionId || !matchday?.id || !app.userId) {
+    if (!app.activeLeagueCompetitionId || !form.matchday?.id) {
       return setErr("Nessuna giornata aperta.");
+    }
+
+    if (!form.is_participant) {
+      return setErr("Non partecipi a questa competizione.");
     }
 
     const validation = validate();
     if (validation) return setErr(validation);
 
+    const playersPayload = Object.entries(selected).flatMap(([role, ids]) =>
+      ids
+        .filter(Boolean)
+        .map((real_player_id) => ({
+          role,
+          real_player_id,
+        }))
+    );
+
     setSaving(true);
 
     try {
-      const { data: lineup, error: luErr } = await supabase
-        .from("lineups")
-        .upsert(
-          {
-            league_id: app.activeLeagueId,
-            league_competition_id: app.activeLeagueCompetitionId,
-            matchday_id: matchday.id,
-            user_id: app.userId,
-            submitted_at: new Date().toISOString(),
-            submitted_status: "within",
-          },
-          { onConflict: "league_competition_id,matchday_id,user_id" }
-        )
-        .select("id")
-        .single();
-
-      if (luErr) throw luErr;
-
-      await supabase.from("lineup_players").delete().eq("lineup_id", lineup.id);
-
-      const inserts = Object.entries(selected).flatMap(([role, ids]) =>
-        ids.filter(Boolean).map((id) => ({
-          lineup_id: lineup.id,
-          real_player_id: id,
-          role,
-        }))
-      );
-
-      const { error: lpErr } = await supabase.from("lineup_players").insert(inserts);
-      if (lpErr) throw lpErr;
-
-      await supabase.from("messages").insert({
-        league_id: app.activeLeagueId,
-        league_competition_id: app.activeLeagueCompetitionId,
-        matchday_id: matchday.id,
-        user_id: app.userId,
-        message_type: "lineup_notification",
-        content: `${app.teamName} ha schierato la formazione`,
+      const { error } = await supabase.rpc("submit_lineup", {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+        p_matchday_id: form.matchday.id,
+        p_players: playersPayload,
       });
+
+      if (error) throw error;
 
       setSaved(true);
       setMsg("Rosa inviata ✅");
@@ -272,28 +204,58 @@ export default function RosaPage() {
 
   return (
     <>
-      <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
+      <AppBar
+        league={app.leagueName}
+        team={app.teamName}
+        onMenuOpen={app.openDrawer}
+      />
 
       <main style={s.container}>
         <div style={{ ...s.card, borderLeft: `4px solid ${app.competitionTheme.primary}` }}>
           <CompetitionBadge name={app.competitionName} type={app.competitionType} />
+
           <h1 style={s.title}>Rosa</h1>
 
-          <div style={s.matchday}>
-            Giornata: <b>{matchday?.number ?? "—"}</b>
-            <span style={s.status}>{matchday?.status ?? "locked"}</span>
+          <div style={s.summary}>
+            <span>
+              Giornata: <b>{form.matchday?.number ?? "—"}</b>
+            </span>
+            <span style={s.status}>{form.matchday?.status ?? "locked"}</span>
           </div>
 
-          {!matchday && (
-            <div style={s.warn}>Nessuna giornata aperta per questa competizione.</div>
+          <div style={s.rulesMini}>
+            {roles.map(([role, count]) => (
+              <span key={role}>
+                {count} {role}
+              </span>
+            ))}
+            <b>{totalPlayers} giocatori</b>
+          </div>
+
+          {!form.is_participant && (
+            <div style={s.warn}>
+              Non partecipi a questa competizione.
+            </div>
+          )}
+
+          {form.is_participant && !form.matchday && (
+            <div style={s.warn}>
+              Nessuna giornata aperta per questa competizione.
+            </div>
           )}
 
           {saved && (
-            <div style={s.ok}>Rosa già inviata. Per modifiche serve reset admin.</div>
+            <div style={s.ok}>
+              Rosa già inviata. Per modificarla serve il reset admin.
+            </div>
           )}
         </div>
 
-        <Campo players={players} selected={selected} roles={roles} />
+        <Campo
+          players={form.players}
+          selected={selected}
+          roles={roles}
+        />
 
         <div style={s.card}>
           <h2 style={s.cardTitle}>Seleziona giocatori</h2>
@@ -314,7 +276,7 @@ export default function RosaPage() {
                     key={`${role}-${index}`}
                     value={currentId}
                     onChange={(e) => selectPlayer(role, index, e.target.value)}
-                    disabled={saved}
+                    disabled={saved || !form.is_participant || !form.matchday}
                     style={s.select}
                   >
                     <option value="">
@@ -329,6 +291,12 @@ export default function RosaPage() {
                   </select>
                 );
               })}
+
+              {playersForRole(role).length === 0 && (
+                <div style={s.emptyRole}>
+                  Nessun giocatore disponibile per questo ruolo.
+                </div>
+              )}
             </div>
           ))}
 
@@ -336,10 +304,13 @@ export default function RosaPage() {
             <button
               type="button"
               onClick={save}
-              disabled={saving || !matchday}
+              disabled={saving || !form.is_participant || !form.matchday}
               style={{
                 ...s.btn,
-                background: matchday ? app.competitionTheme.primary : "#d1d5db",
+                background:
+                  form.is_participant && form.matchday
+                    ? app.competitionTheme.primary
+                    : "#d1d5db",
               }}
             >
               {saving ? "Invio..." : "Invia rosa"}
@@ -354,6 +325,52 @@ export default function RosaPage() {
       <BottomNav />
     </>
   );
+}
+
+function normalizeFormData(value: any): FormData {
+  const playersPerRole =
+    value?.players_per_role && typeof value.players_per_role === "object"
+      ? value.players_per_role
+      : { P: 1, D: 1, C: 1, A: 1 };
+
+  return {
+    is_participant: Boolean(value?.is_participant),
+    matchday: value?.matchday ?? null,
+    players_per_role: playersPerRole,
+    players: Array.isArray(value?.players) ? value.players : [],
+    lineup: value?.lineup ?? null,
+  };
+}
+
+function buildInitialSelected(
+  playersPerRole: Record<string, number>,
+  lineup: LineupData | null
+) {
+  const initial: Record<string, string[]> = {};
+
+  Object.entries(playersPerRole ?? {}).forEach(([role, count]) => {
+    initial[role] = Array.from({ length: Number(count) || 0 }, () => "");
+  });
+
+  if (!lineup?.players?.length) return initial;
+
+  for (const p of lineup.players) {
+    if (!initial[p.role]) initial[p.role] = [];
+
+    const emptyIndex = initial[p.role].findIndex((x) => !x);
+
+    if (emptyIndex >= 0) {
+      initial[p.role][emptyIndex] = p.real_player_id;
+    } else {
+      initial[p.role].push(p.real_player_id);
+    }
+  }
+
+  return initial;
+}
+
+function roleOrder(role: string) {
+  return { A: 1, C: 2, D: 3, P: 4 }[role as "A" | "C" | "D" | "P"] ?? 10;
 }
 
 function RoleBadge({ role }: { role: string }) {
@@ -373,19 +390,23 @@ function Campo(props: {
 }) {
   const byId = new Map(props.players.map((p) => [p.id, p]));
 
-  const rows = props.roles.map(([role]) => {
-    const ids = props.selected[role] ?? [];
-    return {
-      role,
-      players: ids.map((id) => byId.get(id)).filter(Boolean) as Player[],
-    };
-  });
+  const rows = props.roles
+    .map(([role]) => {
+      const ids = props.selected[role] ?? [];
+      return {
+        role,
+        players: ids.map((id) => byId.get(id)).filter(Boolean) as Player[],
+        slots: ids.length,
+      };
+    })
+    .filter((row) => row.slots > 0)
+    .sort((a, b) => roleOrder(a.role) - roleOrder(b.role));
 
-  const topForRole: Record<string, string> = {
-    P: "12%",
-    D: "36%",
-    C: "60%",
-    A: "84%",
+  const topByIndex = (index: number, total: number) => {
+    if (total <= 1) return "50%";
+    const min = 14;
+    const max = 86;
+    return `${min + ((max - min) / (total - 1)) * index}%`;
   };
 
   return (
@@ -400,9 +421,9 @@ function Campo(props: {
         <path d="M 55 472 A 95 95 0 0 1 245 472" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" />
       </svg>
 
-      {rows.map((row) => {
-        const top = topForRole[row.role] ?? "50%";
-        const count = Math.max(row.players.length, 1);
+      {rows.map((row, rowIndex) => {
+        const top = topByIndex(rowIndex, rows.length);
+        const count = Math.max(row.slots, 1);
 
         return (
           <div
@@ -414,7 +435,7 @@ function Campo(props: {
           >
             {Array.from({ length: count }).map((_, i) => {
               const p = row.players[i];
-              const offset = count === 1 ? 0 : (i - (count - 1) / 2) * 88;
+              const offset = count === 1 ? 0 : (i - (count - 1) / 2) * Math.min(86, 250 / count);
 
               return (
                 <div
@@ -463,18 +484,28 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 1000,
     color: "#111827",
   },
-  matchday: {
+  summary: {
     color: "#6b7280",
     fontWeight: 800,
     display: "flex",
     alignItems: "center",
     gap: 10,
+    flexWrap: "wrap",
   },
   status: {
     borderRadius: 999,
     padding: "3px 9px",
     background: "#f3f4f6",
     fontSize: 11,
+    fontWeight: 900,
+  },
+  rulesMini: {
+    marginTop: 12,
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 7,
+    color: "#374151",
+    fontSize: 12,
     fontWeight: 900,
   },
   field: {
@@ -583,5 +614,13 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: 12,
     padding: 12,
     fontWeight: 900,
+  },
+  emptyRole: {
+    color: "#b85c0a",
+    fontSize: 12,
+    fontWeight: 800,
+    background: "#fff7ed",
+    borderRadius: 10,
+    padding: 10,
   },
 };
