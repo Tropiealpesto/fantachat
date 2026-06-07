@@ -1,0 +1,10 @@
+﻿-- FantaChat Superadmin structure
+-- Questa migration è stata applicata manualmente in Supabase SQL Editor.
+-- Contiene:
+-- - app_admins
+-- - is_current_user_superadmin
+-- - campi catalogo competitions
+-- - competition_real_teams
+-- - competition_players
+-- - fixtures/top_n/player_votes compatibili
+-- - RPC superadmin_upsert_*
