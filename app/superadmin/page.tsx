@@ -127,13 +127,21 @@ export default function SuperadminPage() {
       return;
     }
 
-    const list = (data ?? []) as Competition[];
+    const list = ((data ?? []) as Competition[]).filter((c) => {
+      const status = c.visibility_status ?? "active";
+      return status !== "archived" && c.active !== false;
+    });
 
     setCompetitions(list);
 
-    if (!competitionId && list.length) {
-      const first = list.find((c) => c.visibility_status === "active") ?? list[0];
-      setCompetitionId(first.id);
+    if (list.length) {
+      const stillExists = list.some((c) => c.id === competitionId);
+      if (!competitionId || !stillExists) {
+        const first = list.find((c) => c.visibility_status === "active") ?? list[0];
+        setCompetitionId(first.id);
+      }
+    } else {
+      setCompetitionId("");
     }
   }
 
@@ -208,6 +216,9 @@ export default function SuperadminPage() {
         <CompetizioniTab
           competitions={competitions}
           onStatus={setCompetitionStatus}
+          onCreated={loadCompetitions}
+          setErr={setErr}
+          setMsg={setMsg}
         />
       )}
 
@@ -311,32 +322,248 @@ function Selector(props: {
 function CompetizioniTab(props: {
   competitions: Competition[];
   onStatus: (id: string, status: "active" | "wip" | "archived") => void;
+  onCreated: () => Promise<void>;
+  setErr: (x: string | null) => void;
+  setMsg: (x: string | null) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [type, setType] = useState<"campionato" | "champions" | "coppa">("coppa");
+  const [themeKey, setThemeKey] = useState("coppe");
+  const [matchdays, setMatchdays] = useState(7);
+  const [topN, setTopN] = useState(6);
+  const [scope, setScope] = useState("club");
+  const [description, setDescription] = useState("");
+  const [rulesSummary, setRulesSummary] = useState("");
+
+  function autoSlug(value: string) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function handleTypeChange(value: "campionato" | "champions" | "coppa") {
+    setType(value);
+
+    if (value === "campionato") {
+      setThemeKey("campionato");
+      setScope("club");
+      setMatchdays(38);
+    }
+
+    if (value === "champions") {
+      setThemeKey("champions");
+      setScope("club");
+      setMatchdays(8);
+    }
+
+    if (value === "coppa") {
+      setThemeKey("coppe");
+      setMatchdays(7);
+    }
+  }
+
+  async function createCompetition() {
+    props.setErr(null);
+    props.setMsg(null);
+
+    if (!name.trim()) {
+      props.setErr("Inserisci il nome della competizione.");
+      return;
+    }
+
+    setCreating(true);
+
+    const { error } = await supabase.rpc("superadmin_create_global_competition", {
+      p_name: name.trim(),
+      p_slug: slug.trim() || autoSlug(name),
+      p_type: type,
+      p_theme_key: themeKey,
+      p_total_matchdays: matchdays,
+      p_top_n: topN,
+      p_scope: scope,
+      p_description: description.trim() || null,
+      p_rules_summary: rulesSummary.trim() || null,
+    });
+
+    setCreating(false);
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg("Competizione globale creata ✅");
+
+    setName("");
+    setSlug("");
+    setType("coppa");
+    setThemeKey("coppe");
+    setMatchdays(7);
+    setTopN(6);
+    setScope("club");
+    setDescription("");
+    setRulesSummary("");
+    setOpen(false);
+
+    await props.onCreated();
+  }
+
   return (
     <section style={s.card}>
-      <h2 style={s.cardTitle}>Competizioni globali</h2>
-      <p style={s.muted}>
-        Qui vedi solo le competizioni generiche del catalogo, non quelle create dalle singole leghe.
-      </p>
+      <div style={s.actionsBetween}>
+        <div>
+          <h2 style={s.cardTitle}>Competizioni globali attive</h2>
+          <p style={s.muted}>
+            Qui vedi solo le competizioni operative. Quelle chiuse restano in Supabase.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          style={s.smallBtn}
+        >
+          {open ? "Chiudi" : "Nuova"}
+        </button>
+      </div>
+
+      {open && (
+        <div style={s.createBox}>
+          <h3 style={s.smallTitle}>Nuova competizione globale</h3>
+
+          <label style={s.label}>Nome</label>
+          <input
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (!slug) setSlug(autoSlug(e.target.value));
+            }}
+            placeholder="Es. Mondiale per Club 2025"
+            style={s.input}
+          />
+
+          <label style={s.label}>Slug</label>
+          <input
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="mondiale-per-club-2025"
+            style={s.input}
+          />
+
+          <label style={s.label}>Tipo</label>
+          <select
+            value={type}
+            onChange={(e) =>
+              handleTypeChange(e.target.value as "campionato" | "champions" | "coppa")
+            }
+            style={s.input}
+          >
+            <option value="campionato">Campionato</option>
+            <option value="champions">Champions</option>
+            <option value="coppa">Coppa</option>
+          </select>
+
+          <label style={s.label}>Tema grafico</label>
+          <select
+            value={themeKey}
+            onChange={(e) => setThemeKey(e.target.value)}
+            style={s.input}
+          >
+            <option value="campionato">Campionato</option>
+            <option value="champions">Champions</option>
+            <option value="coppe">Coppe</option>
+          </select>
+
+          <div style={s.statsGrid}>
+            <NumberField
+              label="Giornate"
+              value={matchdays}
+              onChange={setMatchdays}
+            />
+
+            <NumberField
+              label="Top squadre"
+              value={topN}
+              onChange={setTopN}
+            />
+          </div>
+
+          <label style={s.label}>Scope</label>
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value)}
+            style={s.input}
+          >
+            <option value="club">Club</option>
+            <option value="nazionali">Nazionali</option>
+          </select>
+
+          <label style={s.label}>Descrizione</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Breve descrizione della competizione"
+            style={s.textarea}
+          />
+
+          <label style={s.label}>Regole sintetiche</label>
+          <textarea
+            value={rulesSummary}
+            onChange={(e) => setRulesSummary(e.target.value)}
+            placeholder="Es. Gol +3, assist +1..."
+            style={s.textarea}
+          />
+
+          <button
+            type="button"
+            onClick={createCompetition}
+            disabled={creating}
+            style={{
+              ...s.saveBtn,
+              opacity: creating ? 0.65 : 1,
+            }}
+          >
+            {creating ? "Creazione..." : "Crea competizione"}
+          </button>
+        </div>
+      )}
 
       <div style={s.list}>
-        {props.competitions.map((c) => (
-          <div key={c.id} style={s.compRow}>
-            <div>
-              <CompetitionBadge name={c.name} type={c.type} />
-              <div style={s.compName}>{c.name}</div>
-              <div style={s.compMeta}>
-                {c.visibility_status} · {c.default_total_matchdays} giornate · Top {c.default_top_n} · {c.players_count} giocatori · {c.teams_count} squadre
+        {props.competitions.length === 0 ? (
+          <div style={s.muted}>
+            Nessuna competizione attiva. Crea una nuova competizione globale.
+          </div>
+        ) : (
+          props.competitions.map((c) => (
+            <div key={c.id} style={s.compRow}>
+              <div>
+                <CompetitionBadge name={c.name} type={c.type} />
+                <div style={s.compName}>{c.name}</div>
+                <div style={s.compMeta}>
+                  {c.visibility_status} · {c.default_total_matchdays} giornate · Top {c.default_top_n} · {c.players_count} giocatori · {c.teams_count} squadre
+                </div>
+              </div>
+
+              <div style={s.actions3}>
+                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "active")}>
+                  Attiva
+                </button>
+                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "wip")}>
+                  WIP
+                </button>
+                <button style={s.dangerBtn} onClick={() => props.onStatus(c.id, "archived")}>
+                  Chiudi
+                </button>
               </div>
             </div>
-
-            <div style={s.actions3}>
-              <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "active")}>Attiva</button>
-              <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "wip")}>WIP</button>
-              <button style={s.dangerBtn} onClick={() => props.onStatus(c.id, "archived")}>Chiudi</button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );
@@ -1113,6 +1340,25 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     fontFamily: "inherit",
     cursor: "pointer",
+  },
+  createBox: {
+    display: "grid",
+    gap: 10,
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: 13,
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 82,
+    padding: 12,
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    fontFamily: "inherit",
+    fontWeight: 700,
+    background: "white",
+    resize: "vertical",
   },
   ok: {
     background: "#f0fdf4",
