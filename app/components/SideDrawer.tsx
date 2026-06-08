@@ -57,6 +57,7 @@ export default function SideDrawer(props: Props) {
           <Nav href="/storico" label="Storico" sub="Giornate passate" pathname={pathname} onClose={props.onClose} />
           <Nav href="/statistiche" label="Statistiche" sub="Giocatori" pathname={pathname} onClose={props.onClose} />
           <Nav href="/podcast" label="Nyx / Podcast" sub="Contenuti narrativi" pathname={pathname} onClose={props.onClose} />
+          <AdminLink href="/regole" label="Regole" onClose={props.onClose} />
 
           <Section style={{ marginTop: 18 }}>Competizioni</Section>
           {props.competitions.length === 0 ? (
