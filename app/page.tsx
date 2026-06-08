@@ -8,6 +8,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import CompetitionBadge from "./components/CompetitionBadge";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
+import { supabase } from "../lib/supabaseClient";
 
 type HomeData = {
   matchday?: {
@@ -43,6 +44,22 @@ type HomeData = {
   } | null;
 };
 
+type CompetitionStatus = {
+  league_competition_id: string;
+  league_competition_status: string;
+  competition_id: string;
+  competition_name: string;
+  competition_visibility_status: string;
+  competition_active: boolean;
+};
+
+type StandingRow = {
+  user_id: string;
+  team_name: string;
+  total_points: number;
+  rank: number;
+};
+
 const emptyHome: HomeData = {
   matchday: null,
   lineup: null,
@@ -52,23 +69,20 @@ const emptyHome: HomeData = {
 
 export default function Home() {
   const router = useRouter();
-
-  // IMPORTANTE:
-  // Mettiamo false qui per evitare che l'hook rimandi a seleziona-lega
-  // solo perché la competizione non è ancora caricata.
   const app = useRequireApp(false);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<HomeData>(emptyHome);
   const [err, setErr] = useState<string | null>(null);
 
+  const [competitionStatus, setCompetitionStatus] = useState<CompetitionStatus | null>(null);
+  const [finalStanding, setFinalStanding] = useState<StandingRow[]>([]);
+
   useEffect(() => {
     if (!app.ready) return;
     if (!app.userId) return;
     if (!app.activeLeagueId) return;
 
-    // Se manca la competizione attiva non carichiamo la home data.
-    // Verrà mostrata una card dedicata sotto.
     if (!app.activeLeagueCompetitionId) {
       setLoading(false);
       setData(emptyHome);
@@ -82,6 +96,41 @@ export default function Home() {
       setErr(null);
 
       try {
+        const { data: statusData } = await supabase.rpc(
+          "get_active_league_competition_status",
+          {
+            p_league_competition_id: app.activeLeagueCompetitionId,
+          }
+        );
+
+        const normalizedStatus = statusData as CompetitionStatus | null;
+
+        if (!cancelled) {
+          setCompetitionStatus(normalizedStatus);
+        }
+
+        const isClosed =
+          normalizedStatus?.league_competition_status === "completed" ||
+          normalizedStatus?.competition_visibility_status === "archived" ||
+          normalizedStatus?.competition_active === false;
+
+        if (isClosed) {
+          const standings = await rpcJson<any>(
+            "get_standings",
+            {
+              p_league_competition_id: app.activeLeagueCompetitionId,
+            },
+            []
+          );
+
+          if (!cancelled) {
+            setFinalStanding(normalizeStandings(standings));
+            setData(emptyHome);
+          }
+
+          return;
+        }
+
         const result = await rpcJson<HomeData>(
           "get_home_data",
           {
@@ -174,6 +223,90 @@ export default function Home() {
   }
 
   if (loading) return <LoadingScreen />;
+
+  const isClosed =
+    competitionStatus?.league_competition_status === "completed" ||
+    competitionStatus?.competition_visibility_status === "archived" ||
+    competitionStatus?.competition_active === false;
+
+  if (isClosed) {
+    return (
+      <>
+        <AppBar
+          league={app.leagueName}
+          team={app.teamName}
+          onMenuOpen={app.openDrawer}
+          right={
+            <button
+              style={s.topBtn}
+              onClick={() => router.push("/seleziona-lega")}
+            >
+              Leghe
+            </button>
+          }
+        />
+
+        <section style={{ ...s.hero, background: theme.hero }}>
+          <div style={s.heroInner}>
+            <CompetitionBadge
+              name={app.competitionName}
+              type={app.competitionType}
+            />
+
+            <div style={s.hello}>Archivio competizione</div>
+            <h1 style={s.team}>Competizione conclusa</h1>
+
+            <p style={s.closedText}>
+              {app.competitionName ?? "Questa competizione"} è terminata.
+              Qui sotto trovi la classifica finale della tua lega.
+            </p>
+          </div>
+        </section>
+
+        <main style={s.container}>
+          <div style={s.card}>
+            <h2 style={s.closedTitle}>Classifica finale</h2>
+
+            {finalStanding.length === 0 ? (
+              <div style={s.muted}>Nessun dato classifica disponibile.</div>
+            ) : (
+              <div style={s.finalTable}>
+                {finalStanding.map((row, index) => {
+                  const isMine = row.user_id === app.userId;
+
+                  return (
+                    <div
+                      key={`${row.user_id}-${index}`}
+                      style={{
+                        ...s.finalRow,
+                        background: isMine ? `${theme.primary}10` : "white",
+                        borderLeft: `4px solid ${isMine ? theme.primary : "transparent"}`,
+                      }}
+                    >
+                      <b style={{ color: isMine ? theme.primary : "#111827" }}>
+                        #{row.rank || index + 1}
+                      </b>
+                      <span>{row.team_name}</span>
+                      <strong>{fmt(row.total_points)}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              style={{ ...s.primaryBtn, background: theme.primary }}
+              onClick={() => router.push("/storico")}
+            >
+              Vedi storico giornate
+            </button>
+          </div>
+        </main>
+
+        <BottomNav />
+      </>
+    );
+  }
 
   const hasLineup = Boolean(data.lineup?.players?.length);
 
@@ -322,6 +455,14 @@ export default function Home() {
   );
 }
 
+function normalizeStandings(value: any): StandingRow[] {
+  if (Array.isArray(value)) return value as StandingRow[];
+  if (Array.isArray(value?.rows)) return value.rows as StandingRow[];
+  if (Array.isArray(value?.standings)) return value.standings as StandingRow[];
+  if (Array.isArray(value?.data)) return value.data as StandingRow[];
+  return [];
+}
+
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div style={s.kpi}>
@@ -375,6 +516,31 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 28,
     lineHeight: 1.1,
     margin: "6px 0 18px",
+  },
+  closedText: {
+    margin: "0",
+    color: "rgba(255,255,255,0.78)",
+    fontWeight: 750,
+    lineHeight: 1.45,
+  },
+  closedTitle: {
+    margin: "0 0 12px",
+    color: "#111827",
+    fontWeight: 1000,
+    fontSize: 22,
+  },
+  finalTable: {
+    display: "grid",
+    gap: 8,
+  },
+  finalRow: {
+    display: "grid",
+    gridTemplateColumns: "44px 1fr 70px",
+    gap: 8,
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
   },
   kpis: {
     display: "grid",
