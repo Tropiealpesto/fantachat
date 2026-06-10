@@ -36,10 +36,13 @@ const EMPTY_FORM: FormData = {
   lineup: null,
 };
 
-// Portiere in alto, attaccante in basso
 function roleOrder(role: string) {
   return ({ P: 1, D: 2, C: 3, A: 4 } as Record<string, number>)[role] ?? 10;
 }
+const norm = (x?: string) => (x ?? "").trim().toLowerCase();
+// Per il portiere mostriamo la nazionale, non il nome del portiere
+function label(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
+function sub(p: Player) { return p.role === "P" ? "Portiere" : p.team; }
 
 export default function RosaPage() {
   const app = useRequireApp(false);
@@ -65,6 +68,8 @@ export default function RosaPage() {
 
   const selectedIds = useMemo(() => Object.values(selected).flat().filter(Boolean), [selected]);
   const totalPlayers = useMemo(() => roles.reduce((s, [, n]) => s + Number(n || 0), 0), [roles]);
+  const byId = useMemo(() => new Map(form.players.map((p) => [p.id, p])), [form.players]);
+  const topNames = useMemo(() => new Set(top.map((t) => norm(t.name))), [top]);
 
   useEffect(() => {
     async function load() {
@@ -91,7 +96,6 @@ export default function RosaPage() {
   }, [app.ready, app.activeLeagueCompetitionId]);
 
   // Partite + Top squadre della giornata
-// Partite + Top squadre della giornata
   useEffect(() => {
     const md = form.matchday?.number;
     if (!app.competitionId || !md) {
@@ -131,11 +135,24 @@ export default function RosaPage() {
     return () => { off = true; };
   }, [app.competitionId, form.matchday?.number]);
 
-  function playersForRole(role: string, currentId?: string) {
+  // Giocatori disponibili per un ruolo, con regole: max 1 per squadra, max 1 Top
+  function availableFor(role: string, currentId?: string) {
+    const others = selectedIds.filter((id) => id && id !== currentId);
+    const otherPlayers = others.map((id) => byId.get(id)).filter(Boolean) as Player[];
+    const usedTeams = new Set(otherPlayers.map((p) => norm(p.team)));
+    const topUsed = otherPlayers.some((p) => topNames.has(norm(p.team)));
+
     return form.players
       .filter((p) => p.role === role)
-      .filter((p) => p.id === currentId || !selectedIds.includes(p.id))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter((p) => {
+        if (p.id === currentId) return true;
+        if (selectedIds.includes(p.id)) return false;
+        const key = norm(p.team);
+        if (usedTeams.has(key)) return false;                 // max 1 per squadra
+        if (topUsed && topNames.has(key)) return false;        // max 1 Top
+        return true;
+      })
+      .sort((a, b) => label(a).localeCompare(label(b)));
   }
 
   function selectPlayer(role: string, index: number, playerId: string) {
@@ -196,7 +213,6 @@ export default function RosaPage() {
       <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
 
       <main style={s.container}>
-        {/* HEADER COMPATTO */}
         <div style={{ ...s.header, borderLeft: `4px solid ${accent}` }}>
           <div style={s.headerTop}>
             <CompetitionBadge name={app.competitionName} type={app.competitionType} />
@@ -218,7 +234,6 @@ export default function RosaPage() {
           {saved && <div style={s.ok}>Rosa già inviata. Per modificarla serve il reset admin.</div>}
         </div>
 
-        {/* 1) SCEGLI I GIOCATORI */}
         <div style={s.card}>
           <h2 style={s.cardTitle}>Scegli i giocatori</h2>
 
@@ -236,7 +251,7 @@ export default function RosaPage() {
                   role={role}
                   index={index}
                   disabled={locked}
-                  options={playersForRole(role, selected[role]?.[index])}
+                  options={availableFor(role, selected[role]?.[index])}
                   currentId={selected[role]?.[index] ?? ""}
                   onSelect={(id) => selectPlayer(role, index, id)}
                   onClear={() => selectPlayer(role, index, "")}
@@ -259,7 +274,6 @@ export default function RosaPage() {
           {err && <div style={s.err}>{err}</div>}
         </div>
 
-        {/* 2) PARTITE | TOP SQUADRE */}
         <div style={s.duo}>
           <div style={s.card}>
             <h3 style={s.duoTitle}>Partite</h3>
@@ -295,7 +309,6 @@ export default function RosaPage() {
           </div>
         </div>
 
-        {/* 3) CAMPO */}
         <Campo players={form.players} selected={selected} roles={roles} />
       </main>
 
@@ -317,6 +330,7 @@ function PlayerPicker(props: {
   const [open, setOpen] = useState(false);
 
   const current = props.currentId ? props.options.find((p) => p.id === props.currentId) : null;
+  const isGK = props.role === "P";
 
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -331,8 +345,8 @@ function PlayerPicker(props: {
       <div style={s.chip}>
         <RoleBadge role={props.role} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={s.chipName}>{current.name}</div>
-          <div style={s.chipTeam}>{current.team}</div>
+          <div style={s.chipName}>{label(current)}</div>
+          <div style={s.chipTeam}>{sub(current)}</div>
         </div>
         {!props.disabled && (
           <button type="button" onClick={props.onClear} style={s.chipClear} aria-label="Rimuovi">✕</button>
@@ -349,18 +363,18 @@ function PlayerPicker(props: {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         disabled={props.disabled}
-        placeholder={`Cerca ${ROLE_LABELS[props.role] ?? props.role} #${props.index + 1}`}
+        placeholder={isGK ? `Cerca la nazionale (portiere)` : `Cerca ${ROLE_LABELS[props.role] ?? props.role} #${props.index + 1}`}
         style={s.search}
       />
       {open && !props.disabled && (
         <div style={s.dropdown}>
           {matches.map((p) => (
             <button key={p.id} type="button" onMouseDown={() => { props.onSelect(p.id); setOpen(false); setQ(""); }} style={s.option}>
-              <b>{p.name}</b>
-              {p.team ? <small>{p.team}</small> : null}
+              <b>{label(p)}</b>
+              {sub(p) ? <small>{sub(p)}</small> : null}
             </button>
           ))}
-          {matches.length === 0 && <div style={s.optionEmpty}>Nessun giocatore trovato.</div>}
+          {matches.length === 0 && <div style={s.optionEmpty}>Nessun risultato.</div>}
         </div>
       )}
     </div>
@@ -410,10 +424,11 @@ function Campo(props: { players: Player[]; selected: Record<string, string[]>; r
               const p = row.players[i];
               const offset = count === 1 ? 0 : (i - (count - 1) / 2) * Math.min(96, 260 / count);
               const c = ROLE_COLORS[row.role] ?? { bg: "#f3f4f6", color: "#6b7280" };
+              const text = p ? (row.role === "P" ? p.team : p.name) : "—";
               return (
                 <div key={`${row.role}-${i}`} style={{ ...s.playerDot, transform: `translate(calc(-50% + ${offset}px), -50%)` }}>
                   <span style={{ ...s.jersey, background: c.bg, color: c.color }}>{row.role}</span>
-                  <span style={s.playerName}>{p?.name ?? "—"}</span>
+                  <span style={s.playerName}>{text}</span>
                 </div>
               );
             })}
@@ -452,7 +467,6 @@ function buildInitialSelected(ppr: Record<string, number>, lineup: LineupData | 
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 100px", display: "grid", gap: 12 },
-
   header: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
   headerTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 },
   statusPill: { borderRadius: 999, padding: "3px 10px", background: "#f3f4f6", fontSize: 11, fontWeight: 900, color: "#6b7280" },
@@ -462,26 +476,20 @@ const s: Record<string, React.CSSProperties> = {
   rulesMini: { marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
   rulePill: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 999, padding: "3px 9px", fontSize: 11, fontWeight: 900, color: "#374151" },
   ruleTotal: { marginLeft: "auto", fontSize: 11, fontWeight: 900, color: "#15803d" },
-
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" },
   cardTitle: { margin: "0 0 12px", fontSize: 18, fontWeight: 1000, color: "#111827" },
-
   roleBlock: { display: "grid", gap: 8, marginBottom: 14 },
   roleTitle: { display: "flex", alignItems: "center", gap: 8, fontWeight: 1000, color: "#111827" },
   roleBadge: { width: 28, height: 28, borderRadius: 8, display: "inline-grid", placeItems: "center", fontWeight: 1000, fontSize: 12 },
-
   search: { width: "100%", padding: 12, borderRadius: 12, border: "1px solid #e5e7eb", fontFamily: "inherit", fontWeight: 700, background: "white" },
   dropdown: { position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 20, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 12px 30px rgba(15,23,42,0.16)", maxHeight: 260, overflowY: "auto", display: "grid" },
   option: { display: "grid", gap: 1, textAlign: "left", border: "none", borderBottom: "1px solid #f3f4f6", background: "white", padding: "10px 12px", cursor: "pointer", fontFamily: "inherit" },
   optionEmpty: { padding: 12, color: "#6b7280", fontWeight: 700, fontSize: 13 },
-
   chip: { display: "flex", alignItems: "center", gap: 10, padding: 10, borderRadius: 12, border: "1px solid #e5e7eb", background: "#f9fafb" },
   chipName: { fontWeight: 900, color: "#111827", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   chipTeam: { fontSize: 12, fontWeight: 700, color: "#6b7280", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   chipClear: { border: "none", background: "#e5e7eb", color: "#374151", width: 26, height: 26, borderRadius: 8, fontWeight: 900, cursor: "pointer", flexShrink: 0 },
-
   btn: { width: "100%", padding: 14, border: "none", color: "white", borderRadius: 12, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
-
   duo: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" },
   duoTitle: { margin: "0 0 10px", fontSize: 14, fontWeight: 1000, color: "#111827" },
   duoList: { display: "grid", gap: 7 },
@@ -490,7 +498,6 @@ const s: Record<string, React.CSSProperties> = {
   fxTeam: { overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   fxVs: { color: "#9ca3af", fontSize: 10, fontWeight: 900 },
   topRow: { display: "grid", gridTemplateColumns: "30px 1fr", gap: 6, alignItems: "center", fontSize: 13, fontWeight: 800, color: "#374151" },
-
   field: { position: "relative", width: "100%", aspectRatio: "0.66", borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 28px rgba(15,23,42,0.16)" },
   grass: { position: "absolute", inset: 0, background: "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)" },
   lines: { position: "absolute", inset: 0, width: "100%", height: "100%" },
@@ -498,7 +505,6 @@ const s: Record<string, React.CSSProperties> = {
   playerDot: { position: "absolute", left: "50%", top: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 },
   jersey: { width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 14, boxShadow: "0 3px 8px rgba(0,0,0,0.28)", border: "2px solid rgba(255,255,255,0.85)" },
   playerName: { maxWidth: 92, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", background: "rgba(0,0,0,0.62)", color: "white", borderRadius: 7, padding: "3px 8px", fontSize: 11, fontWeight: 900 },
-
   ok: { marginTop: 10, background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", borderRadius: 12, padding: 12, fontWeight: 900 },
   warn: { marginTop: 10, background: "#fff7ed", border: "1px solid #fed7aa", color: "#b85c0a", borderRadius: 12, padding: 12, fontWeight: 900 },
   err: { marginTop: 10, background: "#fff1f2", border: "1px solid #fecaca", color: "#991b1b", borderRadius: 12, padding: 12, fontWeight: 900 },
