@@ -12,6 +12,7 @@ type Player = { id: string; name: string; role: string; team: string };
 type Matchday = { id: string; number: number; status: string };
 type LineupData = { id?: string; submitted_at?: string; players?: { role: string; real_player_id: string }[] };
 type FormData = {
+  competition_id: string | null;
   is_participant: boolean;
   matchday: Matchday | null;
   players_per_role: Record<string, number>;
@@ -29,6 +30,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   A: { bg: "#fee2e2", color: "#dc2626" },
 };
 const EMPTY_FORM: FormData = {
+  competition_id: null,
   is_participant: false,
   matchday: null,
   players_per_role: { P: 1, D: 1, C: 1, A: 1 },
@@ -40,7 +42,6 @@ function roleOrder(role: string) {
   return ({ P: 1, D: 2, C: 3, A: 4 } as Record<string, number>)[role] ?? 10;
 }
 const norm = (x?: string) => (x ?? "").trim().toLowerCase();
-// Per il portiere mostriamo la nazionale, non il nome del portiere
 function label(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
 function sub(p: Player) { return p.role === "P" ? "Portiere" : p.team; }
 
@@ -95,29 +96,17 @@ export default function RosaPage() {
     load();
   }, [app.ready, app.activeLeagueCompetitionId]);
 
-  // Partite + Top squadre della giornata
-// Partite + Top squadre della giornata
+  // Partite + Top squadre della giornata (usa l'id competizione dato dalla funzione)
   useEffect(() => {
     const md = form.matchday?.number;
-    if (!app.activeLeagueCompetitionId || !md) {
+    const compId = form.competition_id;
+    if (!compId || !md) {
       setTop([]);
       setFixtures([]);
       return;
     }
     let off = false;
     (async () => {
-      // ricava la competizione dalla lega-competizione (più affidabile)
-      let compId = app.competitionId;
-      if (!compId) {
-        const { data: lc } = await supabase
-          .from("league_competitions")
-          .select("competition_id")
-          .eq("id", app.activeLeagueCompetitionId)
-          .maybeSingle();
-        compId = (lc as any)?.competition_id ?? null;
-      }
-      if (!compId) { if (!off) { setTop([]); setFixtures([]); } return; }
-
       const { data: teams } = await supabase
         .from("real_teams")
         .select("id,name")
@@ -146,9 +135,8 @@ export default function RosaPage() {
       })));
     })();
     return () => { off = true; };
-  }, [app.activeLeagueCompetitionId, app.competitionId, form.matchday?.number]);
+  }, [form.competition_id, form.matchday?.number]);
 
-  // Giocatori disponibili per un ruolo, con regole: max 1 per squadra, max 1 Top
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
     const otherPlayers = others.map((id) => byId.get(id)).filter(Boolean) as Player[];
@@ -161,8 +149,8 @@ export default function RosaPage() {
         if (p.id === currentId) return true;
         if (selectedIds.includes(p.id)) return false;
         const key = norm(p.team);
-        if (usedTeams.has(key)) return false;                 // max 1 per squadra
-        if (topUsed && topNames.has(key)) return false;        // max 1 Top
+        if (usedTeams.has(key)) return false;
+        if (topUsed && topNames.has(key)) return false;
         return true;
       })
       .sort((a, b) => label(a).localeCompare(label(b)));
@@ -455,6 +443,7 @@ function Campo(props: { players: Player[]; selected: Record<string, string[]>; r
 function normalizeFormData(value: any): FormData {
   const ppr = value?.players_per_role && typeof value.players_per_role === "object" ? value.players_per_role : { P: 1, D: 1, C: 1, A: 1 };
   return {
+    competition_id: value?.competition_id ?? null,
     is_participant: Boolean(value?.is_participant),
     matchday: value?.matchday ?? null,
     players_per_role: ppr,
