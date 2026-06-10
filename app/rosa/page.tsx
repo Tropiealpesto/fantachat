@@ -495,7 +495,7 @@ const s: Record<string, React.CSSProperties> = {
   field: { position: "relative", width: "100%", aspectRatio: "0.66", borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 28px rgba(15,23,42,0.16)" },
   grass: { position: "absolute", inset: 0, background: "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)" },
   lines: { position: "absolute", inset: 0, width: "100%", height: "100%" },
-  fieldRow: { position: "absolute", left: "50%", width: "100%", height: 1 },
+  fieldRow: { position: "absolute", left: 0, width: "100%", height: 1 },
   playerDot: { position: "absolute", left: "50%", top: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 },
   jersey: { width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 14, boxShadow: "0 3px 8px rgba(0,0,0,0.28)", border: "2px solid rgba(255,255,255,0.85)" },
   playerName: { maxWidth: 92, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", background: "rgba(0,0,0,0.62)", color: "white", borderRadius: 7, padding: "3px 8px", fontSize: 11, fontWeight: 900 },
