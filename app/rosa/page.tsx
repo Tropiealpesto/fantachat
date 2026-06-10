@@ -91,9 +91,10 @@ export default function RosaPage() {
   }, [app.ready, app.activeLeagueCompetitionId]);
 
   // Partite + Top squadre della giornata
+// Partite + Top squadre della giornata
   useEffect(() => {
     const md = form.matchday?.number;
-    if (!app.competitionId || !app.seasonId || !md) {
+    if (!app.competitionId || !md) {
       setTop([]);
       setFixtures([]);
       return;
@@ -110,7 +111,6 @@ export default function RosaPage() {
         .from("top_teams")
         .select("rank,real_team_id")
         .eq("competition_id", app.competitionId)
-        .eq("season_id", app.seasonId)
         .eq("matchday_number", md)
         .order("rank", { ascending: true });
 
@@ -118,7 +118,6 @@ export default function RosaPage() {
         .from("fixtures")
         .select("home_team_id,away_team_id,status")
         .eq("competition_id", app.competitionId)
-        .eq("season_id", app.seasonId)
         .eq("matchday_number", md);
 
       if (off) return;
@@ -130,7 +129,7 @@ export default function RosaPage() {
       })));
     })();
     return () => { off = true; };
-  }, [app.competitionId, app.seasonId, form.matchday?.number]);
+  }, [app.competitionId, form.matchday?.number]);
 
   function playersForRole(role: string, currentId?: string) {
     return form.players
