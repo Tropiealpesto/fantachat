@@ -26,18 +26,8 @@ type Competition = {
   teams_count: number;
 };
 
-type Player = {
-  id: string;
-  name: string;
-  role: string;
-  team_name: string;
-};
-
-type Team = {
-  id: string;
-  name: string;
-  country: string;
-};
+type Player = { id: string; name: string; role: string; team_name: string };
+type Team = { id: string; name: string; country: string };
 
 type Stats = {
   goals: number;
@@ -50,13 +40,7 @@ type Stats = {
   clean_sheet: boolean;
 };
 
-type TopTeam = {
-  id: string;
-  real_team_id: string;
-  team_name: string;
-  rank: number;
-};
-
+type TopTeam = { id: string; real_team_id: string; team_name: string; rank: number };
 type Fixture = {
   id: string;
   home_team_id: string;
@@ -68,14 +52,8 @@ type Fixture = {
 };
 
 const EMPTY_STATS: Stats = {
-  goals: 0,
-  assists: 0,
-  yellow: 0,
-  red: 0,
-  goals_conceded: 0,
-  pen_saved: 0,
-  pen_missed: 0,
-  clean_sheet: false,
+  goals: 0, assists: 0, yellow: 0, red: 0,
+  goals_conceded: 0, pen_saved: 0, pen_missed: 0, clean_sheet: false,
 };
 
 export default function SuperadminPage() {
@@ -100,40 +78,28 @@ export default function SuperadminPage() {
   useEffect(() => {
     async function init() {
       if (!app.ready) return;
-
       const { data, error } = await supabase.rpc("is_current_user_superadmin");
-
       if (error || data !== true) {
         setChecking(false);
         setIsSuperadmin(false);
         return;
       }
-
       setIsSuperadmin(true);
       setChecking(false);
       await loadCompetitions();
     }
-
     init();
   }, [app.ready]);
 
   async function loadCompetitions() {
     setErr(null);
-
     const { data, error } = await supabase.rpc("superadmin_get_competitions");
-
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-
+    if (error) { setErr(error.message); return; }
     const list = ((data ?? []) as Competition[]).filter((c) => {
       const status = c.visibility_status ?? "active";
       return status !== "archived" && c.active !== false;
     });
-
     setCompetitions(list);
-
     if (list.length) {
       const stillExists = list.some((c) => c.id === competitionId);
       if (!competitionId || !stillExists) {
@@ -145,24 +111,15 @@ export default function SuperadminPage() {
     }
   }
 
-  async function setCompetitionStatus(
-    id: string,
-    status: "active" | "wip" | "archived"
-  ) {
+  async function setCompetitionStatus(id: string, status: "active" | "wip" | "archived") {
     setMsg(null);
     setErr(null);
-
     const { error } = await supabase.rpc("superadmin_set_competition_status", {
       p_competition_id: id,
       p_visibility_status: status,
       p_active: status !== "archived",
     });
-
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-
+    if (error) { setErr(error.message); return; }
     setMsg("Stato competizione aggiornato ✅");
     await loadCompetitions();
   }
@@ -186,9 +143,7 @@ export default function SuperadminPage() {
     <Shell app={app}>
       <div style={s.hero}>
         <h1 style={s.title}>Superadmin</h1>
-        <p style={s.subtitle}>
-          Gestisci competizioni globali, statistiche, top squadre e partite.
-        </p>
+        <p style={s.subtitle}>Gestisci competizioni globali, statistiche, top squadre e partite.</p>
       </div>
 
       {err && <div style={s.err}>{err}</div>}
@@ -223,30 +178,15 @@ export default function SuperadminPage() {
       )}
 
       {tab === "statistiche" && selectedCompetition && (
-        <StatisticheTab
-          competition={selectedCompetition}
-          matchday={matchday}
-          setErr={setErr}
-          setMsg={setMsg}
-        />
+        <StatisticheTab competition={selectedCompetition} matchday={matchday} setErr={setErr} setMsg={setMsg} />
       )}
 
       {tab === "top" && selectedCompetition && (
-        <TopSquadreTab
-          competition={selectedCompetition}
-          matchday={matchday}
-          setErr={setErr}
-          setMsg={setMsg}
-        />
+        <TopSquadreTab competition={selectedCompetition} matchday={matchday} setErr={setErr} setMsg={setMsg} />
       )}
 
       {tab === "partite" && selectedCompetition && (
-        <PartiteTab
-          competition={selectedCompetition}
-          matchday={matchday}
-          setErr={setErr}
-          setMsg={setMsg}
-        />
+        <PartiteTab competition={selectedCompetition} matchday={matchday} setErr={setErr} setMsg={setMsg} />
       )}
     </Shell>
   );
@@ -255,11 +195,7 @@ export default function SuperadminPage() {
 function Shell(props: { app: ReturnType<typeof useApp>; children: React.ReactNode }) {
   return (
     <>
-      <AppBar
-        league="FantaChat"
-        team="SUPERADMIN"
-        onMenuOpen={props.app.openDrawer}
-      />
+      <AppBar league="FantaChat" team="SUPERADMIN" onMenuOpen={props.app.openDrawer} />
       <main style={s.container}>{props.children}</main>
       <BottomNav />
     </>
@@ -294,15 +230,9 @@ function Selector(props: {
   return (
     <div style={s.card}>
       <label style={s.label}>Competizione</label>
-      <select
-        value={props.competitionId}
-        onChange={(e) => props.setCompetitionId(e.target.value)}
-        style={s.input}
-      >
+      <select value={props.competitionId} onChange={(e) => props.setCompetitionId(e.target.value)} style={s.input}>
         {props.competitions.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
+          <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </select>
 
@@ -315,6 +245,65 @@ function Selector(props: {
         onChange={(e) => props.setMatchday(Number(e.target.value) || 1)}
         style={s.input}
       />
+    </div>
+  );
+}
+
+// Ricerca a comparsa riutilizzabile (stile Rosa)
+function Typeahead<T extends { id: string }>(props: {
+  placeholder: string;
+  search: (q: string) => Promise<T[]>;
+  renderItem: (item: T) => React.ReactNode;
+  onPick: (item: T) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<T[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const needle = q.trim();
+    if (!needle) { setResults([]); setLoading(false); return; }
+    let off = false;
+    setLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const r = await props.search(needle);
+        if (!off) setResults(r);
+      } finally {
+        if (!off) setLoading(false);
+      }
+    }, 220);
+    return () => { off = true; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={props.placeholder}
+        style={s.input}
+      />
+      {open && q.trim() !== "" && (
+        <div style={s.taDropdown}>
+          {loading && <div style={s.taEmpty}>Ricerca...</div>}
+          {!loading && results.length === 0 && <div style={s.taEmpty}>Nessun risultato.</div>}
+          {results.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onMouseDown={() => { props.onPick(item); setQ(""); setOpen(false); }}
+              style={s.taOption}
+            >
+              {props.renderItem(item)}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -340,45 +329,21 @@ function CompetizioniTab(props: {
   const [rulesSummary, setRulesSummary] = useState("");
 
   function autoSlug(value: string) {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+    return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
   function handleTypeChange(value: "campionato" | "champions" | "coppa") {
     setType(value);
-
-    if (value === "campionato") {
-      setThemeKey("campionato");
-      setScope("club");
-      setMatchdays(38);
-    }
-
-    if (value === "champions") {
-      setThemeKey("champions");
-      setScope("club");
-      setMatchdays(8);
-    }
-
-    if (value === "coppa") {
-      setThemeKey("coppe");
-      setMatchdays(7);
-    }
+    if (value === "campionato") { setThemeKey("campionato"); setScope("club"); setMatchdays(38); }
+    if (value === "champions") { setThemeKey("champions"); setScope("club"); setMatchdays(8); }
+    if (value === "coppa") { setThemeKey("coppe"); setMatchdays(7); }
   }
 
   async function createCompetition() {
     props.setErr(null);
     props.setMsg(null);
-
-    if (!name.trim()) {
-      props.setErr("Inserisci il nome della competizione.");
-      return;
-    }
-
+    if (!name.trim()) { props.setErr("Inserisci il nome della competizione."); return; }
     setCreating(true);
-
     const { error } = await supabase.rpc("superadmin_create_global_competition", {
       p_name: name.trim(),
       p_slug: slug.trim() || autoSlug(name),
@@ -390,27 +355,12 @@ function CompetizioniTab(props: {
       p_description: description.trim() || null,
       p_rules_summary: rulesSummary.trim() || null,
     });
-
     setCreating(false);
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
+    if (error) { props.setErr(error.message); return; }
     props.setMsg("Competizione globale creata ✅");
-
-    setName("");
-    setSlug("");
-    setType("coppa");
-    setThemeKey("coppe");
-    setMatchdays(7);
-    setTopN(6);
-    setScope("club");
-    setDescription("");
-    setRulesSummary("");
+    setName(""); setSlug(""); setType("coppa"); setThemeKey("coppe");
+    setMatchdays(7); setTopN(6); setScope("club"); setDescription(""); setRulesSummary("");
     setOpen(false);
-
     await props.onCreated();
   }
 
@@ -419,16 +369,9 @@ function CompetizioniTab(props: {
       <div style={s.actionsBetween}>
         <div>
           <h2 style={s.cardTitle}>Competizioni globali attive</h2>
-          <p style={s.muted}>
-            Qui vedi solo le competizioni operative. Quelle chiuse restano in Supabase.
-          </p>
+          <p style={s.muted}>Qui vedi solo le competizioni operative. Quelle chiuse restano in Supabase.</p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          style={s.smallBtn}
-        >
+        <button type="button" onClick={() => setOpen((v) => !v)} style={s.smallBtn}>
           {open ? "Chiudi" : "Nuova"}
         </button>
       </div>
@@ -440,95 +383,46 @@ function CompetizioniTab(props: {
           <label style={s.label}>Nome</label>
           <input
             value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (!slug) setSlug(autoSlug(e.target.value));
-            }}
+            onChange={(e) => { setName(e.target.value); if (!slug) setSlug(autoSlug(e.target.value)); }}
             placeholder="Es. Mondiale per Club 2025"
             style={s.input}
           />
 
           <label style={s.label}>Slug</label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="mondiale-per-club-2025"
-            style={s.input}
-          />
+          <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="mondiale-per-club-2025" style={s.input} />
 
           <label style={s.label}>Tipo</label>
-          <select
-            value={type}
-            onChange={(e) =>
-              handleTypeChange(e.target.value as "campionato" | "champions" | "coppa")
-            }
-            style={s.input}
-          >
+          <select value={type} onChange={(e) => handleTypeChange(e.target.value as "campionato" | "champions" | "coppa")} style={s.input}>
             <option value="campionato">Campionato</option>
             <option value="champions">Champions</option>
             <option value="coppa">Coppa</option>
           </select>
 
           <label style={s.label}>Tema grafico</label>
-          <select
-            value={themeKey}
-            onChange={(e) => setThemeKey(e.target.value)}
-            style={s.input}
-          >
+          <select value={themeKey} onChange={(e) => setThemeKey(e.target.value)} style={s.input}>
             <option value="campionato">Campionato</option>
             <option value="champions">Champions</option>
             <option value="coppe">Coppe</option>
           </select>
 
           <div style={s.statsGrid}>
-            <NumberField
-              label="Giornate"
-              value={matchdays}
-              onChange={setMatchdays}
-            />
-
-            <NumberField
-              label="Top squadre"
-              value={topN}
-              onChange={setTopN}
-            />
+            <NumberField label="Giornate" value={matchdays} onChange={setMatchdays} />
+            <NumberField label="Top squadre" value={topN} onChange={setTopN} />
           </div>
 
           <label style={s.label}>Scope</label>
-          <select
-            value={scope}
-            onChange={(e) => setScope(e.target.value)}
-            style={s.input}
-          >
+          <select value={scope} onChange={(e) => setScope(e.target.value)} style={s.input}>
             <option value="club">Club</option>
             <option value="nazionali">Nazionali</option>
           </select>
 
           <label style={s.label}>Descrizione</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Breve descrizione della competizione"
-            style={s.textarea}
-          />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrizione della competizione" style={s.textarea} />
 
           <label style={s.label}>Regole sintetiche</label>
-          <textarea
-            value={rulesSummary}
-            onChange={(e) => setRulesSummary(e.target.value)}
-            placeholder="Es. Gol +3, assist +1..."
-            style={s.textarea}
-          />
+          <textarea value={rulesSummary} onChange={(e) => setRulesSummary(e.target.value)} placeholder="Es. Gol +3, assist +1..." style={s.textarea} />
 
-          <button
-            type="button"
-            onClick={createCompetition}
-            disabled={creating}
-            style={{
-              ...s.saveBtn,
-              opacity: creating ? 0.65 : 1,
-            }}
-          >
+          <button type="button" onClick={createCompetition} disabled={creating} style={{ ...s.saveBtn, opacity: creating ? 0.65 : 1 }}>
             {creating ? "Creazione..." : "Crea competizione"}
           </button>
         </div>
@@ -536,9 +430,7 @@ function CompetizioniTab(props: {
 
       <div style={s.list}>
         {props.competitions.length === 0 ? (
-          <div style={s.muted}>
-            Nessuna competizione attiva. Crea una nuova competizione globale.
-          </div>
+          <div style={s.muted}>Nessuna competizione attiva. Crea una nuova competizione globale.</div>
         ) : (
           props.competitions.map((c) => (
             <div key={c.id} style={s.compRow}>
@@ -549,17 +441,10 @@ function CompetizioniTab(props: {
                   {c.visibility_status} · {c.default_total_matchdays} giornate · Top {c.default_top_n} · {c.players_count} giocatori · {c.teams_count} squadre
                 </div>
               </div>
-
               <div style={s.actions3}>
-                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "active")}>
-                  Attiva
-                </button>
-                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "wip")}>
-                  WIP
-                </button>
-                <button style={s.dangerBtn} onClick={() => props.onStatus(c.id, "archived")}>
-                  Chiudi
-                </button>
+                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "active")}>Attiva</button>
+                <button style={s.smallBtn} onClick={() => props.onStatus(c.id, "wip")}>WIP</button>
+                <button style={s.dangerBtn} onClick={() => props.onStatus(c.id, "archived")}>Chiudi</button>
               </div>
             </div>
           ))
@@ -575,39 +460,15 @@ function StatisticheTab(props: {
   setErr: (x: string | null) => void;
   setMsg: (x: string | null) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [players, setPlayers] = useState<Player[]>([]);
   const [selected, setSelected] = useState<Player | null>(null);
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [saving, setSaving] = useState(false);
-
-  async function searchPlayers() {
-    props.setErr(null);
-    props.setMsg(null);
-    setSelected(null);
-
-    const { data, error } = await supabase.rpc("superadmin_search_players_for_vote", {
-      p_competition_id: props.competition.id,
-      p_query: query.trim(),
-    });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
-    setPlayers((data ?? []) as Player[]);
-  }
 
   async function pickPlayer(p: Player) {
     setSelected(p);
     props.setErr(null);
     props.setMsg(null);
-
-    if (!props.competition.active_season_id) {
-      props.setErr("Questa competizione non ha una season attiva.");
-      return;
-    }
+    if (!props.competition.active_season_id) { props.setErr("Questa competizione non ha una season attiva."); return; }
 
     const { data, error } = await supabase.rpc("superadmin_get_player_stats", {
       p_competition_id: props.competition.id,
@@ -615,11 +476,7 @@ function StatisticheTab(props: {
       p_matchday_number: props.matchday,
       p_real_player_id: p.id,
     });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
+    if (error) { props.setErr(error.message); return; }
 
     setStats({
       goals: Number(data?.goals ?? 0),
@@ -640,19 +497,10 @@ function StatisticheTab(props: {
   async function saveStats() {
     props.setErr(null);
     props.setMsg(null);
-
-    if (!selected) {
-      props.setErr("Seleziona un giocatore.");
-      return;
-    }
-
-    if (!props.competition.active_season_id) {
-      props.setErr("Competizione senza season attiva.");
-      return;
-    }
+    if (!selected) { props.setErr("Seleziona un giocatore."); return; }
+    if (!props.competition.active_season_id) { props.setErr("Competizione senza season attiva."); return; }
 
     setSaving(true);
-
     const { data, error } = await supabase.rpc("superadmin_upsert_player_stats", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
@@ -667,53 +515,34 @@ function StatisticheTab(props: {
       p_pen_missed: stats.pen_missed,
       p_clean_sheet: stats.clean_sheet,
     });
-
     setSaving(false);
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
+    if (error) { props.setErr(error.message); return; }
     props.setMsg(`Statistiche salvate ✅ Totale: ${data?.total_points_base ?? 0}`);
   }
 
   return (
     <section style={s.card}>
       <h2 style={s.cardTitle}>Statistiche giocatore</h2>
-      <p style={s.muted}>
-        Cerca e seleziona il giocatore esatto dal database. Le statistiche saranno salvate sul suo ID reale.
-      </p>
+      <p style={s.muted}>Scrivi il nome del giocatore o della squadra e selezionalo dall'elenco che compare.</p>
 
-      <div style={s.searchRow}>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Scrivi nome giocatore o squadra"
-          style={s.input}
-        />
-        <button type="button" onClick={searchPlayers} style={s.searchBtn}>
-          Cerca
-        </button>
-      </div>
-
-      <div style={s.list}>
-        {players.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => pickPlayer(p)}
-            style={{
-              ...s.playerRow,
-              borderColor: selected?.id === p.id ? "#16a34a" : "#e5e7eb",
-              background: selected?.id === p.id ? "#f0fdf4" : "white",
-            }}
-          >
-            <b>{p.name} {p.team_name ? `(${p.team_name})` : ""}</b>
-            <span>{p.role}</span>
-          </button>
-        ))}
-      </div>
+      <Typeahead<Player>
+        placeholder="Cerca giocatore o squadra"
+        search={async (q) => {
+          const { data, error } = await supabase.rpc("superadmin_search_players_for_vote", {
+            p_competition_id: props.competition.id,
+            p_query: q,
+          });
+          if (error) { props.setErr(error.message); return []; }
+          return (data ?? []) as Player[];
+        }}
+        renderItem={(p) => (
+          <span style={s.taItem}>
+            <b>{p.name}</b>
+            <small>{p.role}{p.team_name ? ` · ${p.team_name}` : ""}</small>
+          </span>
+        )}
+        onPick={pickPlayer}
+      />
 
       {selected && (
         <div style={s.statsBox}>
@@ -728,7 +557,6 @@ function StatisticheTab(props: {
             <NumberField label="Giallo" value={stats.yellow} onChange={(v) => setStat("yellow", v)} />
             <NumberField label="Rosso" value={stats.red} onChange={(v) => setStat("red", v)} />
             <NumberField label="Rigore sbagliato" value={stats.pen_missed} onChange={(v) => setStat("pen_missed", v)} />
-
             {selected.role === "P" && (
               <>
                 <NumberField label="Gol subito" value={stats.goals_conceded} onChange={(v) => setStat("goals_conceded", v)} />
@@ -739,11 +567,7 @@ function StatisticheTab(props: {
 
           {(selected.role === "P" || selected.role === "D") && (
             <label style={s.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={stats.clean_sheet}
-                onChange={(e) => setStat("clean_sheet", e.target.checked)}
-              />
+              <input type="checkbox" checked={stats.clean_sheet} onChange={(e) => setStat("clean_sheet", e.target.checked)} />
               Clean sheet
             </label>
           )}
@@ -763,8 +587,6 @@ function TopSquadreTab(props: {
   setErr: (x: string | null) => void;
   setMsg: (x: string | null) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [teams, setTeams] = useState<Team[]>([]);
   const [top, setTop] = useState<TopTeam[]>([]);
   const [rank, setRank] = useState(1);
 
@@ -775,39 +597,18 @@ function TopSquadreTab(props: {
 
   async function loadTop() {
     if (!props.competition.active_season_id) return;
-
     const { data, error } = await supabase.rpc("superadmin_get_top_teams", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
       p_matchday_number: props.matchday,
     });
-
     if (!error) setTop((data ?? []) as TopTeam[]);
-  }
-
-  async function searchTeams() {
-    const { data, error } = await supabase.rpc("superadmin_search_teams", {
-      p_competition_id: props.competition.id,
-      p_query: query.trim(),
-    });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
-    setTeams((data ?? []) as Team[]);
   }
 
   async function addTeam(team: Team) {
     props.setErr(null);
     props.setMsg(null);
-
-    if (!props.competition.active_season_id) {
-      props.setErr("Competizione senza season attiva.");
-      return;
-    }
-
+    if (!props.competition.active_season_id) { props.setErr("Competizione senza season attiva."); return; }
     const { error } = await supabase.rpc("superadmin_upsert_top_team", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
@@ -815,31 +616,20 @@ function TopSquadreTab(props: {
       p_real_team_id: team.id,
       p_rank: rank,
     });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
-    props.setMsg("Squadra top salvata ✅");
+    if (error) { props.setErr(error.message); return; }
+    props.setMsg(`Top #${rank} salvata: ${team.name} ✅`);
     setRank(rank + 1);
     await loadTop();
   }
 
   async function clearTop() {
     if (!props.competition.active_season_id) return;
-
     const { error } = await supabase.rpc("superadmin_clear_top_n", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
       p_matchday_number: props.matchday,
     });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
+    if (error) { props.setErr(error.message); return; }
     setRank(1);
     props.setMsg("Top squadre svuotata ✅");
     await loadTop();
@@ -849,35 +639,24 @@ function TopSquadreTab(props: {
     <section style={s.card}>
       <h2 style={s.cardTitle}>Top squadre</h2>
 
-      <div style={s.searchRow}>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cerca squadra"
-          style={s.input}
-        />
-        <button type="button" onClick={searchTeams} style={s.searchBtn}>
-          Cerca
-        </button>
-      </div>
-
       <label style={s.label}>Posizione Top</label>
-      <input
-        type="number"
-        min={1}
-        value={rank}
-        onChange={(e) => setRank(Number(e.target.value) || 1)}
-        style={s.input}
-      />
+      <input type="number" min={1} value={rank} onChange={(e) => setRank(Number(e.target.value) || 1)} style={s.input} />
 
-      <div style={s.list}>
-        {teams.map((t) => (
-          <button key={t.id} type="button" style={s.playerRow} onClick={() => addTeam(t)}>
-            <b>{t.name}</b>
-            <span>{t.country || "—"}</span>
-          </button>
-        ))}
-      </div>
+      <Typeahead<Team>
+        placeholder="Scrivi e scegli la squadra"
+        search={async (q) => {
+          const { data, error } = await supabase.rpc("superadmin_search_teams", {
+            p_competition_id: props.competition.id,
+            p_query: q,
+          });
+          if (error) { props.setErr(error.message); return []; }
+          return (data ?? []) as Team[];
+        }}
+        renderItem={(t) => (
+          <span style={s.taItem}><b>{t.name}</b>{t.country ? <small>{t.country}</small> : null}</span>
+        )}
+        onPick={addTeam}
+      />
 
       <div style={s.actionsBetween}>
         <h3 style={s.smallTitle}>Top inserita</h3>
@@ -885,7 +664,9 @@ function TopSquadreTab(props: {
       </div>
 
       <div style={s.list}>
-        {top.map((t) => (
+        {top.length === 0 ? (
+          <div style={s.muted}>Nessuna squadra inserita per questa giornata.</div>
+        ) : top.map((t) => (
           <div key={t.id} style={s.topRow}>
             <b>#{t.rank}</b>
             <span>{t.team_name}</span>
@@ -902,10 +683,6 @@ function PartiteTab(props: {
   setErr: (x: string | null) => void;
   setMsg: (x: string | null) => void;
 }) {
-  const [homeQuery, setHomeQuery] = useState("");
-  const [awayQuery, setAwayQuery] = useState("");
-  const [homeResults, setHomeResults] = useState<Team[]>([]);
-  const [awayResults, setAwayResults] = useState<Team[]>([]);
   const [home, setHome] = useState<Team | null>(null);
   const [away, setAway] = useState<Team | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
@@ -917,44 +694,28 @@ function PartiteTab(props: {
 
   async function loadFixtures() {
     if (!props.competition.active_season_id) return;
-
     const { data, error } = await supabase.rpc("superadmin_get_fixtures", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
       p_matchday_number: props.matchday,
     });
-
     if (!error) setFixtures((data ?? []) as Fixture[]);
   }
 
-  async function searchTeams(q: string, setter: (x: Team[]) => void) {
+  const searchTeams = async (q: string) => {
     const { data, error } = await supabase.rpc("superadmin_search_teams", {
       p_competition_id: props.competition.id,
-      p_query: q.trim(),
+      p_query: q,
     });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
-    setter((data ?? []) as Team[]);
-  }
+    if (error) { props.setErr(error.message); return []; }
+    return (data ?? []) as Team[];
+  };
 
   async function addFixture() {
     props.setErr(null);
     props.setMsg(null);
-
-    if (!props.competition.active_season_id) {
-      props.setErr("Competizione senza season attiva.");
-      return;
-    }
-
-    if (!home || !away) {
-      props.setErr("Seleziona squadra casa e squadra trasferta.");
-      return;
-    }
-
+    if (!props.competition.active_season_id) { props.setErr("Competizione senza season attiva."); return; }
+    if (!home || !away) { props.setErr("Seleziona squadra casa e squadra trasferta."); return; }
     const { error } = await supabase.rpc("superadmin_upsert_fixture", {
       p_competition_id: props.competition.id,
       p_season_id: props.competition.active_season_id,
@@ -964,32 +725,16 @@ function PartiteTab(props: {
       p_starts_at: null,
       p_status: "scheduled",
     });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
+    if (error) { props.setErr(error.message); return; }
     props.setMsg("Partita salvata ✅");
     setHome(null);
     setAway(null);
-    setHomeQuery("");
-    setAwayQuery("");
-    setHomeResults([]);
-    setAwayResults([]);
     await loadFixtures();
   }
 
   async function deleteFixture(id: string) {
-    const { error } = await supabase.rpc("superadmin_delete_fixture", {
-      p_fixture_id: id,
-    });
-
-    if (error) {
-      props.setErr(error.message);
-      return;
-    }
-
+    const { error } = await supabase.rpc("superadmin_delete_fixture", { p_fixture_id: id });
+    if (error) { props.setErr(error.message); return; }
     props.setMsg("Partita eliminata ✅");
     await loadFixtures();
   }
@@ -999,34 +744,22 @@ function PartiteTab(props: {
       <h2 style={s.cardTitle}>Partite</h2>
 
       <label style={s.label}>Squadra casa</label>
-      <div style={s.searchRow}>
-        <input
-          value={homeQuery}
-          onChange={(e) => setHomeQuery(e.target.value)}
-          placeholder="Cerca squadra casa"
-          style={s.input}
-        />
-        <button type="button" style={s.searchBtn} onClick={() => searchTeams(homeQuery, setHomeResults)}>
-          Cerca
-        </button>
-      </div>
-
-      <TeamResults results={homeResults} selected={home} onPick={setHome} />
+      <Typeahead<Team>
+        placeholder="Scrivi e scegli la squadra di casa"
+        search={searchTeams}
+        renderItem={(t) => (<span style={s.taItem}><b>{t.name}</b>{t.country ? <small>{t.country}</small> : null}</span>)}
+        onPick={setHome}
+      />
+      {home && <div style={s.picked}>Casa: <b>{home.name}</b></div>}
 
       <label style={s.label}>Squadra trasferta</label>
-      <div style={s.searchRow}>
-        <input
-          value={awayQuery}
-          onChange={(e) => setAwayQuery(e.target.value)}
-          placeholder="Cerca squadra trasferta"
-          style={s.input}
-        />
-        <button type="button" style={s.searchBtn} onClick={() => searchTeams(awayQuery, setAwayResults)}>
-          Cerca
-        </button>
-      </div>
-
-      <TeamResults results={awayResults} selected={away} onPick={setAway} />
+      <Typeahead<Team>
+        placeholder="Scrivi e scegli la squadra in trasferta"
+        search={searchTeams}
+        renderItem={(t) => (<span style={s.taItem}><b>{t.name}</b>{t.country ? <small>{t.country}</small> : null}</span>)}
+        onPick={setAway}
+      />
+      {away && <div style={s.picked}>Trasferta: <b>{away.name}</b></div>}
 
       <div style={s.fixturePreview}>
         <b>{home?.name ?? "Casa"}</b>
@@ -1034,21 +767,16 @@ function PartiteTab(props: {
         <b>{away?.name ?? "Trasferta"}</b>
       </div>
 
-      <button type="button" onClick={addFixture} style={s.saveBtn}>
-        Aggiungi partita
-      </button>
+      <button type="button" onClick={addFixture} style={s.saveBtn}>Aggiungi partita</button>
 
       <h3 style={s.smallTitle}>Partite inserite</h3>
-
       <div style={s.list}>
-        {fixtures.map((f) => (
+        {fixtures.length === 0 ? (
+          <div style={s.muted}>Nessuna partita inserita.</div>
+        ) : fixtures.map((f) => (
           <div key={f.id} style={s.fixtureRow}>
-            <span>
-              <b>{f.home_team_name}</b> - <b>{f.away_team_name}</b>
-            </span>
-            <button type="button" onClick={() => deleteFixture(f.id)} style={s.removeBtn}>
-              Elimina
-            </button>
+            <span><b>{f.home_team_name}</b> - <b>{f.away_team_name}</b></span>
+            <button type="button" onClick={() => deleteFixture(f.id)} style={s.removeBtn}>Elimina</button>
           </div>
         ))}
       </div>
@@ -1056,324 +784,56 @@ function PartiteTab(props: {
   );
 }
 
-function TeamResults(props: {
-  results: Team[];
-  selected: Team | null;
-  onPick: (team: Team) => void;
-}) {
-  return (
-    <div style={s.list}>
-      {props.results.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => props.onPick(t)}
-          style={{
-            ...s.playerRow,
-            borderColor: props.selected?.id === t.id ? "#16a34a" : "#e5e7eb",
-            background: props.selected?.id === t.id ? "#f0fdf4" : "white",
-          }}
-        >
-          <b>{t.name}</b>
-          <span>{t.country || "—"}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function NumberField(props: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
+function NumberField(props: { label: string; value: number; onChange: (value: number) => void }) {
   return (
     <label style={s.numberField}>
       <span>{props.label}</span>
-      <input
-        type="number"
-        value={props.value}
-        onChange={(e) => props.onChange(Number(e.target.value) || 0)}
-      />
+      <input type="number" value={props.value} onChange={(e) => props.onChange(Number(e.target.value) || 0)} />
     </label>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
-  container: {
-    maxWidth: 520,
-    margin: "0 auto",
-    padding: "16px 14px 100px",
-    display: "grid",
-    gap: 14,
-  },
-  hero: {
-    background: "linear-gradient(160deg,#14532d,#16a34a)",
-    color: "white",
-    borderRadius: 22,
-    padding: 18,
-    boxShadow: "0 8px 24px rgba(22,163,74,0.20)",
-  },
-  title: {
-    margin: 0,
-    fontSize: 28,
-    fontWeight: 1000,
-  },
-  subtitle: {
-    margin: "8px 0 0",
-    color: "rgba(255,255,255,0.78)",
-    fontWeight: 700,
-    lineHeight: 1.4,
-  },
-  tabs: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 8,
-  },
-  tab: {
-    padding: 11,
-    borderRadius: 12,
-    border: "1px solid #e5e7eb",
-    fontWeight: 1000,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  card: {
-    background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 20,
-    padding: 16,
-    display: "grid",
-    gap: 12,
-    boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
-  },
-  cardTitle: {
-    margin: 0,
-    fontSize: 21,
-    fontWeight: 1000,
-    color: "#111827",
-  },
-  muted: {
-    margin: 0,
-    color: "#6b7280",
-    fontSize: 13,
-    fontWeight: 700,
-    lineHeight: 1.45,
-  },
-  list: {
-    display: "grid",
-    gap: 8,
-  },
-  compRow: {
-    border: "1px solid #e5e7eb",
-    borderRadius: 16,
-    padding: 13,
-    display: "grid",
-    gap: 10,
-  },
-  compName: {
-    marginTop: 8,
-    color: "#111827",
-    fontWeight: 1000,
-    fontSize: 16,
-  },
-  compMeta: {
-    marginTop: 3,
-    color: "#6b7280",
-    fontSize: 12,
-    fontWeight: 800,
-  },
-  actions3: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: 8,
-  },
-  smallBtn: {
-    border: "1px solid #e5e7eb",
-    borderRadius: 10,
-    background: "white",
-    padding: 9,
-    fontWeight: 900,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  dangerBtn: {
-    border: "1px solid #fed7aa",
-    borderRadius: 10,
-    background: "#fff7ed",
-    color: "#ea580c",
-    padding: 9,
-    fontWeight: 900,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  label: {
-    fontSize: 12,
-    color: "#374151",
-    fontWeight: 1000,
-    textTransform: "uppercase",
-  },
-  input: {
-    width: "100%",
-    padding: 12,
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    fontFamily: "inherit",
-    fontWeight: 800,
-    background: "white",
-  },
-  searchRow: {
-    display: "grid",
-    gridTemplateColumns: "1fr 86px",
-    gap: 8,
-  },
-  searchBtn: {
-    border: "none",
-    borderRadius: 12,
-    background: "#16a34a",
-    color: "white",
-    fontWeight: 1000,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  playerRow: {
-    display: "grid",
-    gap: 3,
-    textAlign: "left",
-    border: "1px solid #e5e7eb",
-    borderRadius: 13,
-    background: "white",
-    padding: 12,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  statsBox: {
-    display: "grid",
-    gap: 12,
-    borderTop: "1px solid #e5e7eb",
-    paddingTop: 14,
-  },
-  selectedTitle: {
-    margin: 0,
-    display: "grid",
-    gap: 3,
-    color: "#111827",
-    fontWeight: 1000,
-  },
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 9,
-  },
-  numberField: {
-    display: "grid",
-    gap: 5,
-    color: "#374151",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  checkboxRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 9,
-    color: "#111827",
-    fontWeight: 900,
-  },
-  saveBtn: {
-    border: "none",
-    borderRadius: 13,
-    background: "#16a34a",
-    color: "white",
-    padding: 14,
-    fontWeight: 1000,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  topRow: {
-    display: "grid",
-    gridTemplateColumns: "42px 1fr",
-    gap: 10,
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 13,
-    background: "#f9fafb",
-    fontWeight: 900,
-  },
-  actionsBetween: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-  },
-  smallTitle: {
-    margin: 0,
-    fontSize: 16,
-    fontWeight: 1000,
-    color: "#111827",
-  },
-  fixturePreview: {
-    display: "grid",
-    gridTemplateColumns: "1fr 34px 1fr",
-    gap: 8,
-    alignItems: "center",
-    textAlign: "center",
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
-    borderRadius: 14,
-    padding: 12,
-  },
-  fixtureRow: {
-    display: "grid",
-    gridTemplateColumns: "1fr 78px",
-    gap: 8,
-    alignItems: "center",
-    padding: 12,
-    border: "1px solid #e5e7eb",
-    borderRadius: 13,
-  },
-  removeBtn: {
-    border: "1px solid #fed7aa",
-    background: "#fff7ed",
-    color: "#ea580c",
-    borderRadius: 10,
-    padding: 8,
-    fontWeight: 900,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  createBox: {
-    display: "grid",
-    gap: 10,
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
-    borderRadius: 16,
-    padding: 13,
-  },
-  textarea: {
-    width: "100%",
-    minHeight: 82,
-    padding: 12,
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    fontFamily: "inherit",
-    fontWeight: 700,
-    background: "white",
-    resize: "vertical",
-  },
-  ok: {
-    background: "#f0fdf4",
-    border: "1px solid #86efac",
-    color: "#15803d",
-    borderRadius: 12,
-    padding: 12,
-    fontWeight: 900,
-  },
-  err: {
-    background: "#fff1f2",
-    border: "1px solid #fecaca",
-    color: "#991b1b",
-    borderRadius: 12,
-    padding: 12,
-    fontWeight: 900,
-  },
+  container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 14 },
+  hero: { background: "linear-gradient(160deg,#14532d,#16a34a)", color: "white", borderRadius: 22, padding: 18, boxShadow: "0 8px 24px rgba(22,163,74,0.20)" },
+  title: { margin: 0, fontSize: 28, fontWeight: 1000 },
+  subtitle: { margin: "8px 0 0", color: "rgba(255,255,255,0.78)", fontWeight: 700, lineHeight: 1.4 },
+  tabs: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
+  tab: { padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, display: "grid", gap: 12, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  cardTitle: { margin: 0, fontSize: 21, fontWeight: 1000, color: "#111827" },
+  muted: { margin: 0, color: "#6b7280", fontSize: 13, fontWeight: 700, lineHeight: 1.45 },
+  list: { display: "grid", gap: 8 },
+  compRow: { border: "1px solid #e5e7eb", borderRadius: 16, padding: 13, display: "grid", gap: 10 },
+  compName: { marginTop: 8, color: "#111827", fontWeight: 1000, fontSize: 16 },
+  compMeta: { marginTop: 3, color: "#6b7280", fontSize: 12, fontWeight: 800 },
+  actions3: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 },
+  smallBtn: { border: "1px solid #e5e7eb", borderRadius: 10, background: "white", padding: 9, fontWeight: 900, fontFamily: "inherit", cursor: "pointer" },
+  dangerBtn: { border: "1px solid #fed7aa", borderRadius: 10, background: "#fff7ed", color: "#ea580c", padding: 9, fontWeight: 900, fontFamily: "inherit", cursor: "pointer" },
+  label: { fontSize: 12, color: "#374151", fontWeight: 1000, textTransform: "uppercase" },
+  input: { width: "100%", padding: 12, border: "1px solid #e5e7eb", borderRadius: 12, fontFamily: "inherit", fontWeight: 800, background: "white" },
+  taDropdown: { position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 30, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 12px 30px rgba(15,23,42,0.16)", maxHeight: 260, overflowY: "auto", display: "grid" },
+  taOption: { textAlign: "left", border: "none", borderBottom: "1px solid #f3f4f6", background: "white", padding: "10px 12px", cursor: "pointer", fontFamily: "inherit" },
+  taItem: { display: "grid", gap: 1 },
+  taEmpty: { padding: 12, color: "#6b7280", fontWeight: 700, fontSize: 13 },
+  picked: { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: 10, padding: "8px 12px", fontWeight: 800, fontSize: 13 },
+  searchRow: { display: "grid", gridTemplateColumns: "1fr 86px", gap: 8 },
+  searchBtn: { border: "none", borderRadius: 12, background: "#16a34a", color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
+  playerRow: { display: "grid", gap: 3, textAlign: "left", border: "1px solid #e5e7eb", borderRadius: 13, background: "white", padding: 12, fontFamily: "inherit", cursor: "pointer" },
+  statsBox: { display: "grid", gap: 12, borderTop: "1px solid #e5e7eb", paddingTop: 14 },
+  selectedTitle: { margin: 0, display: "grid", gap: 3, color: "#111827", fontWeight: 1000 },
+  statsGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 },
+  numberField: { display: "grid", gap: 5, color: "#374151", fontSize: 12, fontWeight: 900 },
+  checkboxRow: { display: "flex", alignItems: "center", gap: 9, color: "#111827", fontWeight: 900 },
+  saveBtn: { border: "none", borderRadius: 13, background: "#16a34a", color: "white", padding: 14, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
+  topRow: { display: "grid", gridTemplateColumns: "42px 1fr", gap: 10, alignItems: "center", padding: 12, borderRadius: 13, background: "#f9fafb", fontWeight: 900 },
+  actionsBetween: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 },
+  smallTitle: { margin: 0, fontSize: 16, fontWeight: 1000, color: "#111827" },
+  fixturePreview: { display: "grid", gridTemplateColumns: "1fr 34px 1fr", gap: 8, alignItems: "center", textAlign: "center", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 14, padding: 12 },
+  fixtureRow: { display: "grid", gridTemplateColumns: "1fr 78px", gap: 8, alignItems: "center", padding: 12, border: "1px solid #e5e7eb", borderRadius: 13 },
+  removeBtn: { border: "1px solid #fed7aa", background: "#fff7ed", color: "#ea580c", borderRadius: 10, padding: 8, fontWeight: 900, fontFamily: "inherit", cursor: "pointer" },
+  createBox: { display: "grid", gap: 10, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 16, padding: 13 },
+  textarea: { width: "100%", minHeight: 82, padding: 12, border: "1px solid #e5e7eb", borderRadius: 12, fontFamily: "inherit", fontWeight: 700, background: "white", resize: "vertical" },
+  ok: { background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", borderRadius: 12, padding: 12, fontWeight: 900 },
+  err: { background: "#fff1f2", border: "1px solid #fecaca", color: "#991b1b", borderRadius: 12, padding: 12, fontWeight: 900 },
 };
