@@ -96,32 +96,45 @@ export default function RosaPage() {
   }, [app.ready, app.activeLeagueCompetitionId]);
 
   // Partite + Top squadre della giornata
+// Partite + Top squadre della giornata
   useEffect(() => {
     const md = form.matchday?.number;
-    if (!app.competitionId || !md) {
+    if (!app.activeLeagueCompetitionId || !md) {
       setTop([]);
       setFixtures([]);
       return;
     }
     let off = false;
     (async () => {
+      // ricava la competizione dalla lega-competizione (più affidabile)
+      let compId = app.competitionId;
+      if (!compId) {
+        const { data: lc } = await supabase
+          .from("league_competitions")
+          .select("competition_id")
+          .eq("id", app.activeLeagueCompetitionId)
+          .maybeSingle();
+        compId = (lc as any)?.competition_id ?? null;
+      }
+      if (!compId) { if (!off) { setTop([]); setFixtures([]); } return; }
+
       const { data: teams } = await supabase
         .from("real_teams")
         .select("id,name")
-        .eq("competition_id", app.competitionId);
+        .eq("competition_id", compId);
       const map = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
 
       const { data: tt } = await supabase
         .from("top_teams")
         .select("rank,real_team_id")
-        .eq("competition_id", app.competitionId)
+        .eq("competition_id", compId)
         .eq("matchday_number", md)
         .order("rank", { ascending: true });
 
       const { data: fx } = await supabase
         .from("fixtures")
         .select("home_team_id,away_team_id,status")
-        .eq("competition_id", app.competitionId)
+        .eq("competition_id", compId)
         .eq("matchday_number", md);
 
       if (off) return;
@@ -133,7 +146,7 @@ export default function RosaPage() {
       })));
     })();
     return () => { off = true; };
-  }, [app.competitionId, form.matchday?.number]);
+  }, [app.activeLeagueCompetitionId, app.competitionId, form.matchday?.number]);
 
   // Giocatori disponibili per un ruolo, con regole: max 1 per squadra, max 1 Top
   function availableFor(role: string, currentId?: string) {
