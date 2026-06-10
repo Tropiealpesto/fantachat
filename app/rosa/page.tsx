@@ -8,28 +8,9 @@ import CompetitionBadge from "../components/CompetitionBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
-type Player = {
-  id: string;
-  name: string;
-  role: string;
-  team: string;
-};
-
-type Matchday = {
-  id: string;
-  number: number;
-  status: string;
-};
-
-type LineupData = {
-  id?: string;
-  submitted_at?: string;
-  players?: {
-    role: string;
-    real_player_id: string;
-  }[];
-};
-
+type Player = { id: string; name: string; role: string; team: string };
+type Matchday = { id: string; number: number; status: string };
+type LineupData = { id?: string; submitted_at?: string; players?: { role: string; real_player_id: string }[] };
 type FormData = {
   is_participant: boolean;
   matchday: Matchday | null;
@@ -37,21 +18,16 @@ type FormData = {
   players: Player[];
   lineup: LineupData | null;
 };
+type TopRow = { rank: number; name: string };
+type FixtureRow = { home: string; away: string; status: string };
 
-const ROLE_LABELS: Record<string, string> = {
-  P: "Portiere",
-  D: "Difensore",
-  C: "Centrocampista",
-  A: "Attaccante",
-};
-
+const ROLE_LABELS: Record<string, string> = { P: "Portiere", D: "Difensore", C: "Centrocampista", A: "Attaccante" };
 const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   P: { bg: "#fef9c3", color: "#a16207" },
   D: { bg: "#dcfce7", color: "#15803d" },
   C: { bg: "#dbeafe", color: "#1d4ed8" },
   A: { bg: "#fee2e2", color: "#dc2626" },
 };
-
 const EMPTY_FORM: FormData = {
   is_participant: false,
   matchday: null,
@@ -59,6 +35,11 @@ const EMPTY_FORM: FormData = {
   players: [],
   lineup: null,
 };
+
+// Portiere in alto, attaccante in basso
+function roleOrder(role: string) {
+  return ({ P: 1, D: 2, C: 3, A: 4 } as Record<string, number>)[role] ?? 10;
+}
 
 export default function RosaPage() {
   const app = useRequireApp(false);
@@ -71,6 +52,9 @@ export default function RosaPage() {
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
+  const [top, setTop] = useState<TopRow[]>([]);
+  const [fixtures, setFixtures] = useState<FixtureRow[]>([]);
+
   const roles = useMemo(
     () =>
       Object.entries(form.players_per_role ?? {})
@@ -79,40 +63,23 @@ export default function RosaPage() {
     [form.players_per_role]
   );
 
-  const selectedIds = useMemo(
-    () => Object.values(selected).flat().filter(Boolean),
-    [selected]
-  );
-
-  const totalPlayers = useMemo(
-    () => roles.reduce((sum, [, n]) => sum + Number(n || 0), 0),
-    [roles]
-  );
+  const selectedIds = useMemo(() => Object.values(selected).flat().filter(Boolean), [selected]);
+  const totalPlayers = useMemo(() => roles.reduce((s, [, n]) => s + Number(n || 0), 0), [roles]);
 
   useEffect(() => {
     async function load() {
       if (!app.ready || !app.activeLeagueCompetitionId) return;
-
       setLoading(true);
       setErr(null);
       setMsg(null);
-
       try {
         const { data, error } = await supabase.rpc("get_lineup_form_data", {
           p_league_competition_id: app.activeLeagueCompetitionId,
         });
-
         if (error) throw error;
-
         const nextForm = normalizeFormData(data);
         setForm(nextForm);
-
-        const initial = buildInitialSelected(
-          nextForm.players_per_role,
-          nextForm.lineup
-        );
-
-        setSelected(initial);
+        setSelected(buildInitialSelected(nextForm.players_per_role, nextForm.lineup));
         setSaved(Boolean(nextForm.lineup?.id));
       } catch (e: any) {
         setErr(e?.message ?? String(e));
@@ -120,9 +87,50 @@ export default function RosaPage() {
         setLoading(false);
       }
     }
-
     load();
   }, [app.ready, app.activeLeagueCompetitionId]);
+
+  // Partite + Top squadre della giornata
+  useEffect(() => {
+    const md = form.matchday?.number;
+    if (!app.competitionId || !app.seasonId || !md) {
+      setTop([]);
+      setFixtures([]);
+      return;
+    }
+    let off = false;
+    (async () => {
+      const { data: teams } = await supabase
+        .from("real_teams")
+        .select("id,name")
+        .eq("competition_id", app.competitionId);
+      const map = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
+
+      const { data: tt } = await supabase
+        .from("top_teams")
+        .select("rank,real_team_id")
+        .eq("competition_id", app.competitionId)
+        .eq("season_id", app.seasonId)
+        .eq("matchday_number", md)
+        .order("rank", { ascending: true });
+
+      const { data: fx } = await supabase
+        .from("fixtures")
+        .select("home_team_id,away_team_id,status")
+        .eq("competition_id", app.competitionId)
+        .eq("season_id", app.seasonId)
+        .eq("matchday_number", md);
+
+      if (off) return;
+      setTop(((tt ?? []) as any[]).map((r) => ({ rank: r.rank, name: map.get(r.real_team_id) ?? "—" })));
+      setFixtures(((fx ?? []) as any[]).map((r) => ({
+        home: map.get(r.home_team_id) ?? "—",
+        away: map.get(r.away_team_id) ?? "—",
+        status: r.status,
+      })));
+    })();
+    return () => { off = true; };
+  }, [app.competitionId, app.seasonId, form.matchday?.number]);
 
   function playersForRole(role: string, currentId?: string) {
     return form.players
@@ -144,53 +152,32 @@ export default function RosaPage() {
   function validate() {
     for (const [role, count] of roles) {
       const ids = selected[role] ?? [];
-      if (ids.filter(Boolean).length !== count) {
-        return `Completa il ruolo ${ROLE_LABELS[role] ?? role}.`;
-      }
+      if (ids.filter(Boolean).length !== count) return `Completa il ruolo ${ROLE_LABELS[role] ?? role}.`;
     }
-
-    if (new Set(selectedIds).size !== selectedIds.length) {
-      return "Non puoi selezionare due volte lo stesso giocatore.";
-    }
-
+    if (new Set(selectedIds).size !== selectedIds.length) return "Non puoi selezionare due volte lo stesso giocatore.";
     return null;
   }
 
   async function save() {
     setErr(null);
     setMsg(null);
+    if (!app.activeLeagueCompetitionId || !form.matchday?.id) return setErr("Nessuna giornata aperta.");
+    if (!form.is_participant) return setErr("Non partecipi a questa competizione.");
+    const v = validate();
+    if (v) return setErr(v);
 
-    if (!app.activeLeagueCompetitionId || !form.matchday?.id) {
-      return setErr("Nessuna giornata aperta.");
-    }
-
-    if (!form.is_participant) {
-      return setErr("Non partecipi a questa competizione.");
-    }
-
-    const validation = validate();
-    if (validation) return setErr(validation);
-
-    const playersPayload = Object.entries(selected).flatMap(([role, ids]) =>
-      ids
-        .filter(Boolean)
-        .map((real_player_id) => ({
-          role,
-          real_player_id,
-        }))
+    const payload = Object.entries(selected).flatMap(([role, ids]) =>
+      ids.filter(Boolean).map((real_player_id) => ({ role, real_player_id }))
     );
 
     setSaving(true);
-
     try {
       const { error } = await supabase.rpc("submit_lineup", {
         p_league_competition_id: app.activeLeagueCompetitionId,
         p_matchday_id: form.matchday.id,
-        p_players: playersPayload,
+        p_players: payload,
       });
-
       if (error) throw error;
-
       setSaved(true);
       setMsg("Rosa inviata ✅");
     } catch (e: any) {
@@ -202,101 +189,60 @@ export default function RosaPage() {
 
   if (!app.ready || loading) return <LoadingScreen />;
 
+  const locked = saved || !form.is_participant || !form.matchday;
+  const accent = app.competitionTheme.primary;
+
   return (
     <>
-      <AppBar
-        league={app.leagueName}
-        team={app.teamName}
-        onMenuOpen={app.openDrawer}
-      />
+      <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
 
       <main style={s.container}>
-        <div style={{ ...s.card, borderLeft: `4px solid ${app.competitionTheme.primary}` }}>
-          <CompetitionBadge name={app.competitionName} type={app.competitionType} />
-
-          <h1 style={s.title}>Rosa</h1>
-
-          <div style={s.summary}>
-            <span>
-              Giornata: <b>{form.matchday?.number ?? "—"}</b>
-            </span>
-            <span style={s.status}>{form.matchday?.status ?? "locked"}</span>
+        {/* HEADER COMPATTO */}
+        <div style={{ ...s.header, borderLeft: `4px solid ${accent}` }}>
+          <div style={s.headerTop}>
+            <CompetitionBadge name={app.competitionName} type={app.competitionType} />
+            <span style={s.statusPill}>{form.matchday?.status ?? "chiusa"}</span>
           </div>
-
+          <div style={s.headerRow}>
+            <h1 style={s.title}>Rosa</h1>
+            <div style={s.gj}>Giornata <b>{form.matchday?.number ?? "—"}</b></div>
+          </div>
           <div style={s.rulesMini}>
             {roles.map(([role, count]) => (
-              <span key={role}>
-                {count} {role}
-              </span>
+              <span key={role} style={s.rulePill}>{count} {role}</span>
             ))}
-            <b>{totalPlayers} giocatori</b>
+            <span style={s.ruleTotal}>{totalPlayers} giocatori</span>
           </div>
 
-          {!form.is_participant && (
-            <div style={s.warn}>
-              Non partecipi a questa competizione.
-            </div>
-          )}
-
-          {form.is_participant && !form.matchday && (
-            <div style={s.warn}>
-              Nessuna giornata aperta per questa competizione.
-            </div>
-          )}
-
-          {saved && (
-            <div style={s.ok}>
-              Rosa già inviata. Per modificarla serve il reset admin.
-            </div>
-          )}
+          {!form.is_participant && <div style={s.warn}>Non partecipi a questa competizione.</div>}
+          {form.is_participant && !form.matchday && <div style={s.warn}>Nessuna giornata aperta.</div>}
+          {saved && <div style={s.ok}>Rosa già inviata. Per modificarla serve il reset admin.</div>}
         </div>
 
-        <Campo
-          players={form.players}
-          selected={selected}
-          roles={roles}
-        />
-
+        {/* 1) SCEGLI I GIOCATORI */}
         <div style={s.card}>
-          <h2 style={s.cardTitle}>Seleziona giocatori</h2>
+          <h2 style={s.cardTitle}>Scegli i giocatori</h2>
 
           {roles.map(([role, count]) => (
             <div key={role} style={s.roleBlock}>
               <div style={s.roleTitle}>
                 <RoleBadge role={role} />
                 <span>{ROLE_LABELS[role] ?? role}</span>
-                <small>{count} giocatori</small>
+                <small>{count}</small>
               </div>
 
-              {Array.from({ length: Number(count) || 0 }).map((_, index) => {
-                const currentId = selected[role]?.[index] ?? "";
-
-                return (
-                  <select
-                    key={`${role}-${index}`}
-                    value={currentId}
-                    onChange={(e) => selectPlayer(role, index, e.target.value)}
-                    disabled={saved || !form.is_participant || !form.matchday}
-                    style={s.select}
-                  >
-                    <option value="">
-                      Scegli {ROLE_LABELS[role] ?? role} #{index + 1}
-                    </option>
-
-                    {playersForRole(role, currentId).map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}{p.team ? ` (${p.team})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                );
-              })}
-
-              {playersForRole(role).length === 0 && (
-                <div style={s.emptyRole}>
-                  Nessun giocatore disponibile per questo ruolo.
-                </div>
-              )}
+              {Array.from({ length: Number(count) || 0 }).map((_, index) => (
+                <PlayerPicker
+                  key={`${role}-${index}`}
+                  role={role}
+                  index={index}
+                  disabled={locked}
+                  options={playersForRole(role, selected[role]?.[index])}
+                  currentId={selected[role]?.[index] ?? ""}
+                  onSelect={(id) => selectPlayer(role, index, id)}
+                  onClear={() => selectPlayer(role, index, "")}
+                />
+              ))}
             </div>
           ))}
 
@@ -305,21 +251,53 @@ export default function RosaPage() {
               type="button"
               onClick={save}
               disabled={saving || !form.is_participant || !form.matchday}
-              style={{
-                ...s.btn,
-                background:
-                  form.is_participant && form.matchday
-                    ? app.competitionTheme.primary
-                    : "#d1d5db",
-              }}
+              style={{ ...s.btn, background: form.is_participant && form.matchday ? accent : "#d1d5db" }}
             >
               {saving ? "Invio..." : "Invia rosa"}
             </button>
           )}
-
           {msg && <div style={s.ok}>{msg}</div>}
           {err && <div style={s.err}>{err}</div>}
         </div>
+
+        {/* 2) PARTITE | TOP SQUADRE */}
+        <div style={s.duo}>
+          <div style={s.card}>
+            <h3 style={s.duoTitle}>Partite</h3>
+            {fixtures.length === 0 ? (
+              <div style={s.duoEmpty}>Nessuna partita.</div>
+            ) : (
+              <div style={s.duoList}>
+                {fixtures.map((f, i) => (
+                  <div key={i} style={s.fixtureRow}>
+                    <span style={s.fxTeam}>{f.home}</span>
+                    <span style={s.fxVs}>vs</span>
+                    <span style={s.fxTeam}>{f.away}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={s.card}>
+            <h3 style={s.duoTitle}>Top squadre</h3>
+            {top.length === 0 ? (
+              <div style={s.duoEmpty}>Nessuna Top.</div>
+            ) : (
+              <div style={s.duoList}>
+                {top.map((t, i) => (
+                  <div key={i} style={s.topRow}>
+                    <b style={{ color: accent }}>#{t.rank}</b>
+                    <span style={s.fxTeam}>{t.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3) CAMPO */}
+        <Campo players={form.players} selected={selected} roles={roles} />
       </main>
 
       <BottomNav />
@@ -327,125 +305,115 @@ export default function RosaPage() {
   );
 }
 
-function normalizeFormData(value: any): FormData {
-  const playersPerRole =
-    value?.players_per_role && typeof value.players_per_role === "object"
-      ? value.players_per_role
-      : { P: 1, D: 1, C: 1, A: 1 };
+function PlayerPicker(props: {
+  role: string;
+  index: number;
+  disabled: boolean;
+  options: Player[];
+  currentId: string;
+  onSelect: (id: string) => void;
+  onClear: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
 
-  return {
-    is_participant: Boolean(value?.is_participant),
-    matchday: value?.matchday ?? null,
-    players_per_role: playersPerRole,
-    players: Array.isArray(value?.players) ? value.players : [],
-    lineup: value?.lineup ?? null,
-  };
-}
+  const current = props.currentId ? props.options.find((p) => p.id === props.currentId) : null;
 
-function buildInitialSelected(
-  playersPerRole: Record<string, number>,
-  lineup: LineupData | null
-) {
-  const initial: Record<string, string[]> = {};
+  const matches = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return props.options.slice(0, 8);
+    return props.options
+      .filter((p) => (p.name + " " + (p.team ?? "")).toLowerCase().includes(needle))
+      .slice(0, 15);
+  }, [q, props.options]);
 
-  Object.entries(playersPerRole ?? {}).forEach(([role, count]) => {
-    initial[role] = Array.from({ length: Number(count) || 0 }, () => "");
-  });
-
-  if (!lineup?.players?.length) return initial;
-
-  for (const p of lineup.players) {
-    if (!initial[p.role]) initial[p.role] = [];
-
-    const emptyIndex = initial[p.role].findIndex((x) => !x);
-
-    if (emptyIndex >= 0) {
-      initial[p.role][emptyIndex] = p.real_player_id;
-    } else {
-      initial[p.role].push(p.real_player_id);
-    }
+  if (current) {
+    return (
+      <div style={s.chip}>
+        <RoleBadge role={props.role} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={s.chipName}>{current.name}</div>
+          <div style={s.chipTeam}>{current.team}</div>
+        </div>
+        {!props.disabled && (
+          <button type="button" onClick={props.onClear} style={s.chipClear} aria-label="Rimuovi">✕</button>
+        )}
+      </div>
+    );
   }
 
-  return initial;
-}
-
-function roleOrder(role: string) {
-  return { A: 1, C: 2, D: 3, P: 4 }[role as "A" | "C" | "D" | "P"] ?? 10;
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        disabled={props.disabled}
+        placeholder={`Cerca ${ROLE_LABELS[props.role] ?? props.role} #${props.index + 1}`}
+        style={s.search}
+      />
+      {open && !props.disabled && (
+        <div style={s.dropdown}>
+          {matches.map((p) => (
+            <button key={p.id} type="button" onMouseDown={() => { props.onSelect(p.id); setOpen(false); setQ(""); }} style={s.option}>
+              <b>{p.name}</b>
+              {p.team ? <small>{p.team}</small> : null}
+            </button>
+          ))}
+          {matches.length === 0 && <div style={s.optionEmpty}>Nessun giocatore trovato.</div>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function RoleBadge({ role }: { role: string }) {
   const c = ROLE_COLORS[role] ?? { bg: "#f3f4f6", color: "#6b7280" };
-
-  return (
-    <span style={{ ...s.roleBadge, background: c.bg, color: c.color }}>
-      {role}
-    </span>
-  );
+  return <span style={{ ...s.roleBadge, background: c.bg, color: c.color }}>{role}</span>;
 }
 
-function Campo(props: {
-  players: Player[];
-  selected: Record<string, string[]>;
-  roles: [string, number][];
-}) {
+function Campo(props: { players: Player[]; selected: Record<string, string[]>; roles: [string, number][] }) {
   const byId = new Map(props.players.map((p) => [p.id, p]));
 
   const rows = props.roles
     .map(([role]) => {
       const ids = props.selected[role] ?? [];
-      return {
-        role,
-        players: ids.map((id) => byId.get(id)).filter(Boolean) as Player[],
-        slots: ids.length,
-      };
+      return { role, players: ids.map((id) => byId.get(id)).filter(Boolean) as Player[], slots: ids.length };
     })
-    .filter((row) => row.slots > 0)
+    .filter((r) => r.slots > 0)
     .sort((a, b) => roleOrder(a.role) - roleOrder(b.role));
 
-  const topByIndex = (index: number, total: number) => {
+  const topByIndex = (i: number, total: number) => {
     if (total <= 1) return "50%";
-    const min = 14;
-    const max = 86;
-    return `${min + ((max - min) / (total - 1)) * index}%`;
+    return `${16 + ((84 - 16) / (total - 1)) * i}%`;
   };
 
   return (
     <div style={s.field}>
-      <svg style={s.fieldSvg} viewBox="0 0 300 484" preserveAspectRatio="none">
-        <rect width="300" height="484" fill="#2d8a4e" />
-        <rect x="12" y="12" width="276" height="460" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2" rx="3" />
-        <rect x="75" y="12" width="150" height="70" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" />
-        <rect x="110" y="12" width="80" height="28" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" />
-        <circle cx="150" cy="242" r="42" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-        <line x1="12" y1="242" x2="288" y2="242" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-        <path d="M 55 472 A 95 95 0 0 1 245 472" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5" />
+      <div style={s.grass} />
+      <svg style={s.lines} viewBox="0 0 300 454" preserveAspectRatio="none">
+        <rect x="10" y="10" width="280" height="434" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" rx="4" />
+        <line x1="10" y1="227" x2="290" y2="227" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
+        <circle cx="150" cy="227" r="40" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
+        <circle cx="150" cy="227" r="2.5" fill="rgba(255,255,255,0.6)" />
+        <rect x="95" y="10" width="110" height="56" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+        <rect x="125" y="10" width="50" height="24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+        <rect x="95" y="388" width="110" height="56" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+        <rect x="125" y="420" width="50" height="24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
       </svg>
 
       {rows.map((row, rowIndex) => {
-        const top = topByIndex(rowIndex, rows.length);
         const count = Math.max(row.slots, 1);
-
         return (
-          <div
-            key={row.role}
-            style={{
-              ...s.fieldRow,
-              top,
-            }}
-          >
+          <div key={row.role} style={{ ...s.fieldRow, top: topByIndex(rowIndex, rows.length) }}>
             {Array.from({ length: count }).map((_, i) => {
               const p = row.players[i];
-              const offset = count === 1 ? 0 : (i - (count - 1) / 2) * Math.min(86, 250 / count);
-
+              const offset = count === 1 ? 0 : (i - (count - 1) / 2) * Math.min(96, 260 / count);
+              const c = ROLE_COLORS[row.role] ?? { bg: "#f3f4f6", color: "#6b7280" };
               return (
-                <div
-                  key={`${row.role}-${i}`}
-                  style={{
-                    ...s.playerDot,
-                    transform: `translate(calc(-50% + ${offset}px), -50%)`,
-                  }}
-                >
-                  <RoleBadge role={row.role} />
+                <div key={`${row.role}-${i}`} style={{ ...s.playerDot, transform: `translate(calc(-50% + ${offset}px), -50%)` }}>
+                  <span style={{ ...s.jersey, background: c.bg, color: c.color }}>{row.role}</span>
                   <span style={s.playerName}>{p?.name ?? "—"}</span>
                 </div>
               );
@@ -457,170 +425,82 @@ function Campo(props: {
   );
 }
 
+function normalizeFormData(value: any): FormData {
+  const ppr = value?.players_per_role && typeof value.players_per_role === "object" ? value.players_per_role : { P: 1, D: 1, C: 1, A: 1 };
+  return {
+    is_participant: Boolean(value?.is_participant),
+    matchday: value?.matchday ?? null,
+    players_per_role: ppr,
+    players: Array.isArray(value?.players) ? value.players : [],
+    lineup: value?.lineup ?? null,
+  };
+}
+
+function buildInitialSelected(ppr: Record<string, number>, lineup: LineupData | null) {
+  const initial: Record<string, string[]> = {};
+  Object.entries(ppr ?? {}).forEach(([role, count]) => {
+    initial[role] = Array.from({ length: Number(count) || 0 }, () => "");
+  });
+  if (!lineup?.players?.length) return initial;
+  for (const p of lineup.players) {
+    if (!initial[p.role]) initial[p.role] = [];
+    const idx = initial[p.role].findIndex((x) => !x);
+    if (idx >= 0) initial[p.role][idx] = p.real_player_id;
+    else initial[p.role].push(p.real_player_id);
+  }
+  return initial;
+}
+
 const s: Record<string, React.CSSProperties> = {
-  container: {
-    maxWidth: 520,
-    margin: "0 auto",
-    padding: "16px 14px 100px",
-    display: "grid",
-    gap: 14,
-  },
-  card: {
-    background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    padding: 16,
-    boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
-  },
-  title: {
-    margin: "12px 0 8px",
-    fontSize: 26,
-    fontWeight: 1000,
-    color: "#111827",
-  },
-  cardTitle: {
-    margin: "0 0 12px",
-    fontSize: 20,
-    fontWeight: 1000,
-    color: "#111827",
-  },
-  summary: {
-    color: "#6b7280",
-    fontWeight: 800,
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  status: {
-    borderRadius: 999,
-    padding: "3px 9px",
-    background: "#f3f4f6",
-    fontSize: 11,
-    fontWeight: 900,
-  },
-  rulesMini: {
-    marginTop: 12,
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 7,
-    color: "#374151",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  field: {
-    position: "relative",
-    width: "100%",
-    aspectRatio: "0.62",
-    borderRadius: 18,
-    overflow: "hidden",
-    boxShadow: "0 8px 24px rgba(15,23,42,0.12)",
-  },
-  fieldSvg: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-  },
-  fieldRow: {
-    position: "absolute",
-    left: "50%",
-    width: "100%",
-    height: 1,
-  },
-  playerDot: {
-    position: "absolute",
-    left: "50%",
-    top: 0,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 5,
-  },
-  playerName: {
-    maxWidth: 84,
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-    background: "rgba(0,0,0,0.65)",
-    color: "white",
-    borderRadius: 7,
-    padding: "3px 7px",
-    fontSize: 11,
-    fontWeight: 900,
-  },
-  roleBlock: {
-    display: "grid",
-    gap: 9,
-    marginBottom: 15,
-  },
-  roleTitle: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    fontWeight: 1000,
-    color: "#111827",
-  },
-  roleBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    display: "inline-grid",
-    placeItems: "center",
-    fontWeight: 1000,
-    fontSize: 13,
-  },
-  select: {
-    padding: 13,
-    borderRadius: 13,
-    border: "1px solid #e5e7eb",
-    fontFamily: "inherit",
-    fontWeight: 800,
-    background: "white",
-  },
-  btn: {
-    width: "100%",
-    padding: 14,
-    border: "none",
-    color: "white",
-    borderRadius: 13,
-    fontWeight: 1000,
-    fontFamily: "inherit",
-    cursor: "pointer",
-  },
-  ok: {
-    marginTop: 10,
-    background: "#f0fdf4",
-    border: "1px solid #86efac",
-    color: "#15803d",
-    borderRadius: 12,
-    padding: 12,
-    fontWeight: 900,
-  },
-  warn: {
-    marginTop: 10,
-    background: "#fff7ed",
-    border: "1px solid #fed7aa",
-    color: "#b85c0a",
-    borderRadius: 12,
-    padding: 12,
-    fontWeight: 900,
-  },
-  err: {
-    marginTop: 10,
-    background: "#fff1f2",
-    border: "1px solid #fecaca",
-    color: "#991b1b",
-    borderRadius: 12,
-    padding: 12,
-    fontWeight: 900,
-  },
-  emptyRole: {
-    color: "#b85c0a",
-    fontSize: 12,
-    fontWeight: 800,
-    background: "#fff7ed",
-    borderRadius: 10,
-    padding: 10,
-  },
+  container: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 100px", display: "grid", gap: 12 },
+
+  header: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  headerTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  statusPill: { borderRadius: 999, padding: "3px 10px", background: "#f3f4f6", fontSize: 11, fontWeight: 900, color: "#6b7280" },
+  headerRow: { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: 8 },
+  title: { margin: 0, fontSize: 20, fontWeight: 1000, color: "#111827" },
+  gj: { color: "#6b7280", fontWeight: 800, fontSize: 13 },
+  rulesMini: { marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
+  rulePill: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 999, padding: "3px 9px", fontSize: 11, fontWeight: 900, color: "#374151" },
+  ruleTotal: { marginLeft: "auto", fontSize: 11, fontWeight: 900, color: "#15803d" },
+
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" },
+  cardTitle: { margin: "0 0 12px", fontSize: 18, fontWeight: 1000, color: "#111827" },
+
+  roleBlock: { display: "grid", gap: 8, marginBottom: 14 },
+  roleTitle: { display: "flex", alignItems: "center", gap: 8, fontWeight: 1000, color: "#111827" },
+  roleBadge: { width: 28, height: 28, borderRadius: 8, display: "inline-grid", placeItems: "center", fontWeight: 1000, fontSize: 12 },
+
+  search: { width: "100%", padding: 12, borderRadius: 12, border: "1px solid #e5e7eb", fontFamily: "inherit", fontWeight: 700, background: "white" },
+  dropdown: { position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 20, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 12px 30px rgba(15,23,42,0.16)", maxHeight: 260, overflowY: "auto", display: "grid" },
+  option: { display: "grid", gap: 1, textAlign: "left", border: "none", borderBottom: "1px solid #f3f4f6", background: "white", padding: "10px 12px", cursor: "pointer", fontFamily: "inherit" },
+  optionEmpty: { padding: 12, color: "#6b7280", fontWeight: 700, fontSize: 13 },
+
+  chip: { display: "flex", alignItems: "center", gap: 10, padding: 10, borderRadius: 12, border: "1px solid #e5e7eb", background: "#f9fafb" },
+  chipName: { fontWeight: 900, color: "#111827", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  chipTeam: { fontSize: 12, fontWeight: 700, color: "#6b7280", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  chipClear: { border: "none", background: "#e5e7eb", color: "#374151", width: 26, height: 26, borderRadius: 8, fontWeight: 900, cursor: "pointer", flexShrink: 0 },
+
+  btn: { width: "100%", padding: 14, border: "none", color: "white", borderRadius: 12, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
+
+  duo: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" },
+  duoTitle: { margin: "0 0 10px", fontSize: 14, fontWeight: 1000, color: "#111827" },
+  duoList: { display: "grid", gap: 7 },
+  duoEmpty: { color: "#9ca3af", fontWeight: 800, fontSize: 12 },
+  fixtureRow: { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 5, alignItems: "center", fontSize: 12, fontWeight: 800, color: "#374151" },
+  fxTeam: { overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  fxVs: { color: "#9ca3af", fontSize: 10, fontWeight: 900 },
+  topRow: { display: "grid", gridTemplateColumns: "30px 1fr", gap: 6, alignItems: "center", fontSize: 13, fontWeight: 800, color: "#374151" },
+
+  field: { position: "relative", width: "100%", aspectRatio: "0.66", borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 28px rgba(15,23,42,0.16)" },
+  grass: { position: "absolute", inset: 0, background: "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)" },
+  lines: { position: "absolute", inset: 0, width: "100%", height: "100%" },
+  fieldRow: { position: "absolute", left: "50%", width: "100%", height: 1 },
+  playerDot: { position: "absolute", left: "50%", top: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 },
+  jersey: { width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 14, boxShadow: "0 3px 8px rgba(0,0,0,0.28)", border: "2px solid rgba(255,255,255,0.85)" },
+  playerName: { maxWidth: 92, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", background: "rgba(0,0,0,0.62)", color: "white", borderRadius: 7, padding: "3px 8px", fontSize: 11, fontWeight: 900 },
+
+  ok: { marginTop: 10, background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", borderRadius: 12, padding: 12, fontWeight: 900 },
+  warn: { marginTop: 10, background: "#fff7ed", border: "1px solid #fed7aa", color: "#b85c0a", borderRadius: 12, padding: 12, fontWeight: 900 },
+  err: { marginTop: 10, background: "#fff1f2", border: "1px solid #fecaca", color: "#991b1b", borderRadius: 12, padding: 12, fontWeight: 900 },
 };
