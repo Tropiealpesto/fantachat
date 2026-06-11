@@ -784,11 +784,27 @@ function PartiteTab(props: {
   );
 }
 
-function NumberField(props: { label: string; value: number; onChange: (value: number) => void }) {
+function NumberField(props: { label: string; value: number; onChange: (value: number) => void; min?: number; max?: number }) {
+  const min = props.min ?? 0;
+  const clamp = (v: number) => {
+    let x = isNaN(v) ? min : v;
+    x = Math.max(min, x);
+    if (props.max != null) x = Math.min(props.max, x);
+    return x;
+  };
   return (
     <label style={s.numberField}>
       <span>{props.label}</span>
-      <input type="number" value={props.value} onChange={(e) => props.onChange(Number(e.target.value) || 0)} />
+      <div style={s.stepper}>
+        <button type="button" onClick={() => props.onChange(clamp(props.value - 1))} style={s.stepBtn} aria-label="meno">−</button>
+        <input
+          inputMode="numeric"
+          value={String(props.value)}
+          onChange={(e) => props.onChange(clamp(parseInt(e.target.value.replace(/[^0-9]/g, ""), 10)))}
+          style={s.stepInput}
+        />
+        <button type="button" onClick={() => props.onChange(clamp(props.value + 1))} style={s.stepBtn} aria-label="più">+</button>
+      </div>
     </label>
   );
 }
@@ -824,6 +840,9 @@ const s: Record<string, React.CSSProperties> = {
   selectedTitle: { margin: 0, display: "grid", gap: 3, color: "#111827", fontWeight: 1000 },
   statsGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 },
   numberField: { display: "grid", gap: 5, color: "#374151", fontSize: 12, fontWeight: 900 },
+  stepper: { display: "flex", alignItems: "stretch", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "white" },
+  stepBtn: { width: 44, border: "none", background: "#f1f5f9", color: "#15803d", fontSize: 22, fontWeight: 1000, lineHeight: 1, cursor: "pointer", fontFamily: "inherit" },
+  stepInput: { flex: 1, minWidth: 0, width: "100%", border: "none", textAlign: "center", fontWeight: 1000, fontSize: 17, color: "#0f172a", background: "white", outline: "none", fontFamily: "inherit" },
   checkboxRow: { display: "flex", alignItems: "center", gap: 9, color: "#111827", fontWeight: 900 },
   saveBtn: { border: "none", borderRadius: 13, background: "#16a34a", color: "white", padding: 14, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   topRow: { display: "grid", gridTemplateColumns: "42px 1fr", gap: 10, alignItems: "center", padding: 12, borderRadius: 13, background: "#f9fafb", fontWeight: 900 },
