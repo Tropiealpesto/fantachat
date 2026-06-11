@@ -1,5 +1,136 @@
 "use client";
-import { useEffect, useState } from "react"; import { useParams } from "next/navigation"; import AppBar from "../../components/AppBar"; import BottomNav from "../../components/BottomNav"; import LoadingScreen from "../../components/LoadingScreen"; import { useRequireApp } from "../../hooks/useRequireApp"; import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
-type Row={user_id:string;team_name:string;total_score:number;rank:number;players:{role:string;name:string;points:number|null}[]}; type Data={matchday_number:number|null;rows:Row[]};
-export default function StoricoDetail(){const app=useRequireApp(true);const params=useParams();const[data,setData]=useState<Data>({matchday_number:null,rows:[]});const[loading,setLoading]=useState(true);useEffect(()=>{if(!app.ready||!params?.id)return;rpcJson<Data>("get_matchday_detail",{p_matchday_id:params.id}, {matchday_number:null,rows:[]}).then(setData).finally(()=>setLoading(false));},[app.ready,params?.id]);if(!app.ready||loading)return <LoadingScreen/>;return <><AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer}/><main style={s.container}><div style={s.head}><h1>Giornata {data.matchday_number??"—"}</h1><p>Classifica della giornata</p></div>{data.rows.map(r=><div key={r.user_id} style={{...s.card,borderLeft:`4px solid ${r.user_id===app.userId?app.competitionTheme.primary:"transparent"}`}}><div style={s.top}><b>#{r.rank} · {r.team_name}</b><strong>{fmt(r.total_score)}</strong></div>{r.players?.map(p=><div key={p.role} style={s.player}><b>{p.role}</b><span>{p.name}</span><strong>{signedFmt(p.points)}</strong></div>)}</div>)}</main><BottomNav/></>}
-const s:Record<string,React.CSSProperties>={container:{maxWidth:520,margin:"0 auto",padding:"16px 14px 100px",display:"grid",gap:10},head:{background:"white",border:"1px solid #e5e7eb",borderRadius:18,padding:16},card:{background:"white",border:"1px solid #e5e7eb",borderRadius:16,padding:14},top:{display:"flex",justifyContent:"space-between",marginBottom:10},player:{display:"grid",gridTemplateColumns:"28px 1fr auto",gap:8,padding:"4px 0"}};
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import AppBar from "../../components/AppBar";
+import BottomNav from "../../components/BottomNav";
+import LoadingScreen from "../../components/LoadingScreen";
+import { useRequireApp } from "../../hooks/useRequireApp";
+import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
+
+type Player = { role: string; name: string; team: string | null; points: number | null };
+type Row = { user_id: string; team_name: string; total_score: number; rank: number; players: Player[] };
+type Data = { matchday_number: number | null; rows: Row[] };
+
+const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
+  P: { bg: "#fef9c3", color: "#a16207" }, D: { bg: "#dcfce7", color: "#15803d" },
+  C: { bg: "#dbeafe", color: "#1d4ed8" }, A: { bg: "#fee2e2", color: "#dc2626" },
+};
+const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+function hue(str: string) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360; return h; }
+function shieldBg(name?: string | null) { const h = hue(name ?? "x"); return `linear-gradient(135deg,hsl(${h},55%,46%),hsl(${(h + 28) % 360},58%,30%))`; }
+function initials(name?: string | null) { const n = (name ?? "?").trim(); const p = n.split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); }
+function pLabel(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
+function pSub(p: Player) { return p.role === "P" ? "Portiere" : (p.team ?? ""); }
+
+export default function StoricoDetail() {
+  const app = useRequireApp(true);
+  const params = useParams();
+  const [data, setData] = useState<Data>({ matchday_number: null, rows: [] });
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!app.ready || !params?.id) return;
+    rpcJson<Data>("get_matchday_detail", { p_matchday_id: params.id }, { matchday_number: null, rows: [] })
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [app.ready, params?.id]);
+
+  useEffect(() => {
+    if (app.userId && data.rows.some((r) => r.user_id === app.userId)) {
+      setOpen((o) => (o[app.userId!] === undefined ? { ...o, [app.userId!]: true } : o));
+    }
+  }, [data.rows, app.userId]);
+
+  if (!app.ready || loading) return <LoadingScreen />;
+  const accent = app.competitionTheme.primary;
+  const pColor = (v: number) => (v > 0 ? "#15803d" : v < 0 ? "#dc2626" : "#64748b");
+  const pBg = (v: number) => (v > 0 ? "#dcfce7" : v < 0 ? "#fee2e2" : "#f1f5f9");
+
+  return (
+    <>
+      <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
+      <main style={s.container}>
+        <div style={s.head}>
+          <h1 style={s.h1}>Giornata {data.matchday_number ?? "—"}</h1>
+          <p style={s.sub}>Tabellone finale della giornata</p>
+        </div>
+
+        <div style={s.list}>
+          {data.rows.map((r) => {
+            const own = r.user_id === app.userId;
+            const isOpen = !!open[r.user_id];
+            return (
+              <div key={r.user_id} style={{ ...s.card, ...(own ? s.cardYou : {}) }}>
+                <div style={s.rtop} onClick={() => setOpen((o) => ({ ...o, [r.user_id]: !o[r.user_id] }))}>
+                  <div style={s.rank}>{MEDALS[r.rank] ?? r.rank}</div>
+                  <div style={{ ...s.shield, background: shieldBg(r.team_name) }}>{initials(r.team_name)}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={s.rname}>
+                      <span style={s.rnameTxt}>{r.team_name}</span>
+                      {own && <span style={{ ...s.youTag, background: accent }}>TU</span>}
+                    </div>
+                    <div style={s.toggle}>{isOpen ? "▾ nascondi giocatori" : "▸ mostra giocatori"}</div>
+                  </div>
+                  <div style={s.total}>{fmt(r.total_score)}</div>
+                </div>
+
+                {isOpen && (
+                  <div style={s.players}>
+                    {(!r.players || r.players.length === 0) ? (
+                      <div style={s.noLineup}>Nessuna formazione.</div>
+                    ) : (
+                      r.players.map((p, i) => {
+                        const c = ROLE_COLORS[p.role] ?? ROLE_COLORS.C;
+                        const v = p.points == null ? null : Number(p.points);
+                        return (
+                          <div key={i} style={s.prow}>
+                            <span style={{ ...s.rb, background: c.bg, color: c.color }}>{p.role}</span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={s.pn}>{pLabel(p)}</div>
+                              <div style={s.pt}>{pSub(p)}</div>
+                            </div>
+                            <span style={{ ...s.pp, background: v == null ? "#f1f5f9" : pBg(v), color: v == null ? "#94a3b8" : pColor(v) }}>{v == null ? "—" : signedFmt(v)}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {!data.rows.length && <div style={s.empty}>Questa giornata non è ancora stata calcolata.</div>}
+        </div>
+      </main>
+      <BottomNav />
+    </>
+  );
+}
+
+const s: Record<string, React.CSSProperties> = {
+  container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px" },
+  head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 4px 16px rgba(15,23,42,.06)" },
+  h1: { fontSize: 22, fontWeight: 1000, color: "#0f172a", margin: 0 },
+  sub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: "4px 0 0" },
+  list: { display: "grid", gap: 8, marginTop: 14 },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 15, padding: "11px 12px", boxShadow: "0 2px 8px rgba(15,23,42,.05)" },
+  cardYou: { borderColor: "#15803d", background: "#f3fbf5" },
+  rtop: { display: "grid", gridTemplateColumns: "26px 34px 1fr auto", gap: 10, alignItems: "center", cursor: "pointer" },
+  rank: { fontSize: 14, fontWeight: 1000, color: "#64748b", textAlign: "center" },
+  shield: { width: 34, height: 34, borderRadius: 11, display: "grid", placeItems: "center", color: "white", fontWeight: 1000, fontSize: 12, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.16)" },
+  rname: { display: "flex", alignItems: "center", gap: 6 },
+  rnameTxt: { fontSize: 14, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  youTag: { color: "white", fontSize: 9, fontWeight: 1000, borderRadius: 5, padding: "1px 5px" },
+  toggle: { fontSize: 11, fontWeight: 800, color: "#94a3b8", marginTop: 2 },
+  total: { fontSize: 19, fontWeight: 1000, color: "#0f172a", textAlign: "right" },
+  players: { marginTop: 11, paddingTop: 10, borderTop: "1px dashed #e5e7eb", display: "grid", gap: 7 },
+  prow: { display: "grid", gridTemplateColumns: "24px 1fr auto", gap: 9, alignItems: "center" },
+  rb: { width: 24, height: 24, borderRadius: 7, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 11 },
+  pn: { fontSize: 13, fontWeight: 900, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  pt: { fontSize: 10.5, fontWeight: 800, color: "#64748b" },
+  pp: { fontSize: 13, fontWeight: 1000, padding: "2px 9px", borderRadius: 8 },
+  noLineup: { fontSize: 12, fontWeight: 800, color: "#94a3b8" },
+  empty: { background: "white", border: "1px solid #e5e7eb", borderRadius: 15, padding: 16, color: "#64748b", fontWeight: 800 },
+};
