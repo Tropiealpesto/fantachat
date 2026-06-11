@@ -195,6 +195,19 @@ export default function RosaPage() {
         p_players: payload,
       });
       if (error) throw error;
+
+      // crea il biglietto "formazione caricata" nella chat (se fallisce non blocca il salvataggio)
+      try {
+        await supabase.rpc("send_chat_message", {
+          p_league_id: app.activeLeagueId,
+          p_league_competition_id: app.activeLeagueCompetitionId,
+          p_matchday_id: form.matchday.id,
+          p_content: "ha caricato la formazione",
+          p_kind: "lineup",
+          p_meta: null,
+        });
+      } catch {}
+
       setSaved(true);
       setMsg("Rosa inviata ✅");
     } catch (e: any) {
