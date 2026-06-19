@@ -6,6 +6,7 @@ import AppBar from "./components/AppBar";
 import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 import CompetitionBadge from "./components/CompetitionBadge";
+import TeamBadge from "./components/TeamBadge";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
 import { supabase } from "../lib/supabaseClient";
@@ -33,6 +34,7 @@ export default function Home() {
   const [data, setData] = useState<HomeData>(emptyHome);
   const [err, setErr] = useState<string | null>(null);
   const [recap, setRecap] = useState<Recap | null>(null);
+  const [myColors, setMyColors] = useState<{ primary: string | null; secondary: string | null }>({ primary: null, secondary: null });
 
   const [competitionStatus, setCompetitionStatus] = useState<CompetitionStatus | null>(null);
   const [finalStanding, setFinalStanding] = useState<StandingRow[]>([]);
@@ -67,6 +69,18 @@ export default function Home() {
     load();
     return () => { cancelled = true; };
   }, [app.ready, app.userId, app.activeLeagueId, app.activeLeagueCompetitionId]);
+
+  // colori della mia squadra (per il badge nell'hero)
+  useEffect(() => {
+    if (!app.ready || !app.userId || !app.activeLeagueId) return;
+    let off = false;
+    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
+      if (off) return;
+      const me = (data as any[] | null)?.find((m) => m.user_id === app.userId);
+      if (me) setMyColors({ primary: me.color_primary ?? null, secondary: me.color_secondary ?? null });
+    });
+    return () => { off = true; };
+  }, [app.ready, app.userId, app.activeLeagueId]);
 
   // mini riassunto automatico (dai numeri dell'ultima giornata calcolata)
   useEffect(() => {
@@ -155,8 +169,13 @@ export default function Home() {
       <section style={{ ...s.hero, background: theme.hero }}>
         <div style={s.heroInner}>
           <CompetitionBadge name={app.competitionName} type={app.competitionType} />
-          <div style={s.hello}>Ciao, benvenuto 👋</div>
-          <h1 style={s.team}>{app.teamName}</h1>
+          <div style={s.heroRow}>
+            <span style={s.badgeRing}><TeamBadge name={app.teamName} primary={myColors.primary} secondary={myColors.secondary} size={64} /></span>
+            <div style={{ minWidth: 0 }}>
+              <div style={s.hello}>Ciao, benvenuto</div>
+              <h1 style={s.team}>{app.teamName}</h1>
+            </div>
+          </div>
           <div style={s.kpis}>
             <Kpi label="Posizione" value={data.stats?.rank ? `#${data.stats.rank}` : "—"} />
             <Kpi label="Totale" value={fmt(data.stats?.total_points)} />
@@ -218,7 +237,7 @@ export default function Home() {
 
         {app.isAdmin && (
           <div style={s.card}>
-            <h3 style={{ marginTop: 0 }}>⚙️ Admin competizione</h3>
+            <h3 style={{ marginTop: 0 }}>Admin competizione</h3>
             <p style={s.muted}>Le azioni admin lavorano su {app.competitionName ?? "competizione attiva"}.</p>
             <button style={{ ...s.primaryBtn, background: theme.primary }} onClick={() => router.push("/admin")}>Apri admin</button>
           </div>
@@ -249,13 +268,15 @@ const s: Record<string, React.CSSProperties> = {
   topBtn: { border: 0, borderRadius: 999, background: "#f0fdf4", color: "#15803d", padding: "7px 14px", fontWeight: 800, cursor: "pointer" },
   hero: { color: "white", padding: "18px 16px 28px" },
   heroInner: { maxWidth: 520, margin: "0 auto" },
-  hello: { marginTop: 18, opacity: 0.75, fontWeight: 700 },
-  team: { fontSize: 28, lineHeight: 1.1, margin: "6px 0 18px" },
+  heroRow: { display: "flex", alignItems: "center", gap: 14, marginTop: 16 },
+  badgeRing: { borderRadius: "50%", padding: 3, border: "2px solid rgba(255,255,255,.85)", display: "grid", placeItems: "center", flexShrink: 0 },
+  hello: { opacity: 0.78, fontWeight: 700 },
+  team: { fontSize: 28, lineHeight: 1.1, margin: "4px 0 0" },
   closedText: { margin: "0", color: "rgba(255,255,255,0.78)", fontWeight: 750, lineHeight: 1.45 },
   closedTitle: { margin: "0 0 12px", color: "#111827", fontWeight: 1000, fontSize: 22 },
   finalTable: { display: "grid", gap: 8 },
   finalRow: { display: "grid", gridTemplateColumns: "44px 1fr 70px", gap: 8, alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #e5e7eb" },
-  kpis: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 },
+  kpis: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 18 },
   kpi: { background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 14, padding: 12, display: "grid", gap: 4, textAlign: "center" },
   container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px calc(70px + env(safe-area-inset-bottom, 0px) + 20px)", display: "grid", gap: 14 },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 4px 16px rgba(0,0,0,.06)" },
