@@ -1,3 +1,16 @@
+
+
+===== app\storico\page.tsx =====
+
+"use client";
+import { useEffect, useState } from "react"; import { useRouter } from "next/navigation"; import AppBar from "../components/AppBar"; import BottomNav from "../components/BottomNav"; import LoadingScreen from "../components/LoadingScreen"; import CompetitionBadge from "../components/CompetitionBadge"; import { useRequireApp } from "../hooks/useRequireApp"; import { rpcJson, fmt } from "../../lib/rpc";
+type Row={matchday_id:string;matchday_number:number;status:string;total_score:number;rank:number};
+export default function Storico(){const app=useRequireApp(true);const router=useRouter();const[rows,setRows]=useState<Row[]>([]);const[loading,setLoading]=useState(true);useEffect(()=>{if(!app.ready||!app.activeLeagueCompetitionId)return;rpcJson<Row[]>("get_user_history",{p_league_competition_id:app.activeLeagueCompetitionId},[]).then(r=>setRows(r??[])).finally(()=>setLoading(false));},[app.ready,app.activeLeagueCompetitionId]);if(!app.ready||loading)return <LoadingScreen/>;return <><AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer}/><main style={s.container}><div style={s.head}><CompetitionBadge name={app.competitionName} type={app.competitionType}/><h1>Storico</h1><p>Le tue giornate nella competizione attiva</p></div>{rows.map(r=><button key={r.matchday_id} style={s.card} onClick={()=>router.push(`/storico/${r.matchday_id}`)}><div><b>Giornata {r.matchday_number}</b><small>{r.status} · posizione #{r.rank}</small></div><strong>{fmt(r.total_score)}</strong></button>)}{!rows.length&&<div style={s.card}>Nessuna giornata storica.</div>}</main><BottomNav/></>}
+const s:Record<string,React.CSSProperties>={container:{maxWidth:520,margin:"0 auto",padding:"16px 14px 100px",display:"grid",gap:10},head:{background:"white",border:"1px solid #e5e7eb",borderRadius:18,padding:16},card:{background:"white",border:"1px solid #e5e7eb",borderRadius:16,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center",textAlign:"left",fontFamily:"inherit",cursor:"pointer"}};
+
+
+===== app\storico\[id]\page.tsx =====
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,23 +18,23 @@ import { useParams } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
-import TeamBadge, { BadgePattern } from "../../components/TeamBadge";
 import { useRequireApp } from "../../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
-import { supabase } from "../../../lib/supabaseClient";
 
 type Player = { role: string; name: string; team: string | null; points: number | null };
 type Row = { user_id: string; team_name: string; total_score: number; rank: number; players: Player[] };
 type Data = { matchday_number: number | null; rows: Row[] };
-type Kit = { primary: string; secondary: string; pattern: BadgePattern };
 
-const RANK_COLOR: Record<number, string> = { 1: "#f59e0b", 2: "#94a3b8", 3: "#b45309" };
+const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
+  P: { bg: "#fef9c3", color: "#a16207" }, D: { bg: "#dcfce7", color: "#15803d" },
+  C: { bg: "#dbeafe", color: "#1d4ed8" }, A: { bg: "#fee2e2", color: "#dc2626" },
+};
+const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
+function hue(str: string) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360; return h; }
+function shieldBg(name?: string | null) { const h = hue(name ?? "x"); return `linear-gradient(135deg,hsl(${h},55%,46%),hsl(${(h + 28) % 360},58%,30%))`; }
+function initials(name?: string | null) { const n = (name ?? "?").trim(); const p = n.split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); }
 function pLabel(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
-function pSub(p: Player) { return p.role === "P" ? "Portiere" : `${p.role} · ${p.team ?? ""}`; }
-function PlayerCrest({ team, colors, size = 32 }: { team: string; colors: Kit | null; size?: number }) {
-  if (colors) return <TeamBadge name={team} primary={colors.primary} secondary={colors.secondary} pattern={colors.pattern} showInitials={false} size={size} />;
-  return <TeamBadge name={team} showInitials={false} size={size} />;
-}
+function pSub(p: Player) { return p.role === "P" ? "Portiere" : (p.team ?? ""); }
 
 export default function StoricoDetail() {
   const app = useRequireApp(true);
@@ -29,13 +42,6 @@ export default function StoricoDetail() {
   const [data, setData] = useState<Data>({ matchday_number: null, rows: [] });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null }>>({});
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
 
   useEffect(() => {
     if (!app.ready || !params?.id) return;
@@ -43,33 +49,6 @@ export default function StoricoDetail() {
       .then(setData)
       .finally(() => setLoading(false));
   }, [app.ready, params?.id]);
-
-  useEffect(() => {
-    if (!app.ready || !app.activeLeagueId) return;
-    let off = false;
-    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
-      if (off) return;
-      const mc: Record<string, { primary: string | null; secondary: string | null }> = {};
-      ((data as any[] | null) ?? []).forEach((m) => { mc[m.user_id] = { primary: m.color_primary ?? null, secondary: m.color_secondary ?? null }; });
-      setMemberColors(mc);
-    });
-    return () => { off = true; };
-  }, [app.ready, app.activeLeagueId]);
-
-  useEffect(() => {
-    const lc = app.activeLeagueCompetitionId;
-    if (!lc) return;
-    let off = false;
-    supabase.rpc("get_competition_team_colors", { p_league_competition_id: lc }).then(({ data }) => {
-      if (off || !data) return;
-      const m: Record<string, Kit> = {};
-      (data as any[]).forEach((r) => {
-        if (r.name && r.color_primary) m[String(r.name).trim().toLowerCase()] = { primary: r.color_primary, secondary: r.color_secondary || r.color_primary, pattern: (r.kit_pattern || "split") as BadgePattern };
-      });
-      setTeamColors(m);
-    });
-    return () => { off = true; };
-  }, [app.activeLeagueCompetitionId]);
 
   useEffect(() => {
     if (app.userId && data.rows.some((r) => r.user_id === app.userId)) {
@@ -95,13 +74,11 @@ export default function StoricoDetail() {
           {data.rows.map((r) => {
             const own = r.user_id === app.userId;
             const isOpen = !!open[r.user_id];
-            const c = memberColors[r.user_id];
-            const rc = RANK_COLOR[r.rank];
             return (
               <div key={r.user_id} style={{ ...s.card, ...(own ? s.cardYou : {}) }}>
                 <div style={s.rtop} onClick={() => setOpen((o) => ({ ...o, [r.user_id]: !o[r.user_id] }))}>
-                  <div style={{ ...s.rank, ...(rc ? { background: rc, color: "white" } : {}) }}>{r.rank}</div>
-                  <TeamBadge name={r.team_name} primary={c?.primary ?? null} secondary={c?.secondary ?? null} size={34} />
+                  <div style={s.rank}>{MEDALS[r.rank] ?? r.rank}</div>
+                  <div style={{ ...s.shield, background: shieldBg(r.team_name) }}>{initials(r.team_name)}</div>
                   <div style={{ minWidth: 0 }}>
                     <div style={s.rname}>
                       <span style={s.rnameTxt}>{r.team_name}</span>
@@ -118,10 +95,11 @@ export default function StoricoDetail() {
                       <div style={s.noLineup}>Nessuna formazione.</div>
                     ) : (
                       r.players.map((p, i) => {
+                        const c = ROLE_COLORS[p.role] ?? ROLE_COLORS.C;
                         const v = p.points == null ? null : Number(p.points);
                         return (
                           <div key={i} style={s.prow}>
-                            <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={32} />
+                            <span style={{ ...s.rb, background: c.bg, color: c.color }}>{p.role}</span>
                             <div style={{ minWidth: 0 }}>
                               <div style={s.pn}>{pLabel(p)}</div>
                               <div style={s.pt}>{pSub(p)}</div>
@@ -152,15 +130,17 @@ const s: Record<string, React.CSSProperties> = {
   list: { display: "grid", gap: 8, marginTop: 14 },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 15, padding: "11px 12px", boxShadow: "0 2px 8px rgba(15,23,42,.05)" },
   cardYou: { borderColor: "#15803d", background: "#f3fbf5" },
-  rtop: { display: "grid", gridTemplateColumns: "28px 34px 1fr auto", gap: 10, alignItems: "center", cursor: "pointer" },
-  rank: { width: 28, height: 28, borderRadius: 9, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 1000, color: "#64748b", background: "#f1f5f9" },
+  rtop: { display: "grid", gridTemplateColumns: "26px 34px 1fr auto", gap: 10, alignItems: "center", cursor: "pointer" },
+  rank: { fontSize: 14, fontWeight: 1000, color: "#64748b", textAlign: "center" },
+  shield: { width: 34, height: 34, borderRadius: 11, display: "grid", placeItems: "center", color: "white", fontWeight: 1000, fontSize: 12, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.16)" },
   rname: { display: "flex", alignItems: "center", gap: 6 },
   rnameTxt: { fontSize: 14, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   youTag: { color: "white", fontSize: 9, fontWeight: 1000, borderRadius: 5, padding: "1px 5px" },
   toggle: { fontSize: 11, fontWeight: 800, color: "#94a3b8", marginTop: 2 },
   total: { fontSize: 19, fontWeight: 1000, color: "#0f172a", textAlign: "right" },
   players: { marginTop: 11, paddingTop: 10, borderTop: "1px dashed #e5e7eb", display: "grid", gap: 7 },
-  prow: { display: "grid", gridTemplateColumns: "32px 1fr auto", gap: 9, alignItems: "center" },
+  prow: { display: "grid", gridTemplateColumns: "24px 1fr auto", gap: 9, alignItems: "center" },
+  rb: { width: 24, height: 24, borderRadius: 7, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 11 },
   pn: { fontSize: 13, fontWeight: 900, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 800, color: "#64748b" },
   pp: { fontSize: 13, fontWeight: 1000, padding: "2px 9px", borderRadius: 8 },

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { themeFromType } from "../../lib/competitionThemes";
+import TeamBadge from "./TeamBadge";
 
 type DrawerCompetition = {
   id: string; name: string; competition_type: string | null; competition_slug: string | null;
@@ -13,11 +14,8 @@ type Props = {
   isOpen: boolean; onClose: () => void; teamName: string; leagueName: string;
   isAdmin: boolean; isSuperAdmin: boolean; competitions: DrawerCompetition[];
   activeLeagueCompetitionId: string | null; onSwitchCompetition: (id: string) => void;
+  teamPrimary?: string | null; teamSecondary?: string | null;
 };
-
-function hue(str: string) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360; return h; }
-function shieldBg(name?: string | null) { const h = hue(name ?? "x"); return `linear-gradient(135deg,hsl(${h},60%,55%),hsl(${(h + 28) % 360},62%,38%))`; }
-function initials(name?: string | null) { const n = (name ?? "?").trim(); const p = n.split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); }
 
 export default function SideDrawer(props: Props) {
   const pathname = usePathname();
@@ -32,7 +30,7 @@ export default function SideDrawer(props: Props) {
           <div style={s.logo}><span style={{ color: "#4ade80" }}>Fanta</span><span style={{ color: "#fb923c" }}>Chat</span></div>
           <button onClick={props.onClose} style={s.close}>×</button>
           <div style={s.teamrow}>
-            <div style={{ ...s.tshield, background: shieldBg(props.teamName) }}>{initials(props.teamName)}</div>
+            <span style={s.tring}><TeamBadge name={props.teamName} primary={props.teamPrimary ?? null} secondary={props.teamSecondary ?? null} size={40} /></span>
             <div style={{ minWidth: 0 }}>
               <div style={s.tname}>{props.teamName}</div>
               <div style={s.tleague}>{props.leagueName}</div>
@@ -61,6 +59,9 @@ export default function SideDrawer(props: Props) {
           {props.isAdmin && (
             <button style={s.addcomp} onClick={() => { props.onClose(); router.push("/admin/competizione/nuova"); }}>+ Aggiungi competizione</button>
           )}
+
+          <Section style={{ marginTop: 18 }}>La tua squadra</Section>
+          <Item href="/personalizza" title="Personalizza" sub="Colori dello stemma" pathname={pathname} onClose={props.onClose} icon={<><path d="M12 3l5 5a7 7 0 1 1-10 0z" /></>} />
 
           <Section style={{ marginTop: 18 }}>Esplora</Section>
           <Item href="/storico" title="Storico" sub="Giornate passate" pathname={pathname} onClose={props.onClose} icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
@@ -124,7 +125,7 @@ const s: Record<string, React.CSSProperties> = {
   logo: { fontSize: 23, fontWeight: 1000 },
   close: { position: "absolute", top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 0, background: "rgba(255,255,255,.18)", color: "white", fontSize: 20, cursor: "pointer" },
   teamrow: { display: "flex", alignItems: "center", gap: 10, marginTop: 14 },
-  tshield: { width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", fontWeight: 1000, color: "white", border: "2px solid rgba(255,255,255,.6)", flexShrink: 0 },
+  tring: { borderRadius: "50%", border: "2px solid rgba(255,255,255,.6)", padding: 1, display: "grid", placeItems: "center", flexShrink: 0 },
   tname: { fontWeight: 1000, fontSize: 15, lineHeight: 1.1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   tleague: { fontSize: 11, opacity: .8, fontWeight: 700, marginTop: 2 },
   body: { flex: 1, overflowY: "auto", padding: 14 },

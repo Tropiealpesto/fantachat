@@ -5,23 +5,23 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
+import TeamBadge, { BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
+import { supabase } from "../../lib/supabaseClient";
 
 type LivePlayer = { role: string; name: string; team: string; points: number };
 type LiveRow = { user_id: string; team_name: string; live_score: number; projected_total: number; players: LivePlayer[]; rank: number };
 type LiveData = { matchday?: { id: string; number: number; status: string } | null; rows: LiveRow[] };
+type Kit = { primary: string; secondary: string; pattern: BadgePattern };
 const empty: LiveData = { matchday: null, rows: [] };
 
-const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
-  P: { bg: "#fef9c3", color: "#a16207" }, D: { bg: "#dcfce7", color: "#15803d" },
-  C: { bg: "#dbeafe", color: "#1d4ed8" }, A: { bg: "#fee2e2", color: "#dc2626" },
-};
-function hue(str: string) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360; return h; }
-function shieldBg(name?: string | null) { const h = hue(name ?? "x"); return `linear-gradient(135deg,hsl(${h},55%,46%),hsl(${(h + 28) % 360},58%,30%))`; }
-function initials(name?: string | null) { const n = (name ?? "?").trim(); const p = n.split(/\s+/); return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[p.length - 1][0]).toUpperCase(); }
 function pLabel(p: LivePlayer) { return p.role === "P" ? (p.team || p.name) : p.name; }
-function pSub(p: LivePlayer) { return p.role === "P" ? "Portiere" : p.team; }
+function pSub(p: LivePlayer) { return p.role === "P" ? "Portiere" : `${p.role} · ${p.team}`; }
+function PlayerCrest({ team, colors, size = 32 }: { team: string; colors: Kit | null; size?: number }) {
+  if (colors) return <TeamBadge name={team} primary={colors.primary} secondary={colors.secondary} pattern={colors.pattern} showInitials={false} size={size} />;
+  return <TeamBadge name={team} showInitials={false} size={size} />;
+}
 
 export default function LivePage() {
   const app = useRequireApp(true);
@@ -29,6 +29,13 @@ export default function LivePage() {
   const [data, setData] = useState<LiveData>(empty);
   const [err, setErr] = useState<string | null>(null);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null }>>({});
+  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
+
+  function kitOf(team?: string | null): Kit | null {
+    if (!team) return null;
+    return teamColors[team.trim().toLowerCase()] ?? null;
+  }
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
@@ -44,6 +51,35 @@ export default function LivePage() {
     const t = setInterval(load, 15000);
     return () => { off = true; clearInterval(t); };
   }, [app.ready, app.activeLeagueCompetitionId]);
+
+  // colori stemmi dei partecipanti
+  useEffect(() => {
+    if (!app.ready || !app.activeLeagueId) return;
+    let off = false;
+    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
+      if (off) return;
+      const mc: Record<string, { primary: string | null; secondary: string | null }> = {};
+      ((data as any[] | null) ?? []).forEach((m) => { mc[m.user_id] = { primary: m.color_primary ?? null, secondary: m.color_secondary ?? null }; });
+      setMemberColors(mc);
+    });
+    return () => { off = true; };
+  }, [app.ready, app.activeLeagueId]);
+
+  // colori maglia dei giocatori (per competizione)
+  useEffect(() => {
+    const lc = app.activeLeagueCompetitionId;
+    if (!lc) return;
+    let off = false;
+    supabase.rpc("get_competition_team_colors", { p_league_competition_id: lc }).then(({ data }) => {
+      if (off || !data) return;
+      const m: Record<string, Kit> = {};
+      (data as any[]).forEach((r) => {
+        if (r.name && r.color_primary) m[String(r.name).trim().toLowerCase()] = { primary: r.color_primary, secondary: r.color_secondary || r.color_primary, pattern: (r.kit_pattern || "split") as BadgePattern };
+      });
+      setTeamColors(m);
+    });
+    return () => { off = true; };
+  }, [app.activeLeagueCompetitionId]);
 
   // apri di default la riga della propria squadra
   useEffect(() => {
@@ -81,11 +117,12 @@ export default function LivePage() {
           {data.rows.map((r) => {
             const own = r.user_id === app.userId;
             const isOpen = !!open[r.user_id];
+            const c = memberColors[r.user_id];
             return (
               <div key={r.user_id} style={{ ...s.card, ...(own ? s.cardYou : {}) }}>
                 <div style={s.rtop} onClick={() => setOpen((o) => ({ ...o, [r.user_id]: !o[r.user_id] }))}>
                   <div style={s.rank}>{r.rank}</div>
-                  <div style={{ ...s.shield, background: shieldBg(r.team_name) }}>{initials(r.team_name)}</div>
+                  <TeamBadge name={r.team_name} primary={c?.primary ?? null} secondary={c?.secondary ?? null} size={34} />
                   <div style={{ minWidth: 0 }}>
                     <div style={s.rname}>
                       <span style={s.rnameTxt}>{r.team_name}</span>
@@ -104,19 +141,16 @@ export default function LivePage() {
                     {r.players.length === 0 ? (
                       <div style={s.noLineup}>Nessuna formazione schierata.</div>
                     ) : (
-                      r.players.map((p, i) => {
-                        const c = ROLE_COLORS[p.role] ?? ROLE_COLORS.C;
-                        return (
-                          <div key={i} style={s.prow}>
-                            <span style={{ ...s.rb, background: c.bg, color: c.color }}>{p.role}</span>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={s.pn}>{pLabel(p)}</div>
-                              <div style={s.pt}>{pSub(p)}</div>
-                            </div>
-                            <span style={{ ...s.pp, background: liveBg(p.points), color: liveColor(p.points) }}>{signedFmt(p.points)}</span>
+                      r.players.map((p, i) => (
+                        <div key={i} style={s.prow}>
+                          <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={32} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={s.pn}>{pLabel(p)}</div>
+                            <div style={s.pt}>{pSub(p)}</div>
                           </div>
-                        );
-                      })
+                          <span style={{ ...s.pp, background: liveBg(p.points), color: liveColor(p.points) }}>{signedFmt(p.points)}</span>
+                        </div>
+                      ))
                     )}
                   </div>
                 )}
@@ -126,7 +160,7 @@ export default function LivePage() {
           {!data.rows.length && <div style={s.card}>Nessun dato live.</div>}
         </div>
 
-        <div style={s.refresh}>🔄 Si aggiorna da sola ogni 15 secondi</div>
+        <div style={s.refresh}>Si aggiorna da sola ogni 15 secondi</div>
       </main>
       <BottomNav />
     </>
@@ -147,7 +181,6 @@ const s: Record<string, React.CSSProperties> = {
   cardYou: { borderColor: "#15803d", background: "#f3fbf5" },
   rtop: { display: "grid", gridTemplateColumns: "24px 34px 1fr auto", gap: 10, alignItems: "center", cursor: "pointer" },
   rank: { fontSize: 15, fontWeight: 1000, color: "#64748b", textAlign: "center" },
-  shield: { width: 34, height: 34, borderRadius: 11, display: "grid", placeItems: "center", color: "white", fontWeight: 1000, fontSize: 12, border: "2px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.16)" },
   rname: { display: "flex", alignItems: "center", gap: 6 },
   rnameTxt: { fontSize: 14, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   youTag: { color: "white", fontSize: 9, fontWeight: 1000, borderRadius: 5, padding: "1px 5px" },
@@ -156,8 +189,7 @@ const s: Record<string, React.CSSProperties> = {
   bigLive: { fontSize: 22, fontWeight: 1000, lineHeight: 1 },
   inClass: { fontSize: 10.5, color: "#94a3b8", fontWeight: 800, marginTop: 3 },
   players: { marginTop: 11, paddingTop: 10, borderTop: "1px dashed #e5e7eb", display: "grid", gap: 7 },
-  prow: { display: "grid", gridTemplateColumns: "24px 1fr auto", gap: 9, alignItems: "center" },
-  rb: { width: 24, height: 24, borderRadius: 7, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 11 },
+  prow: { display: "grid", gridTemplateColumns: "32px 1fr auto", gap: 9, alignItems: "center" },
   pn: { fontSize: 13, fontWeight: 900, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 800, color: "#64748b" },
   pp: { fontSize: 13, fontWeight: 1000, padding: "2px 9px", borderRadius: 8 },

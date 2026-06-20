@@ -1,28 +1,32 @@
 ﻿"use client";
 
+import { useApp } from "./AppContext";
+
 export default function AppBar(props: {
   league: string;
   team: string;
   right?: React.ReactNode;
   onMenuOpen?: () => void;
 }) {
+  const app = useApp();
+  const handleMenu = props.onMenuOpen ?? app.openDrawer;
+
   return (
     <div className="appbar">
       <div className="appbar-inner">
         <button
-          onClick={props.onMenuOpen}
+          onClick={handleMenu}
           aria-label="Apri menu"
           style={{
             background: "none",
             border: "none",
-            cursor: props.onMenuOpen ? "pointer" : "default",
+            cursor: "pointer",
             padding: "4px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
             color: "#374151",
-            opacity: props.onMenuOpen ? 1 : 0.45,
           }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

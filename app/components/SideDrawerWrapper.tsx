@@ -18,6 +18,19 @@ type DrawerCompetition = {
 export default function SideDrawerWrapper() {
   const app = useApp();
   const [competitions, setCompetitions] = useState<DrawerCompetition[]>([]);
+  const [colors, setColors] = useState<{ primary: string | null; secondary: string | null }>({ primary: null, secondary: null });
+
+  // colori della mia squadra (per lo stemma nell'header del menu)
+  useEffect(() => {
+    if (!app.activeLeagueId || !app.userId) return;
+    let off = false;
+    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
+      if (off) return;
+      const me = (data as any[] | null)?.find((m) => m.user_id === app.userId);
+      if (me) setColors({ primary: me.color_primary ?? null, secondary: me.color_secondary ?? null });
+    });
+    return () => { off = true; };
+  }, [app.activeLeagueId, app.userId, app.drawerOpen]);
 
   useEffect(() => {
     if (!app.drawerOpen || !app.activeLeagueId) return;
@@ -66,6 +79,8 @@ export default function SideDrawerWrapper() {
       competitions={competitions}
       activeLeagueCompetitionId={app.activeLeagueCompetitionId}
       onSwitchCompetition={switchCompetition}
+      teamPrimary={colors.primary}
+      teamSecondary={colors.secondary}
     />
   );
 }
