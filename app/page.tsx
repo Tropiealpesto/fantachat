@@ -28,11 +28,44 @@ type Kit = { primary: string; secondary: string; pattern: BadgePattern };
 
 const emptyHome: HomeData = { matchday: null, lineup: null, stats: null };
 const ROLE_ORDER = ["A", "C", "D", "P"];
+const TOP_ROLE_ORDER = ["P", "D", "C", "A"];
+
+const ROLE_META: Record<string, { bg: string; fg: string; label: string }> = {
+  P: { bg: "#FEF3C7", fg: "#B45309", label: "P" },
+  D: { bg: "#DCFCE7", fg: "#15803D", label: "D" },
+  C: { bg: "#DBEAFE", fg: "#2563EB", label: "C" },
+  A: { bg: "#FEE2E2", fg: "#DC2626", label: "A" },
+};
 
 function PlayerCrest({ team, colors, size = 40 }: { team: string; colors: Kit | null; size?: number }) {
   if (colors) return <TeamBadge name={team} primary={colors.primary} secondary={colors.secondary} pattern={colors.pattern} showInitials={false} size={size} />;
   return <TeamBadge name={team} showInitials={false} size={size} />;
 }
+
+function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
+  const meta = ROLE_META[role] ?? { bg: "#F1F5F9", fg: "#475569", label: role };
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        display: "inline-grid",
+        placeItems: "center",
+        background: meta.bg,
+        color: meta.fg,
+        fontSize: Math.max(12, size * 0.38),
+        fontWeight: 1000,
+        boxShadow: "0 3px 10px rgba(15,23,42,.10)",
+        border: "2px solid rgba(255,255,255,.82)",
+        flexShrink: 0,
+      }}
+    >
+      {meta.label}
+    </span>
+  );
+}
+
 function ptsStyle(v: number | null | undefined): React.CSSProperties {
   const n = Number(v ?? 0);
   return n > 0 ? s.ppUp : n < 0 ? s.ppDown : s.ppFlat;
@@ -53,6 +86,7 @@ export default function Home() {
   const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
   const [standings, setStandings] = useState<StandRow[]>([]);
   const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
+  const [topRole, setTopRole] = useState<string>("A");
 
   const [competitionStatus, setCompetitionStatus] = useState<CompetitionStatus | null>(null);
   const [finalStanding, setFinalStanding] = useState<StandRow[]>([]);
@@ -224,9 +258,16 @@ export default function Home() {
   const hasLineup = Boolean(data.lineup?.players?.length);
   const mvpLabel = recap?.mvp_role === "P" ? (recap?.mvp_team || recap?.mvp_name) : recap?.mvp_name;
 
-  const top5 = standings.slice(0, 5);
-  const meInTop = top5.some((r) => r.user_id === app.userId);
+  const meIdx = standings.findIndex((r) => r.user_id === app.userId);
   const myRow = standings.find((r) => r.user_id === app.userId);
+  const nearbyRows = meIdx >= 0
+    ? standings.slice(Math.max(0, meIdx - 1), Math.min(standings.length, meIdx + 2))
+    : standings.slice(0, 3);
+
+  const shownTopPlayers = (() => {
+    const byRole = topPlayers.filter((p) => p.role === topRole);
+    return (byRole.length ? byRole : topPlayers).slice(0, 3);
+  })();
 
   function StandLine({ row, mine }: { row: StandRow; mine: boolean }) {
     const c = memberColors[row.user_id];
@@ -235,7 +276,7 @@ export default function Home() {
         <span style={s.srank}>{row.rank ?? "—"}</span>
         <TeamBadge name={row.team_name} primary={c?.primary ?? null} secondary={c?.secondary ?? null} size={30} />
         <span style={{ ...s.sname, color: mine ? theme.primary : "#0f172a" }}>{row.team_name}</span>
-        <span style={s.spts}>{fmt(row.total_points)}</span>
+        <span style={s.spts}>{fmt(row.total_points)} pt</span>
       </div>
     );
   }
@@ -266,75 +307,96 @@ export default function Home() {
         {err && <div style={s.error}>Errore: {err}</div>}
 
         {/* Giornata */}
-        <div style={{ ...s.card, borderLeft: `4px solid ${theme.primary}` }}>
-          <div style={s.cardTop}>
-            <div>
-              <div style={s.label}>Giornata corrente</div>
-              <div style={s.matchday}>{data.matchday?.number ?? "—"}</div>
-            </div>
-            <span style={{ ...s.status, color: data.matchday ? theme.primary : "#6b7280", background: data.matchday ? `${theme.primary}14` : "#f3f4f6" }}>{data.matchday?.status ?? "locked"}</span>
+        <div style={s.matchCard}>
+          <div style={s.matchIcon}>▦</div>
+          <div style={{ flex: 1 }}>
+            <div style={s.label}>Giornata corrente</div>
+            <div style={s.matchday}>{data.matchday?.number ?? "—"}</div>
           </div>
+          <span style={{ ...s.status, color: data.matchday ? theme.primary : "#6b7280", background: data.matchday ? `${theme.primary}14` : "#f3f4f6" }}>{data.matchday?.status ?? "locked"}</span>
           <button disabled={!data.matchday} onClick={() => router.push("/rosa")} style={{ ...s.primaryBtn, background: data.matchday ? theme.primary : "#d1d5db" }}>
             {hasLineup ? "Modifica rosa" : "Invia rosa"}
           </button>
         </div>
 
-        {/* Il tuo schieramento (campo) */}
-        {hasLineup && (
-          <div style={s.card}>
-            <div style={s.secHead}>Il tuo schieramento</div>
-            <div style={s.pitch}>
-              <div style={s.pitchLine} />
-              <div style={s.pitchCircle} />
-              {lineupGroups.map((g) => (
-                <div key={g.role} style={s.pitchRow}>
-                  {g.items.map((p, i) => (
-                    <div key={i} style={s.pp}>
-                      <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={46} />
-                      <div style={s.ppName}>{p.role === "P" ? (p.team || p.name) : p.name}</div>
-                      <div style={{ ...s.ppPts, ...ptsStyle(p.points) }}>{signedFmt(p.points)}</div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <div style={s.pitchTot}><span>Totale giornata</span><b>{fmt(data.lineup?.total_points)}</b></div>
-          </div>
-        )}
-
         {/* Mini-classifica */}
-        <div style={s.card}>
-          <div style={s.secHead}>La tua classifica</div>
+        <div style={s.cardLarge}>
+          <div style={s.secHeaderRow}>
+            <div style={s.secHead}>La tua classifica</div>
+            <button onClick={() => router.push("/classifica")} style={s.textLink}>Vedi classifica completa →</button>
+          </div>
           {standings.length === 0 ? (
             <div style={s.muted}>Ancora nessuna classifica.</div>
           ) : (
-            <>
-              {top5.map((r) => <StandLine key={r.user_id} row={r} mine={r.user_id === app.userId} />)}
-              {!meInTop && myRow && (<><div style={s.dots}>· · ·</div><StandLine row={myRow} mine /></>)}
-            </>
+            <div style={{ marginTop: 12 }}>
+              {nearbyRows.map((r) => <StandLine key={r.user_id} row={r} mine={r.user_id === app.userId} />)}
+            </div>
           )}
-          <button onClick={() => router.push("/classifica")} style={s.linkBtn}>Classifica completa →</button>
         </div>
 
-        {/* Top giocatori */}
-        {topPlayers.length > 0 && (
-          <div style={s.card}>
-            <div style={s.secHead}>Top giocatori · giornata</div>
-            <div style={{ marginTop: 6 }}>
-              {topPlayers.map((p, i) => (
-                <div key={i} style={{ ...s.topRow, borderTop: i === 0 ? "none" : "1px solid #f1f5f9" }}>
-                  <span style={s.topRank}>{i + 1}</span>
-                  <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={34} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={s.topName}>{p.role === "P" ? (p.team || p.name) : p.name}</div>
-                    <div style={s.topSub}>{p.role} · {p.team}</div>
+        <div style={s.twoCols}>
+          {/* Il tuo schieramento (mini campo) */}
+          <div style={s.cardSmall}>
+            <div style={s.secHeaderRowCompact}>
+              <div style={s.secHead}>Il tuo schieramento</div>
+              <span style={s.modulePill}>{lineupGroups.length ? `${lineupGroups.find((g) => g.role === "D")?.items.length ?? 0}-${lineupGroups.find((g) => g.role === "C")?.items.length ?? 0}-${lineupGroups.find((g) => g.role === "A")?.items.length ?? 0}` : "—"}</span>
+            </div>
+            {hasLineup ? (
+              <div style={s.miniPitch}>
+                <div style={s.miniPitchMidline} />
+                <div style={s.miniPitchCircle} />
+                {lineupGroups.map((g) => (
+                  <div key={g.role} style={s.miniPitchRow}>
+                    {g.items.map((p, i) => (
+                      <div key={i} style={s.miniPlayer}>
+                        <RoleDot role={p.role} size={34} />
+                        <span>{shortName(p.role === "P" ? (p.team || p.name) : p.name)}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div style={{ ...s.ppPts, ...ptsStyle(p.points) }}>{signedFmt(p.points)}</div>
-                </div>
+                ))}
+              </div>
+            ) : (
+              <div style={s.emptyBox}>Nessuna formazione schierata.</div>
+            )}
+          </div>
+
+          {/* Top giocatori */}
+          <div style={s.cardSmall}>
+            <div style={s.secHeaderRowCompact}>
+              <div style={s.secHead}>Top giocatori</div>
+              <button onClick={() => router.push("/statistiche")} style={s.textLinkSmall}>Vedi tutti</button>
+            </div>
+            <div style={s.roleTabs}>
+              {TOP_ROLE_ORDER.map((r) => (
+                <button key={r} onClick={() => setTopRole(r)} style={{ ...s.roleTab, background: topRole === r ? theme.primary : "#f1f5f9", color: topRole === r ? "white" : "#64748b" }}>{r}</button>
               ))}
             </div>
+            {shownTopPlayers.length > 0 ? (
+              <div style={s.topList}>
+                {shownTopPlayers.map((p, i) => (
+                  <div key={`${p.name}-${i}`} style={s.topRowCompact}>
+                    <span style={s.topRank}>{i + 1}</span>
+                    <RoleDot role={p.role} size={28} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={s.topName}>{shortName(p.name)}</div>
+                      <div style={s.topSub}>{p.team}</div>
+                    </div>
+                    <div style={{ ...s.ppPts, ...ptsStyle(p.points) }}>{signedFmt(p.points)}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={s.emptyBox}>In attesa statistiche.</div>
+            )}
           </div>
-        )}
+        </div>
+
+        <button onClick={() => router.push("/regole")} style={s.ruleLink}>
+          <span style={s.ruleIcon}>◎</span>
+          <span>Regole competizione</span>
+          <span style={{ marginLeft: "auto" }}>›</span>
+        </button>
 
         {/* Nyx */}
         {recap?.has_data && (
@@ -352,18 +414,14 @@ export default function Home() {
           </div>
         )}
 
-        <div style={s.grid}>
-          <Quick href="/rosa" title="Rosa" sub="Scegli i giocatori" />
-          <Quick href="/live" title="Live" sub="Classifica live" />
-          <Quick href="/chat" title="Chat" sub="Lega unica" />
-          <Quick href="/statistiche" title="Statistiche" sub="Giocatori" />
-        </div>
-
         {app.isAdmin && (
-          <div style={s.card}>
-            <h3 style={{ marginTop: 0 }}>Admin competizione</h3>
-            <p style={s.muted}>Le azioni admin lavorano su {app.competitionName ?? "competizione attiva"}.</p>
-            <button style={{ ...s.primaryBtn, background: theme.primary }} onClick={() => router.push("/admin")}>Apri admin</button>
+          <div style={s.adminCard}>
+            <div style={s.adminIcon}>⚙</div>
+            <div style={{ flex: 1 }}>
+              <h3 style={s.adminTitle}>Admin competizione</h3>
+              <p style={s.adminText}>Le azioni admin lavorano su {app.competitionName ?? "competizione attiva"}.</p>
+            </div>
+            <button style={s.adminBtn} onClick={() => router.push("/admin")}>Apri admin</button>
           </div>
         )}
       </main>
@@ -371,6 +429,12 @@ export default function Home() {
       <BottomNav />
     </>
   );
+}
+
+function shortName(name?: string | null) {
+  const n = String(name ?? "").trim();
+  if (n.length <= 13) return n;
+  return `${n.slice(0, 12)}…`;
 }
 
 function normalizeStandings(value: any): StandRow[] {
@@ -384,61 +448,72 @@ function normalizeStandings(value: any): StandRow[] {
 function Kpi({ label, value }: { label: string; value: string }) {
   return (<div style={s.kpi}><small>{label}</small><b>{value}</b></div>);
 }
-function Quick({ href, title, sub }: { href: string; title: string; sub: string }) {
-  return (<a href={href} style={s.quick}><b>{title}</b><small>{sub}</small></a>);
-}
 
 const s: Record<string, React.CSSProperties> = {
-  topBtn: { border: 0, borderRadius: 999, background: "#f0fdf4", color: "#15803d", padding: "7px 14px", fontWeight: 800, cursor: "pointer" },
-  hero: { color: "white", padding: "18px 16px 28px" },
-  heroInner: { maxWidth: 520, margin: "0 auto" },
-  heroRow: { display: "flex", alignItems: "center", gap: 14, marginTop: 16 },
-  badgeRing: { borderRadius: "50%", padding: 3, border: "2px solid rgba(255,255,255,.85)", display: "grid", placeItems: "center", flexShrink: 0 },
-  hello: { opacity: 0.78, fontWeight: 700 },
-  team: { fontSize: 28, lineHeight: 1.1, margin: "4px 0 0" },
+  topBtn: { border: "1px solid #fed7aa", borderRadius: 999, background: "#fff7ed", color: "#ea580c", padding: "8px 17px", fontWeight: 1000, cursor: "pointer" },
+  hero: { color: "white", padding: "18px 16px 92px", position: "relative", overflow: "hidden" },
+  heroInner: { maxWidth: 520, margin: "0 auto", position: "relative", zIndex: 1 },
+  heroRow: { display: "flex", alignItems: "center", gap: 14, marginTop: 18 },
+  badgeRing: { borderRadius: "50%", padding: 4, border: "2px solid rgba(255,255,255,.86)", display: "grid", placeItems: "center", flexShrink: 0, boxShadow: "0 8px 22px rgba(0,0,0,.16)" },
+  hello: { opacity: 0.82, fontWeight: 900, fontSize: 15 },
+  team: { fontSize: 31, lineHeight: 1.06, margin: "4px 0 0", letterSpacing: "-.03em", fontWeight: 1000 },
   closedText: { margin: "0", color: "rgba(255,255,255,0.78)", fontWeight: 750, lineHeight: 1.45 },
   closedTitle: { margin: "0 0 12px", color: "#111827", fontWeight: 1000, fontSize: 22 },
   finalTable: { display: "grid", gap: 8 },
   finalRow: { display: "grid", gridTemplateColumns: "44px 1fr 70px", gap: 8, alignItems: "center", padding: 12, borderRadius: 12, border: "1px solid #e5e7eb" },
-  kpis: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 18 },
-  kpi: { background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.2)", borderRadius: 14, padding: 12, display: "grid", gap: 4, textAlign: "center" },
-  container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px calc(70px + env(safe-area-inset-bottom, 0px) + 20px)", display: "grid", gap: 14 },
-  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 4px 16px rgba(0,0,0,.06)" },
-  cardTop: { display: "flex", justifyContent: "space-between", marginBottom: 12 },
-  label: { color: "#6b7280", fontSize: 11, fontWeight: 900, textTransform: "uppercase" },
-  matchday: { fontSize: 34, fontWeight: 900 },
-  status: { borderRadius: 999, padding: "5px 12px", fontWeight: 900, height: 30 },
-  primaryBtn: { width: "100%", border: 0, color: "white", borderRadius: 12, padding: 13, fontWeight: 900, cursor: "pointer", marginTop: 10 },
+  kpis: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginTop: 22 },
+  kpi: { background: "rgba(255,255,255,.16)", border: "1px solid rgba(255,255,255,.28)", borderRadius: 16, padding: "15px 10px", display: "grid", gap: 4, textAlign: "center", boxShadow: "inset 0 1px 0 rgba(255,255,255,.18)" },
+  container: { maxWidth: 520, margin: "-74px auto 0", padding: "0 14px calc(70px + env(safe-area-inset-bottom, 0px) + 20px)", display: "grid", gap: 13, position: "relative", zIndex: 2 },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 22, padding: 16, boxShadow: "0 10px 28px rgba(15,23,42,.08)" },
+  cardLarge: { background: "white", border: "1px solid #e5e7eb", borderRadius: 22, padding: 16, boxShadow: "0 10px 28px rgba(15,23,42,.08)" },
+  cardSmall: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.07)", minHeight: 190 },
+  twoCols: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
+  matchCard: { background: "white", border: "1px solid #e5e7eb", borderRadius: 22, padding: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, boxShadow: "0 12px 30px rgba(15,23,42,.10)" },
+  matchIcon: { width: 48, height: 48, borderRadius: "50%", display: "grid", placeItems: "center", background: "#eaf7ee", color: "#15803d", fontSize: 22, fontWeight: 1000 },
+  label: { color: "#64748b", fontSize: 11, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".02em" },
+  matchday: { fontSize: 34, fontWeight: 1000, color: "#0f172a", letterSpacing: "-.04em" },
+  status: { borderRadius: 999, padding: "7px 14px", fontWeight: 1000, minHeight: 30, display: "inline-flex", alignItems: "center" },
+  primaryBtn: { width: "100%", border: 0, color: "white", borderRadius: 12, padding: 13, fontWeight: 1000, cursor: "pointer", flexBasis: "100%", boxShadow: "0 8px 18px rgba(22,163,74,.18)" },
   muted: { color: "#6b7280", fontWeight: 700, fontSize: 13, marginTop: 10 },
-  secHead: { fontSize: 15, fontWeight: 1000, color: "#0f172a", marginBottom: 4 },
-  pitch: { position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#16a34a,#13853a)", borderRadius: 16, padding: "20px 10px", display: "flex", flexDirection: "column", gap: 16, marginTop: 10 },
-  pitchLine: { position: "absolute", left: 0, right: 0, top: "50%", height: 2, background: "rgba(255,255,255,.25)" },
-  pitchCircle: { position: "absolute", left: "50%", top: "50%", width: 84, height: 84, marginLeft: -42, marginTop: -42, border: "2px solid rgba(255,255,255,.25)", borderRadius: "50%" },
-  pitchRow: { position: "relative", zIndex: 1, display: "flex", justifyContent: "center", gap: 18, flexWrap: "wrap" },
-  pp: { display: "flex", flexDirection: "column", alignItems: "center", gap: 5, width: 80 },
-  ppName: { color: "#fff", fontSize: 11.5, fontWeight: 900, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80, textShadow: "0 1px 2px rgba(0,0,0,.35)" },
-  ppPts: { fontSize: 11, fontWeight: 1000, borderRadius: 8, padding: "2px 9px" },
+  secHeaderRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 },
+  secHeaderRowCompact: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 },
+  secHead: { fontSize: 16, fontWeight: 1000, color: "#0f172a", letterSpacing: "-.02em" },
+  textLink: { border: 0, background: "transparent", color: "#15803d", fontWeight: 1000, fontSize: 12.5, cursor: "pointer", whiteSpace: "nowrap" },
+  textLinkSmall: { border: 0, background: "transparent", color: "#15803d", fontWeight: 1000, fontSize: 11.5, cursor: "pointer", whiteSpace: "nowrap" },
+  srow: { display: "grid", gridTemplateColumns: "26px 30px 1fr auto", gap: 10, alignItems: "center", padding: "10px 8px", borderRadius: 13, marginBottom: 7 },
+  srank: { fontWeight: 1000, color: "#64748b", fontSize: 14, textAlign: "center" },
+  sname: { fontWeight: 1000, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  spts: { fontWeight: 1000, color: "#0f172a", fontSize: 13.5 },
+  miniPitch: { position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#6fba63,#56a84b)", borderRadius: 15, padding: "15px 8px", display: "flex", flexDirection: "column", gap: 12, border: "3px solid rgba(255,255,255,.70)", minHeight: 146 },
+  miniPitchMidline: { position: "absolute", left: 0, right: 0, top: "50%", height: 2, background: "rgba(255,255,255,.35)" },
+  miniPitchCircle: { position: "absolute", left: "50%", top: "50%", width: 54, height: 54, marginLeft: -27, marginTop: -27, border: "2px solid rgba(255,255,255,.35)", borderRadius: "50%" },
+  miniPitchRow: { position: "relative", zIndex: 1, display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" },
+  miniPlayer: { display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: 48, color: "white", fontSize: 9.5, fontWeight: 900, textAlign: "center", textShadow: "0 1px 2px rgba(0,0,0,.28)" },
+  modulePill: { fontSize: 12, fontWeight: 1000, color: "#15803d", background: "#dcfce7", padding: "5px 10px", borderRadius: 999 },
+  emptyBox: { border: "1px dashed #cbd5e1", color: "#64748b", borderRadius: 14, padding: 14, fontSize: 12.5, fontWeight: 800, textAlign: "center" },
+  roleTabs: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, marginBottom: 9 },
+  roleTab: { border: 0, borderRadius: 999, padding: "7px 0", fontWeight: 1000, cursor: "pointer" },
+  topList: { display: "grid", gap: 4 },
+  topRowCompact: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid #f1f5f9" },
+  topRank: { width: 16, textAlign: "center", fontWeight: 1000, color: "#94a3b8", fontSize: 12 },
+  topName: { fontWeight: 1000, color: "#0f172a", fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  topSub: { fontSize: 10.5, color: "#64748b", fontWeight: 750, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  ppPts: { fontSize: 11, fontWeight: 1000, borderRadius: 8, padding: "2px 8px" },
   ppUp: { background: "#dcfce7", color: "#15803d" },
   ppDown: { background: "#fee2e2", color: "#dc2626" },
   ppFlat: { background: "#f1f5f9", color: "#475569" },
-  pitchTot: { display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 14, fontWeight: 900, color: "#0f172a" },
-  srow: { display: "grid", gridTemplateColumns: "26px 30px 1fr auto", gap: 10, alignItems: "center", padding: "8px 8px", borderRadius: 12, marginBottom: 6 },
-  srank: { fontWeight: 1000, color: "#64748b", fontSize: 14, textAlign: "center" },
-  sname: { fontWeight: 900, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  spts: { fontWeight: 1000, color: "#0f172a", fontSize: 14 },
-  dots: { textAlign: "center", color: "#94a3b8", fontWeight: 1000, padding: "2px 0 6px" },
-  linkBtn: { marginTop: 8, width: "100%", background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 12, padding: 11, fontWeight: 1000, fontSize: 13, cursor: "pointer" },
-  topRow: { display: "flex", alignItems: "center", gap: 10, padding: "9px 4px" },
-  topRank: { width: 20, textAlign: "center", fontWeight: 1000, color: "#94a3b8", fontSize: 13 },
-  topName: { fontWeight: 1000, color: "#0f172a", fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  topSub: { fontSize: 11.5, color: "#64748b", fontWeight: 700 },
+  ruleLink: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: "14px 16px", boxShadow: "0 6px 18px rgba(15,23,42,.06)", display: "flex", alignItems: "center", gap: 12, fontWeight: 1000, color: "#0f172a", cursor: "pointer", width: "100%" },
+  ruleIcon: { width: 26, height: 26, borderRadius: "50%", display: "grid", placeItems: "center", background: "#f0fdf4", color: "#15803d" },
   recapCard: { background: "white", border: "1px solid #e5e7eb", borderTop: "3px solid #ea580c", borderRadius: 18, padding: 15, boxShadow: "0 4px 16px rgba(0,0,0,.06)" },
   recapRow: { display: "flex", gap: 13, alignItems: "center" },
   recapMascot: { width: 78, height: 78, borderRadius: 16, objectFit: "cover", flexShrink: 0, border: "2px solid #fff", boxShadow: "0 4px 12px rgba(0,0,0,.12)" },
   recapLabel: { fontSize: 10.5, fontWeight: 1000, color: "#ea580c", textTransform: "uppercase", letterSpacing: ".05em" },
   recapText: { fontSize: 13.5, fontWeight: 600, color: "#334155", lineHeight: 1.5, margin: "4px 0 0" },
   recapBtn: { width: "100%", marginTop: 13, background: "#15803d", color: "white", border: 0, borderRadius: 12, padding: 12, fontWeight: 1000, fontSize: 14, cursor: "pointer" },
-  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
-  quick: { background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, display: "grid", gap: 4, boxShadow: "0 2px 10px rgba(0,0,0,.04)" },
+  adminCard: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 8px 22px rgba(15,23,42,.07)", display: "flex", alignItems: "center", gap: 12 },
+  adminIcon: { width: 48, height: 48, borderRadius: "50%", display: "grid", placeItems: "center", background: "#f1f5f9", fontSize: 24, flexShrink: 0 },
+  adminTitle: { margin: 0, color: "#0f172a", fontSize: 18, fontWeight: 1000 },
+  adminText: { margin: "4px 0 0", color: "#64748b", fontSize: 13, fontWeight: 750, lineHeight: 1.35 },
+  adminBtn: { border: "1px solid #16a34a", color: "#15803d", background: "white", borderRadius: 14, padding: "11px 16px", fontWeight: 1000, cursor: "pointer", flexShrink: 0 },
   error: { padding: 12, borderRadius: 12, background: "#fff1f2", color: "#991b1b", fontWeight: 800 },
 };
