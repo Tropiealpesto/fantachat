@@ -8,9 +8,28 @@ import CompetitionBadge from "../components/CompetitionBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
-type Player = { id: string; name: string; role: string; team: string };
-type Matchday = { id: string; number: number; status: string };
-type LineupData = { id?: string; submitted_at?: string; players?: { role: string; real_player_id: string }[] };
+type Player = {
+  id: string;
+  name: string;
+  role: string;
+  team: string;
+};
+
+type Matchday = {
+  id: string;
+  number: number;
+  status: string;
+};
+
+type LineupData = {
+  id?: string;
+  submitted_at?: string;
+  players?: {
+    role: string;
+    real_player_id: string;
+  }[];
+};
+
 type FormData = {
   competition_id: string | null;
   is_participant: boolean;
@@ -19,16 +38,37 @@ type FormData = {
   players: Player[];
   lineup: LineupData | null;
 };
-type TopRow = { rank: number; name: string };
-type FixtureRow = { home: string; away: string; status: string };
 
-const ROLE_LABELS: Record<string, string> = { P: "Portiere", D: "Difensore", C: "Centrocampista", A: "Attaccante" };
-const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
-  P: { bg: "#fef9c3", color: "#a16207" },
-  D: { bg: "#dcfce7", color: "#15803d" },
-  C: { bg: "#dbeafe", color: "#1d4ed8" },
-  A: { bg: "#fee2e2", color: "#dc2626" },
+type TopRow = {
+  rank: number;
+  name: string;
 };
+
+type FixtureRow = {
+  home: string;
+  away: string;
+  status: string;
+};
+
+type Slot = {
+  role: string;
+  index: number;
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  P: "Portiere",
+  D: "Difensore",
+  C: "Centrocampista",
+  A: "Attaccante",
+};
+
+const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
+  P: { bg: "#FEF3C7", color: "#B45309" },
+  D: { bg: "#DCFCE7", color: "#15803D" },
+  C: { bg: "#DBEAFE", color: "#2563EB" },
+  A: { bg: "#FEE2E2", color: "#DC2626" },
+};
+
 const EMPTY_FORM: FormData = {
   competition_id: null,
   is_participant: false,
@@ -41,9 +81,26 @@ const EMPTY_FORM: FormData = {
 function roleOrder(role: string) {
   return ({ P: 1, D: 2, C: 3, A: 4 } as Record<string, number>)[role] ?? 10;
 }
+
 const norm = (x?: string) => (x ?? "").trim().toLowerCase();
-function label(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
-function sub(p: Player) { return p.role === "P" ? "Portiere" : p.team; }
+
+function label(p: Player) {
+  return p.role === "P" ? p.team || p.name : p.name;
+}
+
+function sub(p: Player) {
+  return p.role === "P" ? "Portiere" : p.team;
+}
+
+function shortName(name?: string | null) {
+  if (!name) return "—";
+  const clean = name.trim();
+  const parts = clean.split(" ");
+
+  if (parts.length <= 2) return clean;
+
+  return `${parts[0]} ${parts[1]?.[0] ?? ""}.`;
+}
 
 export default function RosaPage() {
   const app = useRequireApp(false);
@@ -58,6 +115,7 @@ export default function RosaPage() {
 
   const [top, setTop] = useState<TopRow[]>([]);
   const [fixtures, setFixtures] = useState<FixtureRow[]>([]);
+  const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
 
   const roles = useMemo(
     () =>
@@ -67,23 +125,43 @@ export default function RosaPage() {
     [form.players_per_role]
   );
 
-  const selectedIds = useMemo(() => Object.values(selected).flat().filter(Boolean), [selected]);
-  const totalPlayers = useMemo(() => roles.reduce((s, [, n]) => s + Number(n || 0), 0), [roles]);
-  const byId = useMemo(() => new Map(form.players.map((p) => [p.id, p])), [form.players]);
-  const topNames = useMemo(() => new Set(top.map((t) => norm(t.name))), [top]);
+  const selectedIds = useMemo(
+    () => Object.values(selected).flat().filter(Boolean),
+    [selected]
+  );
+
+  const totalPlayers = useMemo(
+    () => roles.reduce((sum, [, count]) => sum + Number(count || 0), 0),
+    [roles]
+  );
+
+  const byId = useMemo(
+    () => new Map(form.players.map((p) => [p.id, p])),
+    [form.players]
+  );
+
+  const topNames = useMemo(
+    () => new Set(top.map((t) => norm(t.name))),
+    [top]
+  );
 
   useEffect(() => {
     async function load() {
       if (!app.ready || !app.activeLeagueCompetitionId) return;
+
       setLoading(true);
       setErr(null);
       setMsg(null);
+
       try {
         const { data, error } = await supabase.rpc("get_lineup_form_data", {
           p_league_competition_id: app.activeLeagueCompetitionId,
         });
+
         if (error) throw error;
+
         const nextForm = normalizeFormData(data);
+
         setForm(nextForm);
         setSelected(buildInitialSelected(nextForm.players_per_role, nextForm.lineup));
         setSaved(Boolean(nextForm.lineup?.id));
@@ -93,53 +171,72 @@ export default function RosaPage() {
         setLoading(false);
       }
     }
+
     load();
   }, [app.ready, app.activeLeagueCompetitionId]);
 
-  // Partite + Top squadre della giornata (usa l'id competizione dato dalla funzione)
   useEffect(() => {
-    const md = form.matchday?.number;
-    const compId = form.competition_id;
-    if (!compId || !md) {
+    const matchdayNumber = form.matchday?.number;
+    const competitionId = form.competition_id;
+
+    if (!competitionId || !matchdayNumber) {
       setTop([]);
       setFixtures([]);
       return;
     }
+
     let off = false;
-    (async () => {
+
+    async function loadContext() {
       const { data: teams } = await supabase
         .from("real_teams")
         .select("id,name")
-        .eq("competition_id", compId);
+        .eq("competition_id", competitionId);
+
       const map = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
 
-      const { data: tt } = await supabase
+      const { data: topTeams } = await supabase
         .from("top_teams")
         .select("rank,real_team_id")
-        .eq("competition_id", compId)
-        .eq("matchday_number", md)
+        .eq("competition_id", competitionId)
+        .eq("matchday_number", matchdayNumber)
         .order("rank", { ascending: true });
 
-      const { data: fx } = await supabase
+      const { data: games } = await supabase
         .from("fixtures")
         .select("home_team_id,away_team_id,status")
-        .eq("competition_id", compId)
-        .eq("matchday_number", md);
+        .eq("competition_id", competitionId)
+        .eq("matchday_number", matchdayNumber);
 
       if (off) return;
-      setTop(((tt ?? []) as any[]).map((r) => ({ rank: r.rank, name: map.get(r.real_team_id) ?? "—" })));
-      setFixtures(((fx ?? []) as any[]).map((r) => ({
-        home: map.get(r.home_team_id) ?? "—",
-        away: map.get(r.away_team_id) ?? "—",
-        status: r.status,
-      })));
-    })();
-    return () => { off = true; };
+
+      setTop(
+        ((topTeams ?? []) as any[]).map((r) => ({
+          rank: r.rank,
+          name: map.get(r.real_team_id) ?? "—",
+        }))
+      );
+
+      setFixtures(
+        ((games ?? []) as any[]).map((r) => ({
+          home: map.get(r.home_team_id) ?? "—",
+          away: map.get(r.away_team_id) ?? "—",
+          status: r.status,
+        }))
+      );
+    }
+
+    loadContext();
+
+    return () => {
+      off = true;
+    };
   }, [form.competition_id, form.matchday?.number]);
 
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
     const otherPlayers = others.map((id) => byId.get(id)).filter(Boolean) as Player[];
+
     const usedTeams = new Set(otherPlayers.map((p) => norm(p.team)));
     const topUsed = otherPlayers.some((p) => topNames.has(norm(p.team)));
 
@@ -148,9 +245,12 @@ export default function RosaPage() {
       .filter((p) => {
         if (p.id === currentId) return true;
         if (selectedIds.includes(p.id)) return false;
-        const key = norm(p.team);
-        if (usedTeams.has(key)) return false;
-        if (topUsed && topNames.has(key)) return false;
+
+        const teamKey = norm(p.team);
+
+        if (usedTeams.has(teamKey)) return false;
+        if (topUsed && topNames.has(teamKey)) return false;
+
         return true;
       })
       .sort((a, b) => label(a).localeCompare(label(b)));
@@ -160,8 +260,10 @@ export default function RosaPage() {
     setSelected((prev) => {
       const next = { ...prev };
       const arr = [...(next[role] ?? [])];
+
       arr[index] = playerId;
       next[role] = arr;
+
       return next;
     });
   }
@@ -169,34 +271,51 @@ export default function RosaPage() {
   function validate() {
     for (const [role, count] of roles) {
       const ids = selected[role] ?? [];
-      if (ids.filter(Boolean).length !== count) return `Completa il ruolo ${ROLE_LABELS[role] ?? role}.`;
+      if (ids.filter(Boolean).length !== count) {
+        return `Completa il ruolo ${ROLE_LABELS[role] ?? role}.`;
+      }
     }
-    if (new Set(selectedIds).size !== selectedIds.length) return "Non puoi selezionare due volte lo stesso giocatore.";
+
+    if (new Set(selectedIds).size !== selectedIds.length) {
+      return "Non puoi selezionare due volte lo stesso giocatore.";
+    }
+
     return null;
   }
 
   async function save() {
     setErr(null);
     setMsg(null);
-    if (!app.activeLeagueCompetitionId || !form.matchday?.id) return setErr("Nessuna giornata aperta.");
-    if (!form.is_participant) return setErr("Non partecipi a questa competizione.");
-    const v = validate();
-    if (v) return setErr(v);
+
+    if (!app.activeLeagueCompetitionId || !form.matchday?.id) {
+      return setErr("Nessuna giornata aperta.");
+    }
+
+    if (!form.is_participant) {
+      return setErr("Non partecipi a questa competizione.");
+    }
+
+    const validationError = validate();
+
+    if (validationError) {
+      return setErr(validationError);
+    }
 
     const payload = Object.entries(selected).flatMap(([role, ids]) =>
       ids.filter(Boolean).map((real_player_id) => ({ role, real_player_id }))
     );
 
     setSaving(true);
+
     try {
       const { error } = await supabase.rpc("submit_lineup", {
         p_league_competition_id: app.activeLeagueCompetitionId,
         p_matchday_id: form.matchday.id,
         p_players: payload,
       });
+
       if (error) throw error;
 
-      // crea il biglietto "formazione caricata" nella chat (se fallisce non blocca il salvataggio)
       try {
         await supabase.rpc("send_chat_message", {
           p_league_id: app.activeLeagueId,
@@ -209,7 +328,7 @@ export default function RosaPage() {
       } catch {}
 
       setSaved(true);
-      setMsg("Rosa inviata ✅");
+      setMsg("Rosa inviata");
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     } finally {
@@ -219,231 +338,296 @@ export default function RosaPage() {
 
   if (!app.ready || loading) return <LoadingScreen />;
 
-  const locked = saved || !form.is_participant || !form.matchday;
   const accent = app.competitionTheme.primary;
+  const locked = saved || !form.is_participant || !form.matchday;
+
+  const selectedCount = selectedIds.length;
+  const completionLabel = `${selectedCount}/${totalPlayers}`;
+
+  const currentSlotId =
+    activeSlot && selected[activeSlot.role]
+      ? selected[activeSlot.role][activeSlot.index] ?? ""
+      : "";
+
+  const sheetOptions = activeSlot
+    ? availableFor(activeSlot.role, currentSlotId)
+    : [];
 
   return (
     <>
-      <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
+      <AppBar
+        league={app.leagueName}
+        team={app.teamName}
+        onMenuOpen={app.openDrawer}
+      />
 
       <main style={s.container}>
-        <div style={{ ...s.header, borderLeft: `4px solid ${accent}` }}>
+        <section style={s.headerCard}>
           <div style={s.headerTop}>
-            <CompetitionBadge name={app.competitionName} type={app.competitionType} />
-            <span style={s.statusPill}>{form.matchday?.status ?? "chiusa"}</span>
+            <CompetitionBadge
+              name={app.competitionName}
+              type={app.competitionType}
+            />
+
+            <div style={s.headerStatus}>
+              <span style={s.giornata}>Giornata {form.matchday?.number ?? "—"}</span>
+              <span style={s.statusPill}>{form.matchday?.status ?? "chiusa"}</span>
+            </div>
           </div>
-          <div style={s.headerRow}>
-            <h1 style={s.title}>Rosa</h1>
-            <div style={s.gj}>Giornata <b>{form.matchday?.number ?? "—"}</b></div>
+
+          <div style={s.titleRow}>
+            <div>
+              <h1 style={s.title}>Rosa</h1>
+              <p style={s.subtitle}>
+                Tocca uno slot nel campo per scegliere il giocatore.
+              </p>
+            </div>
+
+            <div style={s.countBox}>
+              <span>{completionLabel}</span>
+              <small>giocatori</small>
+            </div>
           </div>
+
           <div style={s.rulesMini}>
             {roles.map(([role, count]) => (
-              <span key={role} style={s.rulePill}>{count} {role}</span>
+              <span key={role} style={s.rulePill}>
+                <RoleBadge role={role} small />
+                {count}
+              </span>
             ))}
-            <span style={s.ruleTotal}>{totalPlayers} giocatori</span>
           </div>
 
-          {!form.is_participant && <div style={s.warn}>Non partecipi a questa competizione.</div>}
-          {form.is_participant && !form.matchday && <div style={s.warn}>Nessuna giornata aperta.</div>}
-          {saved && <div style={s.ok}>Rosa già inviata. Per modificarla serve il reset admin.</div>}
-        </div>
+          {!form.is_participant && (
+            <div style={s.warn}>Non partecipi a questa competizione.</div>
+          )}
 
-        <div style={s.card}>
-          <h2 style={s.cardTitle}>Scegli i giocatori</h2>
+          {form.is_participant && !form.matchday && (
+            <div style={s.warn}>Nessuna giornata aperta.</div>
+          )}
 
-          {roles.map(([role, count]) => (
-            <div key={role} style={s.roleBlock}>
-              <div style={s.roleTitle}>
-                <RoleBadge role={role} />
-                <span>{ROLE_LABELS[role] ?? role}</span>
-                <small>{count}</small>
-              </div>
-
-              {Array.from({ length: Number(count) || 0 }).map((_, index) => (
-                <PlayerPicker
-                  key={`${role}-${index}`}
-                  role={role}
-                  index={index}
-                  disabled={locked}
-                  options={availableFor(role, selected[role]?.[index])}
-                  currentId={selected[role]?.[index] ?? ""}
-                  onSelect={(id) => selectPlayer(role, index, id)}
-                  onClear={() => selectPlayer(role, index, "")}
-                />
-              ))}
+          {saved && (
+            <div style={s.ok}>
+              Rosa già inviata. Per modificarla serve il reset admin.
             </div>
-          ))}
+          )}
+
+          {msg && <div style={s.ok}>{msg}</div>}
+          {err && <div style={s.err}>{err}</div>}
+        </section>
+
+        <section style={s.card}>
+          <div style={s.sectionHeader}>
+            <h2 style={s.sectionTitle}>Il tuo schieramento</h2>
+
+            <button type="button" style={s.infoBtn} aria-label="Informazioni">
+              i
+            </button>
+          </div>
+
+          <CampoInterattivo
+            players={form.players}
+            selected={selected}
+            roles={roles}
+            locked={locked}
+            onSlotPress={(role, index) => setActiveSlot({ role, index })}
+          />
 
           {!saved && (
             <button
               type="button"
               onClick={save}
               disabled={saving || !form.is_participant || !form.matchday}
-              style={{ ...s.btn, background: form.is_participant && form.matchday ? accent : "#d1d5db" }}
+              style={{
+                ...s.btn,
+                background:
+                  form.is_participant && form.matchday ? accent : "#d1d5db",
+              }}
             >
-              {saving ? "Invio..." : "Invia rosa"}
+              {saving ? "Salvataggio..." : "Salva formazione"}
             </button>
           )}
-          {msg && <div style={s.ok}>{msg}</div>}
-          {err && <div style={s.err}>{err}</div>}
-        </div>
+        </section>
 
         <div style={s.duo}>
-          <div style={s.card}>
-            <h3 style={s.duoTitle}>Partite</h3>
-            {fixtures.length === 0 ? (
-              <div style={s.duoEmpty}>Nessuna partita.</div>
-            ) : (
-              <div style={s.duoList}>
-                {fixtures.map((f, i) => (
-                  <div key={i} style={s.fixtureRow}>
-                    <span style={s.fxTeam}>{f.home}</span>
-                    <span style={s.fxVs}>vs</span>
-                    <span style={s.fxTeam}>{f.away}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <button type="button" style={s.infoCard}>
+            <span style={s.infoIcon}>▣</span>
+            <span>
+              <b>Partite</b>
+              <small>
+                {fixtures.length === 0
+                  ? "Nessuna partita."
+                  : `${fixtures.length} partite`}
+              </small>
+            </span>
+            <span style={s.chev}>›</span>
+          </button>
 
-          <div style={s.card}>
-            <h3 style={s.duoTitle}>Top squadre</h3>
-            {top.length === 0 ? (
-              <div style={s.duoEmpty}>Nessuna Top.</div>
-            ) : (
-              <div style={s.duoList}>
-                {top.map((t, i) => (
-                  <div key={i} style={s.topRow}>
-                    <b style={{ color: accent }}>#{t.rank}</b>
-                    <span style={s.fxTeam}>{t.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <button type="button" style={s.infoCard}>
+            <span style={s.infoIcon}>♛</span>
+            <span>
+              <b>Top squadre</b>
+              <small>
+                {top.length === 0 ? "Nessuna Top." : `${top.length} squadre`}
+              </small>
+            </span>
+            <span style={s.chev}>›</span>
+          </button>
         </div>
-
-        <Campo players={form.players} selected={selected} roles={roles} />
       </main>
+
+      {activeSlot && (
+        <PlayerSheet
+          role={activeSlot.role}
+          currentId={currentSlotId}
+          options={sheetOptions}
+          onClose={() => setActiveSlot(null)}
+          onClear={() => {
+            selectPlayer(activeSlot.role, activeSlot.index, "");
+            setActiveSlot(null);
+          }}
+          onSelect={(id) => {
+            selectPlayer(activeSlot.role, activeSlot.index, id);
+            setActiveSlot(null);
+          }}
+        />
+      )}
 
       <BottomNav />
     </>
   );
 }
 
-function PlayerPicker(props: {
-  role: string;
-  index: number;
-  disabled: boolean;
-  options: Player[];
-  currentId: string;
-  onSelect: (id: string) => void;
-  onClear: () => void;
+function CampoInterattivo(props: {
+  players: Player[];
+  selected: Record<string, string[]>;
+  roles: [string, number][];
+  locked: boolean;
+  onSlotPress: (role: string, index: number) => void;
 }) {
-  const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const current = props.currentId ? props.options.find((p) => p.id === props.currentId) : null;
-  const isGK = props.role === "P";
-
-  const matches = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return props.options.slice(0, 8);
-    return props.options
-      .filter((p) => (p.name + " " + (p.team ?? "")).toLowerCase().includes(needle))
-      .slice(0, 15);
-  }, [q, props.options]);
-
-  if (current) {
-    return (
-      <div style={s.chip}>
-        <RoleBadge role={props.role} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={s.chipName}>{label(current)}</div>
-          <div style={s.chipTeam}>{sub(current)}</div>
-        </div>
-        {!props.disabled && (
-          <button type="button" onClick={props.onClear} style={s.chipClear} aria-label="Rimuovi">✕</button>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ position: "relative" }}>
-      <input
-        value={q}
-        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        disabled={props.disabled}
-        placeholder={isGK ? `Cerca la nazionale (portiere)` : `Cerca ${ROLE_LABELS[props.role] ?? props.role} #${props.index + 1}`}
-        style={s.search}
-      />
-      {open && !props.disabled && (
-        <div style={s.dropdown}>
-          {matches.map((p) => (
-            <button key={p.id} type="button" onMouseDown={() => { props.onSelect(p.id); setOpen(false); setQ(""); }} style={s.option}>
-              <b>{label(p)}</b>
-              {sub(p) ? <small>{sub(p)}</small> : null}
-            </button>
-          ))}
-          {matches.length === 0 && <div style={s.optionEmpty}>Nessun risultato.</div>}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function RoleBadge({ role }: { role: string }) {
-  const c = ROLE_COLORS[role] ?? { bg: "#f3f4f6", color: "#6b7280" };
-  return <span style={{ ...s.roleBadge, background: c.bg, color: c.color }}>{role}</span>;
-}
-
-function Campo(props: { players: Player[]; selected: Record<string, string[]>; roles: [string, number][] }) {
   const byId = new Map(props.players.map((p) => [p.id, p]));
 
   const rows = props.roles
-    .map(([role]) => {
+    .map(([role, count]) => {
       const ids = props.selected[role] ?? [];
-      return { role, players: ids.map((id) => byId.get(id)).filter(Boolean) as Player[], slots: ids.length };
+      const slots = Array.from({ length: Number(count) || 0 }, (_, index) => {
+        const id = ids[index] ?? "";
+        return {
+          role,
+          index,
+          player: id ? byId.get(id) ?? null : null,
+        };
+      });
+
+      return { role, slots };
     })
-    .filter((r) => r.slots > 0)
+    .filter((r) => r.slots.length > 0)
     .sort((a, b) => roleOrder(a.role) - roleOrder(b.role));
 
-  const topByIndex = (i: number, total: number) => {
+  function topByIndex(index: number, total: number) {
     if (total <= 1) return "50%";
-    return `${16 + ((84 - 16) / (total - 1)) * i}%`;
-  };
+    return `${15 + ((85 - 15) / (total - 1)) * index}%`;
+  }
 
   return (
     <div style={s.field}>
       <div style={s.grass} />
-      <svg style={s.lines} viewBox="0 0 300 454" preserveAspectRatio="none">
-        <rect x="10" y="10" width="280" height="434" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" rx="4" />
-        <line x1="10" y1="227" x2="290" y2="227" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
-        <circle cx="150" cy="227" r="40" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
-        <circle cx="150" cy="227" r="2.5" fill="rgba(255,255,255,0.6)" />
-        <rect x="95" y="10" width="110" height="56" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-        <rect x="125" y="10" width="50" height="24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-        <rect x="95" y="388" width="110" height="56" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-        <rect x="125" y="420" width="50" height="24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+
+      <svg style={s.lines} viewBox="0 0 420 260" preserveAspectRatio="none">
+        <rect
+          x="12"
+          y="12"
+          width="396"
+          height="236"
+          rx="10"
+          fill="none"
+          stroke="rgba(255,255,255,.56)"
+          strokeWidth="3"
+        />
+        <line
+          x1="210"
+          y1="12"
+          x2="210"
+          y2="248"
+          stroke="rgba(255,255,255,.42)"
+          strokeWidth="2"
+        />
+        <circle
+          cx="210"
+          cy="130"
+          r="40"
+          fill="none"
+          stroke="rgba(255,255,255,.42)"
+          strokeWidth="2"
+        />
+        <circle cx="210" cy="130" r="3" fill="rgba(255,255,255,.60)" />
+        <rect
+          x="12"
+          y="82"
+          width="54"
+          height="96"
+          fill="none"
+          stroke="rgba(255,255,255,.42)"
+          strokeWidth="2"
+        />
+        <rect
+          x="354"
+          y="82"
+          width="54"
+          height="96"
+          fill="none"
+          stroke="rgba(255,255,255,.42)"
+          strokeWidth="2"
+        />
       </svg>
 
       {rows.map((row, rowIndex) => {
-        const count = Math.max(row.slots, 1);
+        const count = Math.max(row.slots.length, 1);
+
         return (
-          <div key={row.role} style={{ ...s.fieldRow, top: topByIndex(rowIndex, rows.length) }}>
-            {Array.from({ length: count }).map((_, i) => {
-              const p = row.players[i];
-              const offset = count === 1 ? 0 : (i - (count - 1) / 2) * Math.min(96, 260 / count);
-              const c = ROLE_COLORS[row.role] ?? { bg: "#f3f4f6", color: "#6b7280" };
-              const text = p ? (row.role === "P" ? p.team : p.name) : "—";
+          <div
+            key={row.role}
+            style={{
+              ...s.fieldColumn,
+              left: topByIndex(rowIndex, rows.length),
+            }}
+          >
+            {row.slots.map((slot, i) => {
+              const offset =
+                count === 1
+                  ? 0
+                  : (i - (count - 1) / 2) * Math.min(86, 210 / count);
+
               return (
-                <div key={`${row.role}-${i}`} style={{ ...s.playerDot, transform: `translate(calc(-50% + ${offset}px), -50%)` }}>
-                  <span style={{ ...s.jersey, background: c.bg, color: c.color }}>{row.role}</span>
-                  <span style={s.playerName}>{text}</span>
-                </div>
+                <button
+                  key={`${slot.role}-${slot.index}`}
+                  type="button"
+                  disabled={props.locked}
+                  onClick={() => props.onSlotPress(slot.role, slot.index)}
+                  style={{
+                    ...s.slotBtn,
+                    transform: `translate(-50%, calc(-50% + ${offset}px))`,
+                    cursor: props.locked ? "default" : "pointer",
+                  }}
+                >
+                  {slot.player ? (
+                    <>
+                      <RoleBadge role={slot.role} field />
+                      <span style={s.slotName}>
+                        {slot.role === "P"
+                          ? slot.player.team || slot.player.name
+                          : shortName(slot.player.name)}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span style={s.plusCircle}>+</span>
+                      <span style={s.slotNameMuted}>
+                        {ROLE_LABELS[slot.role] ?? slot.role}
+                      </span>
+                    </>
+                  )}
+                </button>
               );
             })}
           </div>
@@ -453,8 +637,151 @@ function Campo(props: { players: Player[]; selected: Record<string, string[]>; r
   );
 }
 
+function PlayerSheet(props: {
+  role: string;
+  currentId: string;
+  options: Player[];
+  onClose: () => void;
+  onClear: () => void;
+  onSelect: (id: string) => void;
+}) {
+  const [q, setQ] = useState("");
+
+  const matches = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+
+    if (!needle) return props.options.slice(0, 12);
+
+    return props.options
+      .filter((p) =>
+        `${p.name} ${p.team ?? ""}`.toLowerCase().includes(needle)
+      )
+      .slice(0, 20);
+  }, [q, props.options]);
+
+  return (
+    <div style={s.sheetLayer}>
+      <button
+        type="button"
+        aria-label="Chiudi selezione"
+        style={s.sheetBackdrop}
+        onClick={props.onClose}
+      />
+
+      <div style={s.sheet}>
+        <div style={s.sheetHandle} />
+
+        <div style={s.sheetHead}>
+          <div>
+            <h2 style={s.sheetTitle}>
+              Seleziona {ROLE_LABELS[props.role] ?? props.role}
+            </h2>
+
+            <p style={s.sheetSubtitle}>
+              Cerca per nome giocatore o nazionale.
+            </p>
+          </div>
+
+          <button type="button" onClick={props.onClose} style={s.closeBtn}>
+            ×
+          </button>
+        </div>
+
+        <div style={s.searchWrap}>
+          <span style={s.searchIcon}>⌕</span>
+
+          <input
+            value={q}
+            autoFocus
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Scrivi il nome del giocatore"
+            style={s.sheetSearch}
+          />
+        </div>
+
+        {props.currentId && (
+          <button type="button" onClick={props.onClear} style={s.clearCurrent}>
+            Rimuovi giocatore selezionato
+          </button>
+        )}
+
+        <div style={s.resultList}>
+          {matches.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => props.onSelect(p.id)}
+              style={{
+                ...s.resultRow,
+                background: p.id === props.currentId ? "#f0fdf4" : "white",
+              }}
+            >
+              <RoleBadge role={p.role} large />
+
+              <span style={s.resultText}>
+                <b>{label(p)}</b>
+                <small>{sub(p)}</small>
+              </span>
+
+              <span style={s.addBtn}>+</span>
+            </button>
+          ))}
+
+          {matches.length === 0 && (
+            <div style={s.emptyResults}>Nessun risultato trovato.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RoleBadge({
+  role,
+  small = false,
+  large = false,
+  field = false,
+}: {
+  role: string;
+  small?: boolean;
+  large?: boolean;
+  field?: boolean;
+}) {
+  const c = ROLE_COLORS[role] ?? {
+    bg: "#f3f4f6",
+    color: "#6b7280",
+  };
+
+  const size = large ? 44 : field ? 46 : small ? 22 : 34;
+
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        display: "inline-grid",
+        placeItems: "center",
+        background: c.bg,
+        color: c.color,
+        fontWeight: 1000,
+        fontSize: large ? 16 : small ? 11 : 15,
+        border: field ? "3px solid rgba(255,255,255,.86)" : "2px solid white",
+        boxShadow: field ? "0 5px 14px rgba(15,23,42,.18)" : "0 3px 9px rgba(15,23,42,.10)",
+        flexShrink: 0,
+      }}
+    >
+      {role}
+    </span>
+  );
+}
+
 function normalizeFormData(value: any): FormData {
-  const ppr = value?.players_per_role && typeof value.players_per_role === "object" ? value.players_per_role : { P: 1, D: 1, C: 1, A: 1 };
+  const ppr =
+    value?.players_per_role && typeof value.players_per_role === "object"
+      ? value.players_per_role
+      : { P: 1, D: 1, C: 1, A: 1 };
+
   return {
     competition_id: value?.competition_id ?? null,
     is_participant: Boolean(value?.is_participant),
@@ -465,62 +792,493 @@ function normalizeFormData(value: any): FormData {
   };
 }
 
-function buildInitialSelected(ppr: Record<string, number>, lineup: LineupData | null) {
+function buildInitialSelected(
+  ppr: Record<string, number>,
+  lineup: LineupData | null
+) {
   const initial: Record<string, string[]> = {};
+
   Object.entries(ppr ?? {}).forEach(([role, count]) => {
     initial[role] = Array.from({ length: Number(count) || 0 }, () => "");
   });
+
   if (!lineup?.players?.length) return initial;
+
   for (const p of lineup.players) {
     if (!initial[p.role]) initial[p.role] = [];
-    const idx = initial[p.role].findIndex((x) => !x);
-    if (idx >= 0) initial[p.role][idx] = p.real_player_id;
+
+    const emptyIndex = initial[p.role].findIndex((x) => !x);
+
+    if (emptyIndex >= 0) initial[p.role][emptyIndex] = p.real_player_id;
     else initial[p.role].push(p.real_player_id);
   }
+
   return initial;
 }
 
 const s: Record<string, React.CSSProperties> = {
-  container: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 100px", display: "grid", gap: 12 },
-  header: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
-  headerTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  statusPill: { borderRadius: 999, padding: "3px 10px", background: "#f3f4f6", fontSize: 11, fontWeight: 900, color: "#6b7280" },
-  headerRow: { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: 8 },
-  title: { margin: 0, fontSize: 20, fontWeight: 1000, color: "#111827" },
-  gj: { color: "#6b7280", fontWeight: 800, fontSize: 13 },
-  rulesMini: { marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" },
-  rulePill: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 999, padding: "3px 9px", fontSize: 11, fontWeight: 900, color: "#374151" },
-  ruleTotal: { marginLeft: "auto", fontSize: 11, fontWeight: 900, color: "#15803d" },
-  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, boxShadow: "0 4px 16px rgba(15,23,42,0.05)" },
-  cardTitle: { margin: "0 0 12px", fontSize: 18, fontWeight: 1000, color: "#111827" },
-  roleBlock: { display: "grid", gap: 8, marginBottom: 14 },
-  roleTitle: { display: "flex", alignItems: "center", gap: 8, fontWeight: 1000, color: "#111827" },
-  roleBadge: { width: 28, height: 28, borderRadius: 8, display: "inline-grid", placeItems: "center", fontWeight: 1000, fontSize: 12 },
-  search: { width: "100%", padding: 12, borderRadius: 12, border: "1px solid #e5e7eb", fontFamily: "inherit", fontWeight: 700, background: "white" },
-  dropdown: { position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 20, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 12px 30px rgba(15,23,42,0.16)", maxHeight: 260, overflowY: "auto", display: "grid" },
-  option: { display: "grid", gap: 1, textAlign: "left", border: "none", borderBottom: "1px solid #f3f4f6", background: "white", padding: "10px 12px", cursor: "pointer", fontFamily: "inherit" },
-  optionEmpty: { padding: 12, color: "#6b7280", fontWeight: 700, fontSize: 13 },
-  chip: { display: "flex", alignItems: "center", gap: 10, padding: 10, borderRadius: 12, border: "1px solid #e5e7eb", background: "#f9fafb" },
-  chipName: { fontWeight: 900, color: "#111827", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
-  chipTeam: { fontSize: 12, fontWeight: 700, color: "#6b7280", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
-  chipClear: { border: "none", background: "#e5e7eb", color: "#374151", width: 26, height: 26, borderRadius: 8, fontWeight: 900, cursor: "pointer", flexShrink: 0 },
-  btn: { width: "100%", padding: 14, border: "none", color: "white", borderRadius: 12, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
-  duo: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, alignItems: "start" },
-  duoTitle: { margin: "0 0 10px", fontSize: 14, fontWeight: 1000, color: "#111827" },
-  duoList: { display: "grid", gap: 7 },
-  duoEmpty: { color: "#9ca3af", fontWeight: 800, fontSize: 12 },
-  fixtureRow: { display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 5, alignItems: "center", fontSize: 12, fontWeight: 800, color: "#374151" },
-  fxTeam: { overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
-  fxVs: { color: "#9ca3af", fontSize: 10, fontWeight: 900 },
-  topRow: { display: "grid", gridTemplateColumns: "30px 1fr", gap: 6, alignItems: "center", fontSize: 13, fontWeight: 800, color: "#374151" },
-  field: { position: "relative", width: "100%", aspectRatio: "0.66", borderRadius: 20, overflow: "hidden", boxShadow: "0 10px 28px rgba(15,23,42,0.16)" },
-  grass: { position: "absolute", inset: 0, background: "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)" },
-  lines: { position: "absolute", inset: 0, width: "100%", height: "100%" },
-  fieldRow: { position: "absolute", left: 0, width: "100%", height: 1 },
-  playerDot: { position: "absolute", left: "50%", top: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 },
-  jersey: { width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 14, boxShadow: "0 3px 8px rgba(0,0,0,0.28)", border: "2px solid rgba(255,255,255,0.85)" },
-  playerName: { maxWidth: 92, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", background: "rgba(0,0,0,0.62)", color: "white", borderRadius: 7, padding: "3px 8px", fontSize: 11, fontWeight: 900 },
-  ok: { marginTop: 10, background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d", borderRadius: 12, padding: 12, fontWeight: 900 },
-  warn: { marginTop: 10, background: "#fff7ed", border: "1px solid #fed7aa", color: "#b85c0a", borderRadius: 12, padding: 12, fontWeight: 900 },
-  err: { marginTop: 10, background: "#fff1f2", border: "1px solid #fecaca", color: "#991b1b", borderRadius: 12, padding: 12, fontWeight: 900 },
+  container: {
+    maxWidth: 520,
+    margin: "0 auto",
+    padding: "14px 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    display: "grid",
+    gap: 14,
+  },
+
+  headerCard: {
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
+    padding: 16,
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+  },
+
+  headerTop: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+
+  headerStatus: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
+  },
+
+  giornata: {
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 900,
+  },
+
+  statusPill: {
+    borderRadius: 999,
+    padding: "6px 12px",
+    background: "#f0fdf4",
+    color: "#15803d",
+    fontSize: 13,
+    fontWeight: 1000,
+  },
+
+  titleRow: {
+    marginTop: 18,
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  title: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 30,
+    fontWeight: 1000,
+    letterSpacing: "-0.04em",
+  },
+
+  subtitle: {
+    margin: "5px 0 0",
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 800,
+    lineHeight: 1.35,
+  },
+
+  countBox: {
+    display: "grid",
+    justifyItems: "center",
+    gap: 1,
+    background: "#f0fdf4",
+    color: "#15803d",
+    borderRadius: 16,
+    padding: "8px 12px",
+    fontWeight: 1000,
+    flexShrink: 0,
+  },
+
+  rulesMini: {
+    marginTop: 14,
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  rulePill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    background: "#f8fafc",
+    border: "1px solid #e5e7eb",
+    borderRadius: 999,
+    padding: "4px 9px",
+    fontSize: 12,
+    fontWeight: 1000,
+    color: "#0f172a",
+  },
+
+  warn: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 14,
+    background: "#fff7ed",
+    border: "1px solid #fed7aa",
+    color: "#c2410c",
+    fontWeight: 900,
+    fontSize: 13,
+  },
+
+  ok: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 14,
+    background: "#f0fdf4",
+    border: "1px solid #86efac",
+    color: "#15803d",
+    fontWeight: 900,
+    fontSize: 13,
+  },
+
+  err: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 14,
+    background: "#fff1f2",
+    border: "1px solid #fecaca",
+    color: "#991b1b",
+    fontWeight: 900,
+    fontSize: 13,
+  },
+
+  card: {
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
+    padding: 16,
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+  },
+
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+    gap: 10,
+  },
+
+  sectionTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 21,
+    fontWeight: 1000,
+    letterSpacing: "-0.03em",
+  },
+
+  infoBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: "50%",
+    border: "1px solid #e5e7eb",
+    background: "white",
+    color: "#64748b",
+    fontWeight: 1000,
+    cursor: "pointer",
+  },
+
+  field: {
+    position: "relative",
+    width: "100%",
+    height: 276,
+    borderRadius: 20,
+    overflow: "hidden",
+    background: "#15803d",
+    boxShadow: "0 14px 32px rgba(15,23,42,.16)",
+  },
+
+  grass: {
+    position: "absolute",
+    inset: 0,
+    background:
+      "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)",
+  },
+
+  lines: {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+  },
+
+  fieldColumn: {
+    position: "absolute",
+    top: 0,
+    height: "100%",
+    width: 1,
+  },
+
+  slotBtn: {
+    position: "absolute",
+    left: 0,
+    top: "50%",
+    border: 0,
+    background: "transparent",
+    padding: 0,
+    display: "grid",
+    justifyItems: "center",
+    gap: 4,
+    minWidth: 78,
+    fontFamily: "inherit",
+  },
+
+  plusCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    color: "white",
+    background: "rgba(255,255,255,.14)",
+    border: "2px dashed rgba(255,255,255,.72)",
+    fontSize: 28,
+    fontWeight: 1000,
+    boxShadow: "0 5px 14px rgba(15,23,42,.18)",
+  },
+
+  slotName: {
+    color: "white",
+    background: "rgba(15,23,42,.78)",
+    borderRadius: 999,
+    padding: "3px 8px",
+    fontSize: 10.5,
+    maxWidth: 92,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    fontWeight: 1000,
+    textShadow: "0 1px 2px rgba(0,0,0,.28)",
+  },
+
+  slotNameMuted: {
+    color: "white",
+    background: "rgba(15,23,42,.52)",
+    borderRadius: 999,
+    padding: "3px 8px",
+    fontSize: 9.5,
+    fontWeight: 1000,
+    textTransform: "uppercase",
+  },
+
+  btn: {
+    width: "100%",
+    padding: 14,
+    border: "none",
+    color: "white",
+    borderRadius: 14,
+    fontWeight: 1000,
+    fontFamily: "inherit",
+    cursor: "pointer",
+    marginTop: 14,
+  },
+
+  duo: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+    alignItems: "stretch",
+  },
+
+  infoCard: {
+    display: "grid",
+    gridTemplateColumns: "42px 1fr auto",
+    gap: 10,
+    alignItems: "center",
+    minHeight: 76,
+    border: "1px solid #e5e7eb",
+    background: "white",
+    borderRadius: 18,
+    padding: 12,
+    boxShadow: "0 8px 22px rgba(15,23,42,.07)",
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+
+  infoIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: "50%",
+    background: "#f0fdf4",
+    color: "#15803d",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: 1000,
+    fontSize: 18,
+  },
+
+  chev: {
+    color: "#64748b",
+    fontSize: 24,
+    lineHeight: 1,
+  },
+
+  sheetLayer: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 50,
+    display: "grid",
+    alignItems: "end",
+    justifyItems: "center",
+    pointerEvents: "none",
+  },
+
+  sheetBackdrop: {
+    position: "absolute",
+    inset: 0,
+    border: 0,
+    background: "rgba(15,23,42,.28)",
+    pointerEvents: "auto",
+  },
+
+  sheet: {
+    position: "relative",
+    zIndex: 2,
+    width: "100%",
+    maxWidth: 520,
+    height: "58vh",
+    background: "white",
+    borderRadius: "28px 28px 0 0",
+    padding: "12px 18px calc(18px + env(safe-area-inset-bottom, 0px))",
+    boxShadow: "0 -20px 46px rgba(15,23,42,.22)",
+    display: "grid",
+    gridTemplateRows: "auto auto auto auto 1fr",
+    gap: 12,
+    pointerEvents: "auto",
+  },
+
+  sheetHandle: {
+    width: 52,
+    height: 5,
+    borderRadius: 999,
+    background: "#d1d5db",
+    justifySelf: "center",
+  },
+
+  sheetHead: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+
+  sheetTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 24,
+    fontWeight: 1000,
+    letterSpacing: "-0.04em",
+  },
+
+  sheetSubtitle: {
+    margin: "4px 0 0",
+    color: "#64748b",
+    fontWeight: 800,
+    fontSize: 13,
+  },
+
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: "50%",
+    border: "1px solid #e5e7eb",
+    background: "#f8fafc",
+    color: "#64748b",
+    fontSize: 24,
+    lineHeight: 1,
+    cursor: "pointer",
+  },
+
+  searchWrap: {
+    position: "relative",
+  },
+
+  searchIcon: {
+    position: "absolute",
+    left: 14,
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#94a3b8",
+    fontSize: 20,
+    pointerEvents: "none",
+  },
+
+  sheetSearch: {
+    width: "100%",
+    height: 48,
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    padding: "0 14px 0 42px",
+    fontFamily: "inherit",
+    fontSize: 15,
+    fontWeight: 800,
+    outline: "none",
+  },
+
+  clearCurrent: {
+    border: "1px solid #fecaca",
+    background: "#fff1f2",
+    color: "#dc2626",
+    borderRadius: 12,
+    padding: 10,
+    fontFamily: "inherit",
+    fontWeight: 1000,
+    cursor: "pointer",
+  },
+
+  resultList: {
+    overflowY: "auto",
+    border: "1px solid #e5e7eb",
+    borderRadius: 18,
+  },
+
+  resultRow: {
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "44px 1fr 34px",
+    alignItems: "center",
+    gap: 12,
+    minHeight: 70,
+    padding: "10px 12px",
+    border: 0,
+    borderBottom: "1px solid #f1f5f9",
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+
+  resultText: {
+    display: "grid",
+    gap: 2,
+    color: "#0f172a",
+    fontSize: 15,
+  },
+
+  addBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background: "#16a34a",
+    color: "white",
+    fontSize: 22,
+    fontWeight: 1000,
+  },
+
+  emptyResults: {
+    padding: 18,
+    color: "#64748b",
+    fontWeight: 800,
+    textAlign: "center",
+  },
 };

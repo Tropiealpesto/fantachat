@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
+import TeamBadge from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt } from "../../lib/rpc";
 
@@ -30,6 +31,21 @@ function normalizeRows(value: unknown): Row[] {
   if (Array.isArray(anyValue?.items)) return anyValue.items as Row[];
 
   return [];
+}
+
+function cleanRank(rank?: number | null, fallback?: number) {
+  if (!rank || rank >= 999) return fallback ? String(fallback) : "—";
+  return String(rank);
+}
+
+function gapText(value: number | null, prefix: string) {
+  if (value === null) return "—";
+  if (value === 0) return "pari";
+  return `${prefix}${fmt(Math.abs(value))} pt`;
+}
+
+function roleValue(v?: number | null) {
+  return fmt(v ?? 0);
 }
 
 export default function Classifica() {
@@ -85,9 +101,63 @@ export default function Classifica() {
     };
   }, [app.ready, app.activeLeagueId, app.activeLeagueCompetitionId]);
 
-  if (!app.ready || loading) return <LoadingScreen />;
-
   const theme = app.competitionTheme;
+
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((a, b) => {
+      const ar = a.rank || 999;
+      const br = b.rank || 999;
+
+      if (ar !== br) return ar - br;
+      return (b.total_points ?? 0) - (a.total_points ?? 0);
+    });
+  }, [rows]);
+
+  const myIndex = sortedRows.findIndex((r) => r.user_id === app.userId);
+  const myRow = myIndex >= 0 ? sortedRows[myIndex] : null;
+  const leader = sortedRows[0] ?? null;
+  const above = myIndex > 0 ? sortedRows[myIndex - 1] : null;
+  const below =
+    myIndex >= 0 && myIndex < sortedRows.length - 1
+      ? sortedRows[myIndex + 1]
+      : null;
+
+  const gapFromLeader =
+    myRow && leader ? (leader.total_points ?? 0) - (myRow.total_points ?? 0) : null;
+
+  const gapFromAbove =
+    myRow && above ? (above.total_points ?? 0) - (myRow.total_points ?? 0) : null;
+
+  const gapToBelow =
+    myRow && below ? (myRow.total_points ?? 0) - (below.total_points ?? 0) : null;
+
+  const bestRole = useMemo(() => {
+    if (!rows.length) return null;
+
+    const roles = [
+      { key: "P", label: "Portieri", field: "p_total" as const },
+      { key: "D", label: "Difensori", field: "d_total" as const },
+      { key: "C", label: "Centrocampisti", field: "c_total" as const },
+      { key: "A", label: "Attaccanti", field: "a_total" as const },
+    ];
+
+    return roles
+      .map((role) => {
+        const top = [...rows].sort(
+          (a, b) => Number(b[role.field] ?? 0) - Number(a[role.field] ?? 0)
+        )[0];
+
+        return {
+          role: role.key,
+          label: role.label,
+          team: top?.team_name ?? "—",
+          value: Number(top?.[role.field] ?? 0),
+        };
+      })
+      .sort((a, b) => b.value - a.value)[0];
+  }, [rows]);
+
+  if (!app.ready || loading) return <LoadingScreen />;
 
   return (
     <>
@@ -98,14 +168,59 @@ export default function Classifica() {
       />
 
       <main style={s.container}>
-        <div style={s.head}>
+        <section style={s.head}>
           <CompetitionBadge
             name={app.competitionName}
             type={app.competitionType}
           />
-          <h1 style={s.title}>Classifica</h1>
-          <p style={s.subtitle}>Classifica aggregata da Supabase</p>
-        </div>
+
+          <div style={s.titleRow}>
+            <div>
+              <h1 style={s.title}>Classifica</h1>
+              <p style={s.subtitle}>
+                Ranking generale della competizione
+              </p>
+            </div>
+
+            {myRow && (
+              <div style={{ ...s.positionBox, background: `${theme.primary}12` }}>
+                <span style={{ color: theme.primary }}>
+                  #{cleanRank(myRow.rank, myIndex + 1)}
+                </span>
+                <small>posizione</small>
+              </div>
+            )}
+          </div>
+
+          {myRow && (
+            <div style={s.summaryGrid}>
+              <SummaryItem
+                label="Dal 1°"
+                value={
+                  gapFromLeader === 0
+                    ? "pari"
+                    : gapText(gapFromLeader, "-")
+                }
+              />
+              <SummaryItem
+                label="Da chi precede"
+                value={
+                  above
+                    ? gapText(gapFromAbove, "-")
+                    : "sei davanti"
+                }
+              />
+              <SummaryItem
+                label="Su chi segue"
+                value={
+                  below
+                    ? gapText(gapToBelow, "+")
+                    : "ultimo dato"
+                }
+              />
+            </div>
+          )}
+        </section>
 
         {!app.activeLeagueCompetitionId && (
           <div style={s.err}>
@@ -115,54 +230,122 @@ export default function Classifica() {
 
         {err && <div style={s.err}>Errore: {err}</div>}
 
-        <div style={s.table}>
-          <div style={s.tableHeader}>
-            <span>#</span>
-            <span>Squadra</span>
-            <span>Tot</span>
-            <span>P</span>
-            <span>D</span>
-            <span>C</span>
-            <span>A</span>
+        <section style={s.card}>
+          <div style={s.sectionHeader}>
+            <h2 style={s.sectionTitle}>Generale</h2>
+
+            <span style={s.smallHint}>
+              {rows.length} squadre
+            </span>
           </div>
 
-          {rows.map((r, index) => {
-            const isMine = r.user_id === app.userId;
+          <div style={s.leaderboard}>
+            {sortedRows.map((r, index) => {
+              const isMine = r.user_id === app.userId;
+              const podium = index < 3;
 
-            return (
-              <div
-                key={`${r.user_id ?? "user"}-${r.rank ?? index}-${index}`}
-                style={{
-                  ...s.row,
-                  borderLeft: `4px solid ${isMine ? theme.primary : "transparent"}`,
-                  background: isMine ? `${theme.primary}10` : "white",
-                }}
-              >
-                <b style={{ color: isMine ? theme.primary : "#111827" }}>
-                  #{r.rank || index + 1}
-                </b>
+              return (
+                <article
+                  key={`${r.user_id ?? "user"}-${r.rank ?? index}-${index}`}
+                  style={{
+                    ...s.row,
+                    background: isMine ? `${theme.primary}10` : "white",
+                    borderColor: isMine
+                      ? `${theme.primary}55`
+                      : podium
+                        ? "#fde68a"
+                        : "#e5e7eb",
+                    boxShadow: isMine
+                      ? `0 10px 26px ${theme.primary}18`
+                      : "0 4px 14px rgba(15,23,42,.04)",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...s.rank,
+                      color: isMine
+                        ? theme.primary
+                        : podium
+                          ? "#b45309"
+                          : "#64748b",
+                      background: isMine
+                        ? `${theme.primary}12`
+                        : podium
+                          ? "#fef3c7"
+                          : "#f8fafc",
+                    }}
+                  >
+                    {cleanRank(r.rank, index + 1)}
+                  </div>
 
-                <span style={s.teamName}>
-                  {r.team_name}
-                  {isMine && <small style={s.you}>Tu</small>}
-                </span>
+                  <TeamBadge name={r.team_name} size={42} />
 
-                <strong style={{ color: isMine ? theme.primary : "#111827" }}>
-                  {fmt(r.total_points)}
-                </strong>
+                  <div style={s.teamBlock}>
+                    <div style={s.teamTop}>
+                      <span
+                        style={{
+                          ...s.teamName,
+                          color: isMine ? theme.primary : "#0f172a",
+                        }}
+                      >
+                        {r.team_name}
+                      </span>
 
-                <small>{fmt(r.p_total)}</small>
-                <small>{fmt(r.d_total)}</small>
-                <small>{fmt(r.c_total)}</small>
-                <small>{fmt(r.a_total)}</small>
+                      {isMine && (
+                        <span
+                          style={{
+                            ...s.you,
+                            background: theme.primary,
+                          }}
+                        >
+                          TU
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={s.roleLine}>
+                      <RoleStat label="P" value={r.p_total} />
+                      <RoleStat label="D" value={r.d_total} />
+                      <RoleStat label="C" value={r.c_total} />
+                      <RoleStat label="A" value={r.a_total} />
+                    </div>
+                  </div>
+
+                  <div style={s.totalBox}>
+                    <strong
+                      style={{
+                        color: isMine ? theme.primary : "#0f172a",
+                      }}
+                    >
+                      {fmt(r.total_points)}
+                    </strong>
+                    <small>pt</small>
+                  </div>
+                </article>
+              );
+            })}
+
+            {rows.length === 0 && !err && (
+              <div style={s.empty}>
+                Nessun dato classifica disponibile.
               </div>
-            );
-          })}
+            )}
+          </div>
+        </section>
 
-          {rows.length === 0 && !err && (
-            <div style={s.empty}>Nessun dato classifica disponibile.</div>
-          )}
-        </div>
+        {bestRole && (
+          <section style={s.trendCard}>
+            <div style={s.trendIcon}>↗</div>
+
+            <div style={{ minWidth: 0 }}>
+              <h3 style={s.trendTitle}>Insight competizione</h3>
+              <p style={s.trendText}>
+                Miglior reparto: <b>{bestRole.label}</b> di{" "}
+                <b>{bestRole.team}</b> con {fmt(bestRole.value)} punti.
+              </p>
+            </div>
+          </section>
+        )}
       </main>
 
       <BottomNav />
@@ -170,83 +353,263 @@ export default function Classifica() {
   );
 }
 
+function SummaryItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={s.summaryItem}>
+      <small>{label}</small>
+      <b>{value}</b>
+    </div>
+  );
+}
+
+function RoleStat({ label, value }: { label: string; value?: number | null }) {
+  return (
+    <span style={s.roleStat}>
+      <b>{label}</b>
+      {roleValue(value)}
+    </span>
+  );
+}
+
 const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "16px 14px 100px",
+    padding: "16px 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    display: "grid",
+    gap: 14,
   },
+
   head: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 22,
+    padding: 18,
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
   },
+
+  titleRow: {
+    marginTop: 20,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 14,
+  },
+
   title: {
-    margin: "12px 0 4px",
-    fontSize: 24,
-    fontWeight: 900,
-    color: "#111827",
-  },
-  subtitle: {
     margin: 0,
-    color: "#6b7280",
-    fontWeight: 700,
+    fontSize: 34,
+    lineHeight: 1.05,
+    fontWeight: 1000,
+    letterSpacing: "-0.05em",
+    color: "#0f172a",
   },
-  table: {
+
+  subtitle: {
+    margin: "5px 0 0",
+    color: "#64748b",
+    fontWeight: 800,
+    fontSize: 14,
+  },
+
+  positionBox: {
+    minWidth: 86,
+    borderRadius: 18,
+    padding: "10px 12px",
+    display: "grid",
+    justifyItems: "center",
+    gap: 2,
+    flexShrink: 0,
+  },
+
+  summaryGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 9,
+    marginTop: 16,
+  },
+
+  summaryItem: {
+    background: "#f8fafc",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: "10px 8px",
+    display: "grid",
+    gap: 4,
+    textAlign: "center",
+  },
+
+  card: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    overflow: "hidden",
-    marginTop: 14,
+    borderRadius: 22,
+    padding: 16,
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
   },
-  tableHeader: {
+
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+
+  sectionTitle: {
+    margin: 0,
+    fontSize: 22,
+    fontWeight: 1000,
+    letterSpacing: "-0.04em",
+    color: "#0f172a",
+  },
+
+  smallHint: {
+    background: "#f1f5f9",
+    color: "#64748b",
+    borderRadius: 999,
+    padding: "6px 10px",
+    fontSize: 12,
+    fontWeight: 1000,
+  },
+
+  leaderboard: {
     display: "grid",
-    gridTemplateColumns: "42px 1fr 54px 34px 34px 34px 34px",
-    gap: 6,
-    padding: "10px 12px",
-    background: "#f9fafb",
-    borderBottom: "1px solid #e5e7eb",
-    color: "#6b7280",
-    fontSize: 10,
-    fontWeight: 900,
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
+    gap: 9,
   },
+
   row: {
     display: "grid",
-    gridTemplateColumns: "42px 1fr 54px 34px 34px 34px 34px",
-    gap: 6,
+    gridTemplateColumns: "38px 42px 1fr auto",
+    gap: 10,
     alignItems: "center",
+    border: "1px solid #e5e7eb",
+    borderRadius: 18,
     padding: 12,
-    borderBottom: "1px solid #f3f4f6",
-    fontSize: 13,
   },
+
+  rank: {
+    width: 38,
+    height: 38,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: 1000,
+    fontSize: 15,
+    flexShrink: 0,
+  },
+
+  teamBlock: {
+    minWidth: 0,
+    display: "grid",
+    gap: 6,
+  },
+
+  teamTop: {
+    display: "flex",
+    alignItems: "center",
+    gap: 7,
+    minWidth: 0,
+  },
+
   teamName: {
     minWidth: 0,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    fontWeight: 800,
-    color: "#111827",
+    fontWeight: 1000,
+    fontSize: 16,
+    letterSpacing: "-0.02em",
   },
+
   you: {
-    marginLeft: 6,
+    color: "white",
+    borderRadius: 7,
+    padding: "2px 6px",
     fontSize: 10,
-    color: "#16a34a",
+    fontWeight: 1000,
+    flexShrink: 0,
+  },
+
+  roleLine: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 5,
+  },
+
+  roleStat: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    background: "#f8fafc",
+    border: "1px solid #e5e7eb",
+    borderRadius: 999,
+    padding: "4px 7px",
+    color: "#64748b",
+    fontSize: 11,
     fontWeight: 900,
   },
-  empty: {
-    padding: 16,
-    color: "#6b7280",
-    fontWeight: 800,
+
+  totalBox: {
+    display: "grid",
+    justifyItems: "end",
+    gap: 0,
+    minWidth: 52,
   },
+
+  empty: {
+    padding: 18,
+    color: "#64748b",
+    fontWeight: 900,
+    textAlign: "center",
+    background: "#f8fafc",
+    borderRadius: 16,
+  },
+
+  trendCard: {
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
+    padding: 16,
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    display: "grid",
+    gridTemplateColumns: "46px 1fr",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  trendIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: "50%",
+    background: "#f0fdf4",
+    color: "#15803d",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: 1000,
+    fontSize: 22,
+  },
+
+  trendTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 18,
+    fontWeight: 1000,
+    letterSpacing: "-0.03em",
+  },
+
+  trendText: {
+    margin: "4px 0 0",
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 800,
+    lineHeight: 1.4,
+  },
+
   err: {
     background: "#fff1f2",
     color: "#991b1b",
     padding: 12,
     borderRadius: 12,
-    marginTop: 12,
     fontWeight: 800,
   },
 };
