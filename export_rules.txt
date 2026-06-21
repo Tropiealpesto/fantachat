@@ -1,28 +1,29 @@
+
+
+===== app\admin\regole\page.tsx =====
+
+import { redirect } from "next/navigation";
+export default function Page(){ redirect("/regole"); }
+
+===== app\admin\voti\page.tsx =====
+
+"use client";
+import { useEffect, useState } from "react"; import AppBar from "../../components/AppBar"; import BottomNav from "../../components/BottomNav"; import CompetitionBadge from "../../components/CompetitionBadge"; import { useRequireLeagueAdmin } from "../../hooks/useRequireApp"; import { supabase } from "../../../lib/supabaseClient"; import { signedFmt } from "../../../lib/rpc";
+type Row={player_id:string;player_name:string;role:string;team_name:string|null;picked_count:number;points:number|null};
+export default function AdminVoti(){const app=useRequireLeagueAdmin();const[rows,setRows]=useState<Row[]>([]);const[votes,setVotes]=useState<Record<string,string>>({});const[msg,setMsg]=useState<string|null>(null);const[err,setErr]=useState<string|null>(null);useEffect(()=>{if(!app.activeLeagueCompetitionId)return;supabase.rpc("get_admin_picked_players",{p_league_competition_id:app.activeLeagueCompetitionId}).then(({data,error})=>{if(error)setErr(error.message);const list=(data??[]) as Row[];setRows(list);const init:Record<string,string>={};list.forEach(r=>{init[r.player_id]=r.points!=null?String(r.points):""});setVotes(init);});},[app.activeLeagueCompetitionId]);async function save(){const items=Object.entries(votes).filter(([,v])=>v.trim()).map(([real_player_id,v])=>({real_player_id,points:Number(v.replace(",","."))}));const{error}=await supabase.rpc("admin_upsert_manual_scores",{p_league_competition_id:app.activeLeagueCompetitionId,p_items:items});if(error)return setErr(error.message);setMsg("Voti salvati e classifiche aggiornate ✅");}return <><AppBar league={app.leagueName} team={`${app.teamName} · ADMIN`} onMenuOpen={app.openDrawer}/><main style={s.container}><div style={s.card}><CompetitionBadge name={app.competitionName} type={app.competitionType}/><h1>Voti competizione</h1><p>Per il modello scalabile il superadmin dovrebbe alimentare player_votes globali. Questa pagina resta per correzioni admin.</p><button onClick={save} style={s.btn}>Salva voti</button>{msg&&<div style={s.ok}>{msg}</div>}{err&&<div style={s.err}>{err}</div>}</div>{rows.map(r=><div key={r.player_id} style={s.row}><div><b>{r.player_name}</b><small>{r.role} · {r.team_name} · scelto x{r.picked_count} · attuale {signedFmt(r.points)}</small></div><input value={votes[r.player_id]??""} onChange={e=>setVotes(p=>({...p,[r.player_id]:e.target.value}))} style={s.vote}/></div>)}</main><BottomNav/></>}
+const s:Record<string,React.CSSProperties>={container:{maxWidth:520,margin:"0 auto",padding:"16px 14px 100px",display:"grid",gap:10},card:{background:"white",border:"1px solid #e5e7eb",borderRadius:18,padding:16},btn:{padding:13,border:0,borderRadius:12,background:"#16a34a",color:"white",fontWeight:900,width:"100%"},row:{background:"white",border:"1px solid #e5e7eb",borderRadius:14,padding:12,display:"grid",gridTemplateColumns:"1fr 90px",gap:10,alignItems:"center"},vote:{padding:10,borderRadius:10,border:"1px solid #e5e7eb"},ok:{color:"#15803d",fontWeight:900},err:{color:"#b85c0a",fontWeight:900}};
+
+
+===== app\regole\page.tsx =====
+
 "use client";
 
-import { useEffect, useState } from "react";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { useApp } from "../components/AppContext";
-import { supabase } from "../../lib/supabaseClient";
 
 export default function RegolePage() {
   const app = useApp();
-  const [ruleset, setRuleset] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!app.activeLeagueCompetitionId) return;
-    let off = false;
-    supabase
-      .from("league_competitions")
-      .select("scoring_ruleset")
-      .eq("id", app.activeLeagueCompetitionId)
-      .maybeSingle()
-      .then(({ data }) => { if (!off) setRuleset((data as any)?.scoring_ruleset ?? null); });
-    return () => { off = true; };
-  }, [app.activeLeagueCompetitionId]);
-
-  const isPro = ruleset === "pro";
 
   return (
     <>
@@ -35,10 +36,7 @@ export default function RegolePage() {
       <main style={s.container}>
         <section style={s.hero}>
           <div style={s.eyebrow}>FantaChat</div>
-          <h1 style={s.title}>
-            Regole competizioni
-            {isPro && <span style={s.proPill}>PRO</span>}
-          </h1>
+          <h1 style={s.title}>Regole competizioni</h1>
           <p style={s.subtitle}>
             Regole principali per formazione, capitani, Top squadre e punteggi.
           </p>
@@ -214,40 +212,6 @@ export default function RegolePage() {
             diversa indicazione della competizione.
           </p>
         </RuleCard>
-
-        {isPro && (
-          <section style={{ ...s.card, borderTop: "3px solid #ea580c" }}>
-            <h2 style={s.cardTitle}>
-              In più nel Pro <span style={s.proPillSmall}>PRO</span>
-            </h2>
-            <div style={s.text}>
-              <p>
-                Le competizioni Pro aggiungono bonus dalle statistiche avanzate,
-                oltre a <strong>tutti</strong> i punteggi del Classico.
-              </p>
-
-              <h3 style={s.subTitle}>Bonus avanzati</h3>
-
-              <ul style={s.list}>
-                <li>Expected Goals (xG): +0,5 per ogni xG</li>
-                <li>Expected Assists (xA): +1 per ogni xA</li>
-              </ul>
-
-              <h3 style={s.subTitle}>Note</h3>
-
-              <p>
-                xG e xA misurano la qualità delle occasioni create e degli assist
-                attesi: premiano la prestazione anche quando il gol o l’assist non
-                arriva.
-              </p>
-
-              <p>
-                I valori arrivano dai dati ufficiali della competizione e si
-                sommano ai punteggi del Classico.
-              </p>
-            </div>
-          </section>
-        )}
       </main>
 
       <BottomNav />
@@ -294,26 +258,6 @@ const s: Record<string, React.CSSProperties> = {
     lineHeight: 1.08,
     fontWeight: 1000,
   },
-  proPill: {
-    fontSize: 13,
-    fontWeight: 1000,
-    color: "white",
-    background: "#ea580c",
-    borderRadius: 8,
-    padding: "2px 9px",
-    marginLeft: 10,
-    verticalAlign: "middle",
-  },
-  proPillSmall: {
-    fontSize: 11,
-    fontWeight: 1000,
-    color: "white",
-    background: "#ea580c",
-    borderRadius: 7,
-    padding: "2px 7px",
-    marginLeft: 6,
-    verticalAlign: "middle",
-  },
   subtitle: {
     margin: 0,
     color: "rgba(255,255,255,0.78)",
@@ -354,3 +298,10 @@ const s: Record<string, React.CSSProperties> = {
     gap: 6,
   },
 };
+
+===== app\superadmin\competizioni\[competitionId]\voti\page.tsx =====
+
+"use client";
+import { useParams } from "next/navigation"; import AppBar from "../../../../components/AppBar"; import BottomNav from "../../../../components/BottomNav"; import { useRequireSuperAdmin } from "../../../../hooks/useRequireApp";
+export default function Voti(){const app=useRequireSuperAdmin();const p=useParams();return <><AppBar league="FantaChat" team="SUPERADMIN" onMenuOpen={app.openDrawer}/><main style={s.container}><div style={s.card}><h1>Voti giocatori globali</h1><p>Competition ID: {String(p.competitionId)}</p><p>TODO UI: usare RPC <b>upsert_player_vote</b> e poi <b>recalculate_all_leagues_for_competition_matchday</b>.</p></div></main><BottomNav/></>}
+const s={container:{maxWidth:520,margin:"0 auto",padding:"16px 14px 100px"},card:{background:"white",border:"1px solid #e5e7eb",borderRadius:18,padding:16}} as const;
