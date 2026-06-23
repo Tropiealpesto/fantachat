@@ -767,10 +767,13 @@ export default function Home() {
                   <div key={g.role} style={s.compactPitchRow}>
                     {g.items.map((p, i) => (
                       <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                        <RoleDot role={p.role} size={38} />
+                        <RoleDot role={p.role} size={36} />
 
                         <span style={s.compactPlayerName}>
-                          {p.role === "P" ? p.team || p.name : shortName(p.name)}
+                          {p.role === "P"
+                            ? p.team || p.name
+                            : (p.name || "").trim().split(" ")[0] ||
+                              shortName(p.name)}
                         </span>
                       </div>
                     ))}
@@ -1157,7 +1160,7 @@ const s: Record<string, React.CSSProperties> = {
   // CAMPO 3D LEGGERO: cornice che ritaglia, dentro un piano inclinato
   compactPitch: {
     position: "relative",
-    height: 210,
+    height: 256,
     overflow: "hidden",
     borderRadius: 18,
     border: "4px solid #6dbf70",
@@ -1174,8 +1177,8 @@ const s: Record<string, React.CSSProperties> = {
     bottom: 0,
     background:
       "repeating-linear-gradient(180deg, #57b25c 0px, #57b25c 17px, #4ea752 17px, #4ea752 34px)",
-    transform: "perspective(640px) rotateX(20deg)",
-    transformOrigin: "center 55%",
+    transform: "perspective(600px) rotateX(23deg)",
+    transformOrigin: "center 50%",
   },
 
   // strato dei giocatori, sopra al piano (restano dritti)
@@ -1187,7 +1190,7 @@ const s: Record<string, React.CSSProperties> = {
     bottom: 0,
     display: "grid",
     alignContent: "space-around",
-    padding: "16px 16px",
+    padding: "14px 14px",
     zIndex: 2,
   },
 
@@ -1229,7 +1232,7 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   compactPlayerName: {
-    maxWidth: 72,
+    maxWidth: 96,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
