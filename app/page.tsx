@@ -1160,12 +1160,12 @@ const s: Record<string, React.CSSProperties> = {
   // CAMPO 3D LEGGERO: cornice che ritaglia, dentro un piano inclinato
   compactPitch: {
     position: "relative",
-    height: 256,
+    height: 250,
     overflow: "hidden",
     borderRadius: 18,
-    border: "4px solid #6dbf70",
-    background: "#49a64f",
-    boxShadow: "inset 0 0 0 2px rgba(255,255,255,.28), 0 14px 28px rgba(11,58,28,.26)",
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    boxShadow: "0 10px 24px rgba(15,23,42,.08)",
   },
 
   // il piano verde che si inclina in prospettiva (effetto 3D)
@@ -1176,9 +1176,8 @@ const s: Record<string, React.CSSProperties> = {
     top: 0,
     bottom: 0,
     background:
-      "repeating-linear-gradient(180deg, #57b25c 0px, #57b25c 17px, #4ea752 17px, #4ea752 34px)",
-    transform: "perspective(600px) rotateX(23deg)",
-    transformOrigin: "center 50%",
+      "repeating-linear-gradient(180deg, #57b25c 0px, #57b25c 18px, #4ea752 18px, #4ea752 36px)",
+    clipPath: "polygon(15% 1%, 85% 1%, 99% 99%, 1% 99%)",
   },
 
   // strato dei giocatori, sopra al piano (restano dritti)
@@ -1207,10 +1206,10 @@ const s: Record<string, React.CSSProperties> = {
     position: "absolute",
     left: "50%",
     top: "50%",
-    width: 70,
-    height: 70,
-    marginLeft: -35,
-    marginTop: -35,
+    width: 84,
+    height: 40,
+    marginLeft: -42,
+    marginTop: -20,
     borderRadius: "50%",
     border: "2px solid rgba(255,255,255,.42)",
   },
