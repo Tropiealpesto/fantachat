@@ -121,9 +121,9 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
         background: meta.bg,
         color: meta.fg,
         fontSize: Math.max(11, size * 0.38),
-        fontWeight: 1000,
-        border: "2px solid rgba(255,255,255,.88)",
-        boxShadow: "0 4px 10px rgba(15,23,42,.14)",
+        fontWeight: 850,
+        border: "1px solid rgba(255,255,255,.9)",
+        boxShadow: "0 3px 8px rgba(15,23,42,.10)",
         flexShrink: 0,
       }}
     >
@@ -663,7 +663,7 @@ export default function Home() {
                 name={app.teamName}
                 primary={myColors.primary}
                 secondary={myColors.secondary}
-                size={54}
+                size={50}
               />
             </span>
 
@@ -787,7 +787,7 @@ export default function Home() {
                   <div key={g.role} style={s.compactPitchRow}>
                     {g.items.map((p, i) => (
                       <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                        <RoleDot role={p.role} size={28} />
+                        <RoleDot role={p.role} size={25} />
 
                         <span style={s.compactPlayerName}>
                           {p.role === "P"
@@ -961,8 +961,8 @@ const s: Record<string, React.CSSProperties> = {
   // hero più compatto e card "Giornata" non più coperta
   hero: {
     color: "white",
-    padding: "22px 16px 42px",
-    marginBottom: -18,
+    padding: "18px 16px 38px",
+    marginBottom: -16,
     position: "relative",
     overflow: "hidden",
   },
@@ -975,46 +975,46 @@ const s: Record<string, React.CSSProperties> = {
   heroRow: {
     display: "flex",
     alignItems: "center",
-    gap: 15,
-    marginTop: 18,
+    gap: 13,
+    marginTop: 16,
   },
 
   badgeRing: {
     borderRadius: "50%",
-    padding: 4,
+    padding: 3,
     border: "2px solid rgba(255,255,255,.88)",
     display: "grid",
     placeItems: "center",
     flexShrink: 0,
-    boxShadow: "0 8px 20px rgba(0,0,0,.16)",
+    boxShadow: "0 8px 18px rgba(0,0,0,.14)",
   },
 
   hello: {
     opacity: 0.86,
-    fontWeight: 900,
-    fontSize: 14,
+    fontWeight: 700,
+    fontSize: 12,
   },
 
   team: {
-    fontSize: 30,
+    fontSize: 26,
     lineHeight: 1.05,
     margin: "4px 0 0",
-    fontWeight: 1000,
-    letterSpacing: "-0.04em",
+    fontWeight: 900,
+    letterSpacing: "-0.03em",
   },
 
   kpis: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 12,
-    marginTop: 20,
+    gap: 10,
+    marginTop: 18,
   },
 
   kpi: {
     background: "rgba(255,255,255,.18)",
     border: "1px solid rgba(255,255,255,.26)",
     borderRadius: 18,
-    padding: "13px 7px",
+    padding: "11px 7px",
     display: "grid",
     gap: 4,
     textAlign: "center",
@@ -1023,15 +1023,15 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   kpiLabel: {
-    fontSize: 10.5,
-    fontWeight: 800,
+    fontSize: 9.5,
+    fontWeight: 700,
     opacity: 0.9,
     textTransform: "uppercase",
     letterSpacing: ".02em",
   },
 
   kpiValue: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: 900,
     lineHeight: 1,
   },
@@ -1039,35 +1039,35 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "0 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    padding: "0 14px calc(72px + env(safe-area-inset-bottom, 0px) + 14px)",
     display: "grid",
-    gap: 12,
+    gap: 13,
     background: "#f4f7f4",
   },
 
   card: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 20,
+    padding: 14,
+    boxShadow: "0 8px 20px rgba(15,23,42,.06)",
   },
 
   matchdayCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 20,
+    padding: 14,
+    boxShadow: "0 8px 20px rgba(15,23,42,.06)",
     display: "grid",
-    gridTemplateColumns: "46px 1fr auto",
-    gap: 12,
+    gridTemplateColumns: "40px 1fr auto",
+    gap: 10,
     alignItems: "center",
   },
 
   matchdayIcon: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: "50%",
     background: "linear-gradient(180deg,#eaf7ee,#dff2e5)",
     color: "#15803d",
@@ -1079,24 +1079,24 @@ const s: Record<string, React.CSSProperties> = {
 
   label: {
     color: "#64748b",
-    fontSize: 11,
-    fontWeight: 1000,
+    fontSize: 9.5,
+    fontWeight: 800,
     textTransform: "uppercase",
     letterSpacing: ".02em",
   },
 
   matchday: {
-    fontSize: 32,
-    fontWeight: 1000,
+    fontSize: 26,
+    fontWeight: 900,
     lineHeight: 1,
     color: "#0f172a",
   },
 
   status: {
     borderRadius: 999,
-    padding: "6px 13px",
-    fontWeight: 1000,
-    fontSize: 13,
+    padding: "5px 11px",
+    fontWeight: 800,
+    fontSize: 12,
   },
 
   primaryBtn: {
@@ -1104,13 +1104,13 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     border: 0,
     color: "white",
-    borderRadius: 14,
-    padding: 13,
+    borderRadius: 13,
+    padding: 11,
     fontWeight: 800,
-    fontSize: 14,
+    fontSize: 13,
     cursor: "pointer",
     marginTop: 2,
-    boxShadow: "0 8px 18px rgba(15,23,42,.10), inset 0 -1px 0 rgba(0,0,0,.08)",
+    boxShadow: "0 7px 16px rgba(15,23,42,.10), inset 0 -1px 0 rgba(0,0,0,.08)",
   },
 
   sectionHeader: {
@@ -1120,23 +1120,23 @@ const s: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
     gap: 8,
     rowGap: 4,
-    marginBottom: 10,
+    marginBottom: 9,
   },
 
   sectionTitle: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 18,
-    fontWeight: 1000,
-    letterSpacing: "-0.03em",
+    fontSize: 15,
+    fontWeight: 800,
+    letterSpacing: "-0.01em",
   },
 
   sectionTitleSm: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 15,
-    fontWeight: 1000,
-    letterSpacing: "-0.02em",
+    fontSize: 14.5,
+    fontWeight: 800,
+    letterSpacing: "-0.01em",
     lineHeight: 1.12,
   },
 
@@ -1144,45 +1144,45 @@ const s: Record<string, React.CSSProperties> = {
     border: 0,
     background: "transparent",
     color: "#15803d",
-    fontWeight: 1000,
-    fontSize: 12.5,
+    fontWeight: 800,
+    fontSize: 11.5,
     cursor: "pointer",
     whiteSpace: "nowrap",
   },
 
   standingsBox: {
     display: "grid",
-    gap: 6,
+    gap: 5,
   },
 
   srow: {
     display: "grid",
-    gridTemplateColumns: "30px 30px 1fr auto",
-    gap: 9,
+    gridTemplateColumns: "28px 28px 1fr auto",
+    gap: 8,
     alignItems: "center",
-    padding: "8px 9px",
+    padding: "7px 8px",
     borderRadius: 14,
   },
 
   srank: {
-    fontWeight: 1000,
+    fontWeight: 800,
     color: "#64748b",
-    fontSize: 14,
+    fontSize: 12.5,
     textAlign: "center",
   },
 
   sname: {
-    fontWeight: 1000,
-    fontSize: 14,
+    fontWeight: 800,
+    fontSize: 12.5,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
 
   spts: {
-    fontWeight: 1000,
+    fontWeight: 800,
     color: "#0f172a",
-    fontSize: 13.5,
+    fontSize: 12.5,
   },
 
   dots: {
@@ -1192,15 +1192,14 @@ const s: Record<string, React.CSSProperties> = {
     padding: "2px 0",
   },
 
-  // CAMPO 3D: cornice bianca + prato tagliato a trapezio
   compactPitch: {
     position: "relative",
-    height: 228,
+    height: 190,
     overflow: "hidden",
-    borderRadius: 18,
+    borderRadius: 16,
     border: "1px solid #e5e7eb",
-    background: "#ffffff",
-    boxShadow: "0 10px 24px rgba(15,23,42,.08)",
+    background: "#eef7ef",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.35)",
   },
 
   pitchPlane: {
@@ -1210,8 +1209,7 @@ const s: Record<string, React.CSSProperties> = {
     top: 0,
     bottom: 0,
     background:
-      "repeating-linear-gradient(180deg, #57b25c 0px, #57b25c 18px, #4ea752 18px, #4ea752 36px)",
-    clipPath: "polygon(7% 1%, 93% 1%, 99% 99%, 1% 99%)",
+      "repeating-linear-gradient(180deg, #4fab5f 0px, #4fab5f 22px, #489f58 22px, #489f58 44px)",
   },
 
   pitchPlayers: {
@@ -1222,7 +1220,7 @@ const s: Record<string, React.CSSProperties> = {
     bottom: 0,
     display: "grid",
     alignContent: "space-around",
-    padding: "12px 12px",
+    padding: "12px 10px",
     zIndex: 2,
   },
 
@@ -1231,20 +1229,20 @@ const s: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     top: "50%",
-    height: 2,
-    background: "rgba(255,255,255,.42)",
+    height: 1,
+    background: "rgba(255,255,255,.36)",
   },
 
   pitchCircleSmall: {
     position: "absolute",
     left: "50%",
     top: "50%",
-    width: 74,
-    height: 34,
-    marginLeft: -37,
-    marginTop: -17,
+    width: 68,
+    height: 28,
+    marginLeft: -34,
+    marginTop: -14,
     borderRadius: "50%",
-    border: "2px solid rgba(255,255,255,.42)",
+    border: "1px solid rgba(255,255,255,.38)",
   },
 
   compactPitchRow: {
@@ -1252,15 +1250,15 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 2,
     display: "flex",
     justifyContent: "center",
-    gap: 13,
+    gap: 10,
     alignItems: "center",
   },
 
   compactPlayer: {
     display: "grid",
     justifyItems: "center",
-    gap: 3,
-    minWidth: 48,
+    gap: 2,
+    minWidth: 42,
   },
 
   compactPlayerName: {
@@ -1269,18 +1267,18 @@ const s: Record<string, React.CSSProperties> = {
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     color: "white",
-    fontWeight: 1000,
-    fontSize: 10,
-    textShadow: "0 1px 3px rgba(0,0,0,.6)",
+    fontWeight: 850,
+    fontSize: 9,
+    textShadow: "0 1px 3px rgba(0,0,0,.45)",
   },
 
   modulePill: {
     background: "#dcfce7",
     color: "#15803d",
     borderRadius: 999,
-    padding: "5px 10px",
-    fontWeight: 1000,
-    fontSize: 11.5,
+    padding: "4px 9px",
+    fontWeight: 800,
+    fontSize: 10.5,
     whiteSpace: "nowrap",
     flexShrink: 0,
   },
@@ -1290,40 +1288,40 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     border: "1px solid #d1d5db",
     background: "white",
-    borderRadius: 14,
-    padding: 10,
+    borderRadius: 13,
+    padding: 9,
     color: "#15803d",
     fontWeight: 800,
-    fontSize: 13.5,
+    fontSize: 12.5,
     cursor: "pointer",
   },
 
   roleTabs: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 7,
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 9,
   },
 
   roleTab: {
     border: 0,
     borderRadius: 999,
-    padding: "7px 0",
-    fontWeight: 1000,
-    fontSize: 13,
+    padding: "6px 0",
+    fontWeight: 850,
+    fontSize: 12,
     cursor: "pointer",
   },
 
   topEmpty: {
     border: "1px dashed #cbd5e1",
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 15,
+    padding: 13,
     display: "grid",
     gap: 5,
     color: "#64748b",
     textAlign: "center",
-    fontWeight: 800,
-    fontSize: 12.5,
+    fontWeight: 700,
+    fontSize: 12,
   },
 
   topGrid: {
@@ -1334,25 +1332,26 @@ const s: Record<string, React.CSSProperties> = {
 
   topPlayerCard: {
     display: "grid",
-    gridTemplateColumns: "24px 32px 1fr auto",
+    gridTemplateColumns: "20px 30px 1fr auto",
     alignItems: "center",
     gap: 8,
-    border: "1px solid #e5e7eb",
-    borderRadius: 14,
-    padding: 9,
+    border: "1px solid #eef2f7",
+    borderRadius: 13,
+    padding: 8,
+    background: "#fbfdfb",
   },
 
   topRank: {
     color: "#64748b",
-    fontWeight: 1000,
-    fontSize: 13,
+    fontWeight: 800,
+    fontSize: 12,
     textAlign: "center",
   },
 
   topName: {
     color: "#0f172a",
-    fontSize: 13,
-    fontWeight: 1000,
+    fontSize: 12.5,
+    fontWeight: 850,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -1360,42 +1359,45 @@ const s: Record<string, React.CSSProperties> = {
 
   topSub: {
     color: "#64748b",
-    fontSize: 11.5,
-    fontWeight: 800,
+    fontSize: 10.5,
+    fontWeight: 700,
   },
 
   ppUp: {
     background: "#dcfce7",
     color: "#15803d",
     borderRadius: 999,
-    padding: "4px 9px",
+    padding: "3px 8px",
+    fontSize: 12,
   },
 
   ppDown: {
     background: "#fee2e2",
     color: "#dc2626",
     borderRadius: 999,
-    padding: "4px 9px",
+    padding: "3px 8px",
+    fontSize: 12,
   },
 
   ppFlat: {
     background: "#f1f5f9",
     color: "#475569",
     borderRadius: 999,
-    padding: "4px 9px",
+    padding: "3px 8px",
+    fontSize: 12,
   },
 
   rulesRow: {
     width: "100%",
     border: "1px solid #e5e7eb",
     background: "white",
-    borderRadius: 18,
-    padding: "12px 14px",
+    borderRadius: 17,
+    padding: "11px 13px",
     display: "grid",
     gridTemplateColumns: "30px 1fr auto",
     alignItems: "center",
     gap: 10,
-    boxShadow: "0 8px 22px rgba(15,23,42,.06)",
+    boxShadow: "0 7px 18px rgba(15,23,42,.05)",
     cursor: "pointer",
     color: "#0f172a",
   },
@@ -1408,50 +1410,50 @@ const s: Record<string, React.CSSProperties> = {
     color: "#15803d",
     display: "grid",
     placeItems: "center",
-    fontWeight: 1000,
+    fontWeight: 850,
   },
 
   rulesArrow: {
     color: "#0f172a",
-    fontSize: 22,
+    fontSize: 20,
     lineHeight: 1,
   },
 
   adminCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 20,
-    padding: 14,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 18,
+    padding: 13,
+    boxShadow: "0 8px 20px rgba(15,23,42,.06)",
     display: "flex",
     alignItems: "center",
     gap: 12,
   },
 
   adminIcon: {
-    width: 44,
-    height: 44,
+    width: 38,
+    height: 38,
     borderRadius: "50%",
     background: "#f1f5f9",
     display: "grid",
     placeItems: "center",
-    fontSize: 21,
+    fontSize: 18,
     flexShrink: 0,
   },
 
   adminTitle: {
     margin: 0,
-    fontSize: 17,
+    fontSize: 14.5,
     lineHeight: 1.05,
     color: "#0f172a",
-    fontWeight: 1000,
+    fontWeight: 850,
   },
 
   adminText: {
     margin: "4px 0 0",
     color: "#64748b",
-    fontWeight: 800,
-    fontSize: 12.5,
+    fontWeight: 650,
+    fontSize: 11.5,
     lineHeight: 1.35,
   },
 
@@ -1459,25 +1461,25 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #16a34a",
     background: "white",
     color: "#15803d",
-    borderRadius: 14,
-    padding: "9px 13px",
-    fontWeight: 1000,
-    fontSize: 13.5,
+    borderRadius: 13,
+    padding: "8px 12px",
+    fontWeight: 850,
+    fontSize: 12.5,
     cursor: "pointer",
     flexShrink: 0,
   },
 
   muted: {
     color: "#6b7280",
-    fontWeight: 700,
-    fontSize: 13,
+    fontWeight: 650,
+    fontSize: 12,
     marginTop: 10,
   },
 
   emptySmall: {
     color: "#64748b",
-    fontWeight: 800,
-    fontSize: 13,
+    fontWeight: 700,
+    fontSize: 12,
     background: "#f8fafc",
     borderRadius: 16,
     padding: 14,
