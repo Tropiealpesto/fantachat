@@ -744,7 +744,15 @@ export default function Home() {
           )}
         </section>
 
-        {hasLineup && (
+        <div
+          style={{
+            display: "grid",
+            gap: 11,
+            alignItems: "start",
+            gridTemplateColumns: hasLineup ? "1fr 1fr" : "1fr",
+          }}
+        >
+          {hasLineup && (
           <section style={s.card}>
             <div style={s.sectionHeader}>
               <h2 style={s.sectionTitle}>Il tuo schieramento</h2>
@@ -852,6 +860,7 @@ export default function Home() {
             </div>
           )}
         </section>
+        </div>
 
         <button onClick={() => router.push("/regole")} style={s.rulesRow}>
           <span style={s.rulesIcon}>◎</span>
