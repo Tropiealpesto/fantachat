@@ -382,10 +382,10 @@ const s: Record<string, React.CSSProperties> = {
 
   head: {
     background: "white",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
     padding: 18,
-    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
   },
 
   titleRow: {
@@ -414,7 +414,7 @@ const s: Record<string, React.CSSProperties> = {
 
   positionBox: {
     minWidth: 86,
-    borderRadius: 8,
+    borderRadius: 18,
     padding: "10px 12px",
     display: "grid",
     justifyItems: "center",
@@ -431,8 +431,8 @@ const s: Record<string, React.CSSProperties> = {
 
   summaryItem: {
     background: "#f8fafc",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
     padding: "10px 8px",
     display: "grid",
     gap: 4,
@@ -441,10 +441,10 @@ const s: Record<string, React.CSSProperties> = {
 
   card: {
     background: "white",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
     padding: 16,
-    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
   },
 
   sectionHeader: {
@@ -466,7 +466,7 @@ const s: Record<string, React.CSSProperties> = {
   smallHint: {
     background: "#f1f5f9",
     color: "#64748b",
-    borderRadius: 8,
+    borderRadius: 999,
     padding: "6px 10px",
     fontSize: 12,
     fontWeight: 1000,
@@ -482,15 +482,15 @@ const s: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "38px 42px 1fr auto",
     gap: 10,
     alignItems: "center",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 18,
     padding: 12,
   },
 
   rank: {
     width: 38,
     height: 38,
-    borderRadius: 8,
+    borderRadius: "50%",
     display: "grid",
     placeItems: "center",
     fontWeight: 1000,
@@ -541,8 +541,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 4,
     background: "#f8fafc",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 999,
     padding: "4px 7px",
     color: "#64748b",
     fontSize: 11,
@@ -562,15 +562,15 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     textAlign: "center",
     background: "#f8fafc",
-    borderRadius: 8,
+    borderRadius: 16,
   },
 
   trendCard: {
     background: "white",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 22,
     padding: 16,
-    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
+    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
     display: "grid",
     gridTemplateColumns: "46px 1fr",
     alignItems: "center",
@@ -580,7 +580,7 @@ const s: Record<string, React.CSSProperties> = {
   trendIcon: {
     width: 46,
     height: 46,
-    borderRadius: 8,
+    borderRadius: "50%",
     background: "#f0fdf4",
     color: "#15803d",
     display: "grid",
@@ -609,7 +609,7 @@ const s: Record<string, React.CSSProperties> = {
     background: "#fff1f2",
     color: "#991b1b",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 14,
     fontWeight: 800,
   },
 };

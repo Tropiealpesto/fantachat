@@ -29,7 +29,7 @@ export const DEFAULT_THEME: CompetitionTheme = {
   hero: "linear-gradient(160deg,#14532d,#16a34a)",
   label: "Campionato",
 
-  pageBg: "#f1f5f1",
+  pageBg: "#f4f7f4",
   cardBg: "#ffffff",
   appbarBg: "rgba(255,255,255,0.88)",
   navBg: "rgba(255,255,255,0.96)",
@@ -37,7 +37,7 @@ export const DEFAULT_THEME: CompetitionTheme = {
   text: "#0f172a",
   muted: "#64748b",
   soft: "#dcfce7",
-  shadow: "0 4px 16px rgba(15,23,42,0.07)",
+  shadow: "0 10px 28px rgba(15,23,42,0.08)",
 };
 
 export const THEMES: Record<string, CompetitionTheme> = {
@@ -54,15 +54,15 @@ export const THEMES: Record<string, CompetitionTheme> = {
       "radial-gradient(circle at 90% 18%, rgba(96,165,250,0.55), transparent 23%), radial-gradient(circle at 10% 0%, rgba(200,162,74,0.10), transparent 18%), linear-gradient(160deg,#020617 0%,#07142f 44%,#123a8c 100%)",
     label: "Champions",
 
-    pageBg: "#edf3ff",
+    pageBg: "#f4f7f4",
     cardBg: "#ffffff",
     appbarBg: "rgba(255,255,255,0.88)",
     navBg: "rgba(255,255,255,0.96)",
-    border: "rgba(59,130,246,0.24)",
+    border: "#e5e7eb",
     text: "#0f172a",
     muted: "#64748b",
     soft: "#dbeafe",
-    shadow: "0 8px 28px rgba(15,23,42,0.12)",
+    shadow: "0 10px 28px rgba(15,23,42,0.08)",
   },
 
   coppe: {
@@ -76,15 +76,15 @@ export const THEMES: Record<string, CompetitionTheme> = {
       "radial-gradient(circle at 50% 0%, rgba(212,160,23,0.28), transparent 24%), radial-gradient(circle at 8% 30%, rgba(0,0,0,0.40), transparent 24%), radial-gradient(circle at 95% 18%, rgba(14,165,233,0.18), transparent 22%), linear-gradient(160deg,#ffffff 0%,#f8fafc 46%,#111827 100%)",
     label: "Coppe",
 
-    pageBg: "#f7f7f2",
+    pageBg: "#f4f7f4",
     cardBg: "#ffffff",
     appbarBg: "rgba(255,255,255,0.88)",
     navBg: "rgba(255,255,255,0.96)",
-    border: "rgba(17,24,39,0.12)",
+    border: "#e5e7eb",
     text: "#111827",
     muted: "#64748b",
     soft: "#fff7d6",
-    shadow: "0 8px 28px rgba(17,24,39,0.10)",
+    shadow: "0 10px 28px rgba(15,23,42,0.08)",
   },
 
   // Alias legacy: se nel DB trovi ancora type/slug mondiale,
@@ -100,15 +100,15 @@ export const THEMES: Record<string, CompetitionTheme> = {
       "radial-gradient(circle at 50% 0%, rgba(212,160,23,0.28), transparent 24%), radial-gradient(circle at 8% 30%, rgba(0,0,0,0.40), transparent 24%), radial-gradient(circle at 95% 18%, rgba(14,165,233,0.18), transparent 22%), linear-gradient(160deg,#ffffff 0%,#f8fafc 46%,#111827 100%)",
     label: "Coppe",
 
-    pageBg: "#f7f7f2",
+    pageBg: "#f4f7f4",
     cardBg: "#ffffff",
     appbarBg: "rgba(255,255,255,0.88)",
     navBg: "rgba(255,255,255,0.96)",
-    border: "rgba(17,24,39,0.12)",
+    border: "#e5e7eb",
     text: "#111827",
     muted: "#64748b",
     soft: "#fff7d6",
-    shadow: "0 8px 28px rgba(17,24,39,0.10)",
+    shadow: "0 10px 28px rgba(15,23,42,0.08)",
   },
 };
 

@@ -22,15 +22,15 @@ export default function CompetitionBadge(props: {
         alignItems: "center",
         gap: 7,
         width: "fit-content",
-        borderRadius: 8,
+        borderRadius: 999,
         padding: "7px 11px",
         fontSize: 12,
-        fontWeight: 1000,
+        fontWeight: 800,
         letterSpacing: 0,
         color: theme.badgeText,
         background: theme.badgeBg,
         border: `1px solid ${theme.key === "champions" ? "rgba(147,197,253,0.28)" : theme.border}`,
-        boxShadow: "0 5px 14px rgba(19,35,26,.06)",
+        boxShadow: "0 4px 12px rgba(15,23,42,.06)",
       }}
     >
       <span

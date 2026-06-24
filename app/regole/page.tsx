@@ -278,9 +278,9 @@ const s: Record<string, React.CSSProperties> = {
   hero: {
     background: "linear-gradient(160deg,#14532d,#16a34a)",
     color: "white",
-    borderRadius: 8,
+    borderRadius: 22,
     padding: 18,
-    boxShadow: "0 14px 32px rgba(19,35,26,0.16)",
+    boxShadow: "0 14px 32px rgba(15,23,42,0.14)",
   },
   eyebrow: {
     fontSize: 12,
@@ -322,10 +322,10 @@ const s: Record<string, React.CSSProperties> = {
   },
   card: {
     background: "white",
-    border: "1px solid #dbe4dd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 20,
     padding: 16,
-    boxShadow: "0 8px 20px rgba(19,35,26,.07)",
+    boxShadow: "0 8px 22px rgba(15,23,42,.07)",
   },
   cardTitle: {
     margin: "0 0 10px",

@@ -70,12 +70,12 @@ export default function Storico() {
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 10 },
-  head: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, boxShadow: "0 12px 28px rgba(19,35,26,.08)" },
+  head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 22, padding: 16, boxShadow: "0 10px 28px rgba(15,23,42,.08)" },
   h1: { fontSize: 21, fontWeight: 1000, color: "#0f172a", margin: "10px 0 1px" },
   hsub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: 0 },
   list: { display: "grid", gap: 8 },
-  card: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: "11px 12px", boxShadow: "0 6px 16px rgba(19,35,26,.05)", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "inherit", cursor: "pointer", width: "100%" },
-  tile: { width: 42, height: 42, borderRadius: 8, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 18, flexShrink: 0 },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: "11px 12px", boxShadow: "0 4px 14px rgba(15,23,42,.05)", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "inherit", cursor: "pointer", width: "100%" },
+  tile: { width: 42, height: 42, borderRadius: 14, display: "grid", placeItems: "center", fontWeight: 900, fontSize: 18, flexShrink: 0 },
   title: { fontSize: 14.5, fontWeight: 1000, color: "#0f172a" },
   meta: { display: "flex", alignItems: "center", gap: 8, marginTop: 3 },
   pill: { borderRadius: 999, padding: "2px 9px", fontSize: 10.5, fontWeight: 1000 },
@@ -83,5 +83,5 @@ const s: Record<string, React.CSSProperties> = {
   score: { fontSize: 19, fontWeight: 1000, color: "#0f172a", lineHeight: 1 },
   scoreL: { fontSize: 9.5, fontWeight: 900, color: "#94a3b8", marginTop: 2 },
   chev: { fontSize: 22, color: "#cbd5e1", fontWeight: 1000, flexShrink: 0 },
-  empty: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, color: "#64748b", fontWeight: 800 },
+  empty: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, color: "#64748b", fontWeight: 800 },
 };
