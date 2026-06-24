@@ -753,9 +753,9 @@ export default function Home() {
           }}
         >
           {hasLineup && (
-          <section style={s.card}>
+          <section style={{ ...s.card, padding: 12 }}>
             <div style={s.sectionHeader}>
-              <h2 style={s.sectionTitle}>Il tuo schieramento</h2>
+              <h2 style={s.sectionTitleSm}>Il tuo schieramento</h2>
 
               <span style={s.modulePill}>
                 {lineupGroups.map((g) => g.items.length).join("-")}
@@ -799,9 +799,9 @@ export default function Home() {
           </section>
         )}
 
-        <section style={s.card}>
+        <section style={{ ...s.card, padding: 12 }}>
           <div style={s.sectionHeader}>
-            <h2 style={s.sectionTitle}>Top giocatori</h2>
+            <h2 style={s.sectionTitleSm}>Top giocatori</h2>
 
             <button
               onClick={() => router.push("/statistiche")}
@@ -1104,7 +1104,9 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: 8,
+    rowGap: 4,
     marginBottom: 10,
   },
 
@@ -1114,6 +1116,15 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 18,
     fontWeight: 1000,
     letterSpacing: "-0.03em",
+  },
+
+  sectionTitleSm: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 15,
+    fontWeight: 1000,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.12,
   },
 
   textLink: {
@@ -1254,9 +1265,11 @@ const s: Record<string, React.CSSProperties> = {
     background: "#dcfce7",
     color: "#15803d",
     borderRadius: 999,
-    padding: "5px 11px",
+    padding: "5px 10px",
     fontWeight: 1000,
-    fontSize: 12,
+    fontSize: 11.5,
+    whiteSpace: "nowrap",
+    flexShrink: 0,
   },
 
   secondaryBtn: {
