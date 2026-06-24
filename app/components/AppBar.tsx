@@ -27,8 +27,6 @@ export default function AppBar(props: {
         </button>
 
         <div className="appbar-brand" style={{ flex: 1 }}>
-          <div className="appbar-mark" aria-hidden="true">FC</div>
-
           <div style={{ minWidth: 0 }}>
             <div className="appbar-logo">
               <span className="logo-fanta">Fanta</span>

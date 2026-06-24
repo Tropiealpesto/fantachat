@@ -181,6 +181,13 @@ function cleanRank(rank?: number | null) {
   return String(rank);
 }
 
+function homeHeroBackground() {
+  return [
+    "linear-gradient(145deg, rgba(8,83,44,.95) 0%, rgba(12,117,61,.96) 55%, rgba(20,166,87,.96) 100%)",
+    "repeating-linear-gradient(155deg, rgba(255,255,255,.055) 0 1px, transparent 1px 34px)",
+  ].join(", ");
+}
+
 export default function Home() {
   const router = useRouter();
   const app = useRequireApp(false);
@@ -517,7 +524,7 @@ export default function Home() {
           }
         />
 
-        <section style={{ ...s.hero, background: theme.hero }}>
+        <section style={{ ...s.hero, background: homeHeroBackground() }}>
           <div style={s.heroInner}>
             <CompetitionBadge
               name={app.competitionName}
@@ -643,7 +650,7 @@ export default function Home() {
         }
       />
 
-      <section style={{ ...s.hero, background: theme.hero }}>
+      <section style={{ ...s.hero, background: homeHeroBackground() }}>
         <div style={s.heroInner}>
           <CompetitionBadge
             name={app.competitionName}
@@ -685,7 +692,12 @@ export default function Home() {
         {err && <div style={s.error}>Errore: {err}</div>}
 
         <div style={s.matchdayCard}>
-          <div style={s.matchdayIcon}>▦</div>
+          <div style={s.matchdayIcon}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="15" rx="2" />
+              <path d="M8 3v4M16 3v4M4 10h16" />
+            </svg>
+          </div>
 
           <div style={{ flex: 1 }}>
             <div style={s.label}>Giornata corrente</div>
@@ -747,9 +759,9 @@ export default function Home() {
         <div
           style={{
             display: "grid",
-            gap: 11,
+            gap: 12,
             alignItems: "start",
-            gridTemplateColumns: hasLineup ? "1fr 1fr" : "1fr",
+            gridTemplateColumns: hasLineup ? "1.08fr .92fr" : "1fr",
           }}
         >
           {hasLineup && (
@@ -775,7 +787,7 @@ export default function Home() {
                   <div key={g.role} style={s.compactPitchRow}>
                     {g.items.map((p, i) => (
                       <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                        <RoleDot role={p.role} size={30} />
+                        <RoleDot role={p.role} size={28} />
 
                         <span style={s.compactPlayerName}>
                           {p.role === "P"
@@ -949,8 +961,8 @@ const s: Record<string, React.CSSProperties> = {
   // hero più compatto e card "Giornata" non più coperta
   hero: {
     color: "white",
-    padding: "18px 16px 30px",
-    marginBottom: -12,
+    padding: "22px 16px 48px",
+    marginBottom: -24,
     position: "relative",
     overflow: "hidden",
   },
@@ -963,13 +975,13 @@ const s: Record<string, React.CSSProperties> = {
   heroRow: {
     display: "flex",
     alignItems: "center",
-    gap: 13,
-    marginTop: 15,
+    gap: 15,
+    marginTop: 18,
   },
 
   badgeRing: {
     borderRadius: "50%",
-    padding: 3,
+    padding: 4,
     border: "2px solid rgba(255,255,255,.88)",
     display: "grid",
     placeItems: "center",
@@ -978,15 +990,15 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   hello: {
-    opacity: 0.82,
+    opacity: 0.86,
     fontWeight: 900,
-    fontSize: 13,
+    fontSize: 14,
   },
 
   team: {
-    fontSize: 26,
+    fontSize: 30,
     lineHeight: 1.05,
-    margin: "3px 0 0",
+    margin: "4px 0 0",
     fontWeight: 1000,
     letterSpacing: "-0.04em",
   },
@@ -994,20 +1006,20 @@ const s: Record<string, React.CSSProperties> = {
   kpis: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 9,
-    marginTop: 16,
+    gap: 12,
+    marginTop: 20,
   },
 
   kpi: {
-    background: "rgba(255,255,255,.20)",
-    border: "1px solid rgba(255,255,255,.30)",
-    borderRadius: 15,
-    padding: "12px 7px",
+    background: "rgba(255,255,255,.18)",
+    border: "1px solid rgba(255,255,255,.26)",
+    borderRadius: 8,
+    padding: "13px 7px",
     display: "grid",
     gap: 4,
     textAlign: "center",
     backdropFilter: "blur(12px)",
-    boxShadow: "0 6px 14px rgba(0,0,0,.16)",
+    boxShadow: "0 10px 22px rgba(0,0,0,.12)",
   },
 
   kpiLabel: {
@@ -1029,23 +1041,24 @@ const s: Record<string, React.CSSProperties> = {
     margin: "0 auto",
     padding: "0 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
     display: "grid",
-    gap: 11,
+    gap: 12,
+    background: "#f4f7f4",
   },
 
   card: {
     background: "white",
     border: "1px solid #dbe4dd",
     borderRadius: 8,
-    padding: 14,
-    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
+    padding: 16,
+    boxShadow: "0 10px 24px rgba(19,35,26,.07)",
   },
 
   matchdayCard: {
     background: "white",
     border: "1px solid #dbe4dd",
     borderRadius: 8,
-    padding: 14,
-    boxShadow: "0 16px 34px rgba(19,35,26,.12)",
+    padding: 16,
+    boxShadow: "0 12px 28px rgba(19,35,26,.10)",
     display: "grid",
     gridTemplateColumns: "46px 1fr auto",
     gap: 12,
@@ -1055,7 +1068,7 @@ const s: Record<string, React.CSSProperties> = {
   matchdayIcon: {
     width: 44,
     height: 44,
-    borderRadius: 8,
+    borderRadius: "50%",
     background: "linear-gradient(180deg,#eaf7ee,#dff2e5)",
     color: "#15803d",
     display: "grid",
@@ -1092,7 +1105,7 @@ const s: Record<string, React.CSSProperties> = {
     border: 0,
     color: "white",
     borderRadius: 8,
-    padding: 12,
+    padding: 13,
     fontWeight: 1000,
     fontSize: 14,
     cursor: "pointer",
@@ -1148,7 +1161,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: 9,
     alignItems: "center",
     padding: "8px 9px",
-    borderRadius: 12,
+    borderRadius: 8,
   },
 
   srank: {
@@ -1182,12 +1195,12 @@ const s: Record<string, React.CSSProperties> = {
   // CAMPO 3D: cornice bianca + prato tagliato a trapezio
   compactPitch: {
     position: "relative",
-    height: 220,
+    height: 168,
     overflow: "hidden",
     borderRadius: 8,
     border: "1px solid #dbe4dd",
     background: "#ffffff",
-    boxShadow: "0 12px 24px rgba(19,35,26,.10)",
+    boxShadow: "0 8px 18px rgba(19,35,26,.08)",
   },
 
   pitchPlane: {
@@ -1198,7 +1211,7 @@ const s: Record<string, React.CSSProperties> = {
     bottom: 0,
     background:
       "repeating-linear-gradient(180deg, #57b25c 0px, #57b25c 18px, #4ea752 18px, #4ea752 36px)",
-    clipPath: "polygon(15% 1%, 85% 1%, 99% 99%, 1% 99%)",
+    clipPath: "polygon(6% 1%, 94% 1%, 99% 99%, 1% 99%)",
   },
 
   pitchPlayers: {
@@ -1209,7 +1222,7 @@ const s: Record<string, React.CSSProperties> = {
     bottom: 0,
     display: "grid",
     alignContent: "space-around",
-    padding: "12px 12px",
+    padding: "10px 10px",
     zIndex: 2,
   },
 
@@ -1239,7 +1252,7 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 2,
     display: "flex",
     justifyContent: "center",
-    gap: 13,
+    gap: 10,
     alignItems: "center",
   },
 
@@ -1247,7 +1260,7 @@ const s: Record<string, React.CSSProperties> = {
     display: "grid",
     justifyItems: "center",
     gap: 3,
-    minWidth: 48,
+    minWidth: 42,
   },
 
   compactPlayerName: {
