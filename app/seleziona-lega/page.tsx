@@ -42,7 +42,7 @@ export default function SelezionaLega() {
   useEffect(() => {
     if (!app.ready) return;
     if (!app.userId) { router.replace("/login"); return; }
-    loadLeagues();
+    void Promise.resolve().then(loadLeagues);
   }, [app.ready, app.userId, router, loadLeagues]);
 
   async function select(id: string) {
@@ -50,7 +50,7 @@ export default function SelezionaLega() {
     const { error } = await supabase.rpc("set_active_league", { p_league_id: id });
     if (error) { setErr(error.message); return; }
     await app.refresh();
-    window.location.href = "/";
+    router.replace("/");
   }
 
   async function join() {
@@ -165,28 +165,28 @@ const s: Record<string, React.CSSProperties> = {
   accent: { width: 40, height: 3.5, borderRadius: 3, background: "linear-gradient(90deg,#15803d,#ea580c)", margin: "7px 2px 0" },
   sub: { fontSize: 13, color: "#64748b", fontWeight: 700, margin: "9px 2px 14px" },
   sec: { fontSize: 10.5, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em", margin: "18px 4px 9px" },
-  card: { width: "100%", display: "grid", gridTemplateColumns: "48px 1fr 24px", gap: 12, alignItems: "center", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 12, textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 3px 12px rgba(15,23,42,.05)", marginBottom: 9 },
+  card: { width: "100%", display: "grid", gridTemplateColumns: "48px 1fr 24px", gap: 12, alignItems: "center", background: "#fff", border: "1px solid #dbe4dd", borderRadius: 8, padding: 12, textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 18px rgba(19,35,26,.06)", marginBottom: 9 },
   cardOn: { borderColor: "#15803d", background: "#f3fbf5" },
-  crest: { width: 48, height: 48, borderRadius: 14, display: "grid", placeItems: "center", color: "#fff", fontWeight: 1000, fontSize: 14, border: "2px solid #fff", boxShadow: "0 3px 8px rgba(0,0,0,.16)" },
+  crest: { width: 48, height: 48, borderRadius: 8, display: "grid", placeItems: "center", color: "#fff", fontWeight: 1000, fontSize: 14, border: "2px solid #fff", boxShadow: "0 3px 8px rgba(0,0,0,.16)" },
   lname: { fontSize: 15, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   lmeta: { fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   pill: { display: "inline-flex", marginTop: 6, padding: "2px 8px", borderRadius: 999, color: "#15803d", background: "#dcfce7", fontSize: 9.5, fontWeight: 1000, textTransform: "uppercase" },
   chev: { color: "#cbd5e1", display: "grid", placeItems: "center" },
   check: { width: 28, height: 28, borderRadius: "50%", background: "#15803d", color: "#fff", display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 15, justifySelf: "center" },
-  create: { border: "1.5px dashed #fdba74", background: "#fff8f3", boxShadow: "none" },
-  plus: { width: 48, height: 48, borderRadius: 14, background: "#ffedd5", color: "#ea580c", display: "grid", placeItems: "center", fontSize: 26, lineHeight: 1 },
+  create: { border: "1px dashed #fdba74", background: "#fff8f3", boxShadow: "none" },
+  plus: { width: 48, height: 48, borderRadius: 8, background: "#ffedd5", color: "#ea580c", display: "grid", placeItems: "center", fontSize: 26, lineHeight: 1 },
   ctitle: { fontSize: 15, fontWeight: 1000, color: "#0f172a" },
   csub: { fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2 },
-  join: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, boxShadow: "0 3px 12px rgba(15,23,42,.05)", marginTop: 4 },
+  join: { background: "#fff", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, boxShadow: "0 8px 18px rgba(19,35,26,.06)", marginTop: 4 },
   jtitle: { fontSize: 17, fontWeight: 1000, color: "#0f172a", margin: 0 },
   jsub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: "4px 0 12px" },
-  input: { width: "100%", padding: "13px 15px", borderRadius: 12, border: "1px solid #e5e7eb", background: "#fff", color: "#0f172a", fontSize: 14, fontWeight: 800, fontFamily: "inherit", outline: "none", marginBottom: 9 },
-  jbtn: { width: "100%", padding: 14, border: "none", borderRadius: 12, background: "#15803d", color: "#fff", fontWeight: 1000, fontSize: 15, fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 6px 16px rgba(21,128,61,.28)", marginTop: 2 },
-  help: { display: "flex", gap: 12, alignItems: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 16, padding: 14, marginTop: 14 },
-  hicon: { width: 40, height: 40, borderRadius: 12, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
+  input: { width: "100%", padding: "13px 15px", borderRadius: 8, border: "1px solid #cbd8cf", background: "#fff", color: "#0f172a", fontSize: 14, fontWeight: 800, fontFamily: "inherit", outline: "none", marginBottom: 9 },
+  jbtn: { width: "100%", padding: 14, border: "none", borderRadius: 8, background: "#15803d", color: "#fff", fontWeight: 1000, fontSize: 15, fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 10px 22px rgba(21,128,61,.24)", marginTop: 2 },
+  help: { display: "flex", gap: 12, alignItems: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: 14, marginTop: 14 },
+  hicon: { width: 40, height: 40, borderRadius: 8, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
   htitle: { fontSize: 14, fontWeight: 1000, color: "#15803d" },
   htext: { fontSize: 12.5, color: "#374151", fontWeight: 650, lineHeight: 1.35, marginTop: 2 },
-  ok: { color: "#15803d", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 12, padding: "10px 12px", fontWeight: 900, marginBottom: 10 },
-  err: { color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: "10px 12px", fontWeight: 900, marginBottom: 10 },
-  empty: { color: "#64748b", fontWeight: 800, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, boxShadow: "0 3px 12px rgba(15,23,42,.05)", marginBottom: 9 },
+  ok: { color: "#15803d", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "10px 12px", fontWeight: 900, marginBottom: 10 },
+  err: { color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 12px", fontWeight: 900, marginBottom: 10 },
+  empty: { color: "#64748b", fontWeight: 800, background: "#fff", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, boxShadow: "0 8px 18px rgba(19,35,26,.06)", marginBottom: 9 },
 };

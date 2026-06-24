@@ -27,8 +27,11 @@ export default function SideDrawer(props: Props) {
       <div onClick={props.onClose} style={{ ...s.overlay, opacity: props.isOpen ? 1 : 0, pointerEvents: props.isOpen ? "auto" : "none" }} />
       <aside style={{ ...s.drawer, transform: props.isOpen ? "translateX(0)" : "translateX(-100%)" }}>
         <header style={s.header}>
-          <div style={s.logo}><span style={{ color: "#4ade80" }}>Fanta</span><span style={{ color: "#fb923c" }}>Chat</span></div>
-          <button onClick={props.onClose} style={s.close}>×</button>
+          <div style={s.logoWrap}>
+            <span style={s.mark}>FC</span>
+            <div style={s.logo}><span style={{ color: "#bbf7d0" }}>Fanta</span><span style={{ color: "#fed7aa" }}>Chat</span></div>
+          </div>
+          <button onClick={props.onClose} style={s.close} aria-label="Chiudi menu">×</button>
           <div style={s.teamrow}>
             <span style={s.tring}><TeamBadge name={props.teamName} primary={props.teamPrimary ?? null} secondary={props.teamSecondary ?? null} size={40} /></span>
             <div style={{ minWidth: 0 }}>
@@ -119,32 +122,34 @@ function AdminLink({ href, label, icon, onClose }: { href: string; label: string
 }
 
 const s: Record<string, React.CSSProperties> = {
-  overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,.38)", zIndex: 200, transition: "opacity .2s" },
-  drawer: { position: "fixed", top: 0, left: 0, bottom: 0, width: 320, maxWidth: "90vw", background: "#fff", zIndex: 201, display: "flex", flexDirection: "column", transition: "transform .25s ease", boxShadow: "4px 0 24px rgba(0,0,0,.14)" },
-  header: { position: "relative", padding: "26px 20px 18px", background: "linear-gradient(135deg,#14532d,#15803d)", color: "white" },
-  logo: { fontSize: 23, fontWeight: 1000 },
-  close: { position: "absolute", top: 14, right: 14, width: 30, height: 30, borderRadius: 9, border: 0, background: "rgba(255,255,255,.18)", color: "white", fontSize: 20, cursor: "pointer" },
+  overlay: { position: "fixed", inset: 0, background: "rgba(13,24,18,.42)", zIndex: 200, transition: "opacity .2s", backdropFilter: "blur(3px)" },
+  drawer: { position: "fixed", top: 0, left: 0, bottom: 0, width: 326, maxWidth: "90vw", background: "#f8fbf8", zIndex: 201, display: "flex", flexDirection: "column", transition: "transform .25s ease", boxShadow: "18px 0 46px rgba(13,24,18,.22)" },
+  header: { position: "relative", padding: "26px 20px 18px", background: "linear-gradient(145deg,#0f3d27 0%,#14532d 54%,#1a7d42 100%)", color: "white", boxShadow: "inset 0 -1px 0 rgba(255,255,255,.16)" },
+  logoWrap: { display: "flex", alignItems: "center", gap: 10 },
+  mark: { width: 34, height: 34, borderRadius: 8, display: "grid", placeItems: "center", background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.22)", color: "white", fontWeight: 1000, fontSize: 13 },
+  logo: { fontSize: 23, fontWeight: 1000, letterSpacing: 0 },
+  close: { position: "absolute", top: 14, right: 14, width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.13)", color: "white", fontSize: 21, cursor: "pointer", lineHeight: 1 },
   teamrow: { display: "flex", alignItems: "center", gap: 10, marginTop: 14 },
   tring: { borderRadius: "50%", border: "2px solid rgba(255,255,255,.6)", padding: 1, display: "grid", placeItems: "center", flexShrink: 0 },
   tname: { fontWeight: 1000, fontSize: 15, lineHeight: 1.1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   tleague: { fontSize: 11, opacity: .8, fontWeight: 700, marginTop: 2 },
   body: { flex: 1, overflowY: "auto", padding: 14 },
   section: { fontSize: 10.5, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em", margin: "6px 4px 9px" },
-  comp: { width: "100%", display: "flex", alignItems: "center", gap: 11, border: "1.5px solid #e5e7eb", borderRadius: 13, padding: 10, marginBottom: 8, background: "white", cursor: "pointer", textAlign: "left", fontFamily: "inherit" },
-  cicon: { width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", color: "white", fontWeight: 1000, flexShrink: 0 },
+  comp: { width: "100%", display: "flex", alignItems: "center", gap: 11, border: "1px solid #dbe4dd", borderRadius: 8, padding: 10, marginBottom: 8, background: "white", cursor: "pointer", textAlign: "left", fontFamily: "inherit", boxShadow: "0 6px 16px rgba(19,35,26,.05)" },
+  cicon: { width: 36, height: 36, borderRadius: 8, display: "grid", placeItems: "center", color: "white", fontWeight: 1000, flexShrink: 0 },
   cname: { fontWeight: 1000, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   cmeta: { color: "#64748b", fontSize: 11, marginTop: 1, fontWeight: 700 },
   cbadge: { marginLeft: "auto", color: "white", fontSize: 9.5, fontWeight: 1000, borderRadius: 999, padding: "3px 9px" },
-  addcomp: { width: "100%", border: "1.5px dashed #d1d5db", background: "#fafafa", color: "#64748b", borderRadius: 12, padding: 11, fontWeight: 900, fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
-  item: { display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid #e5e7eb", borderRadius: 12, marginBottom: 7, textDecoration: "none" },
+  addcomp: { width: "100%", border: "1px dashed #c7d2cb", background: "#ffffff", color: "#64748b", borderRadius: 8, padding: 11, fontWeight: 900, fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
+  item: { display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid #dbe4dd", borderRadius: 8, marginBottom: 7, textDecoration: "none", background: "white", boxShadow: "0 4px 12px rgba(19,35,26,.04)" },
   itemIco: { width: 20, height: 20, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
   itemT: { fontWeight: 900, fontSize: 13.5, color: "#0f172a" },
   itemS: { fontSize: 11, color: "#64748b", fontWeight: 700 },
-  adminbox: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 13, padding: 8 },
-  alink: { display: "flex", alignItems: "center", gap: 10, background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "#0f172a", textDecoration: "none" },
+  adminbox: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 8, padding: 8 },
+  alink: { display: "flex", alignItems: "center", gap: 10, background: "white", border: "1px solid #e5e7eb", borderRadius: 8, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "#0f172a", textDecoration: "none" },
   alinkIco: { width: 17, height: 17, fill: "none", stroke: "#b45309", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
-  footer: { padding: 14, borderTop: "1px solid #f1f5f9", background: "#fafafa" },
-  exit: { width: "100%", border: "1px solid #e5e7eb", background: "white", borderRadius: 11, padding: 11, fontWeight: 900, fontSize: 13, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "inherit" },
+  footer: { padding: 14, borderTop: "1px solid #e8eee9", background: "#f8fbf8" },
+  exit: { width: "100%", border: "1px solid #dbe4dd", background: "white", borderRadius: 8, padding: 11, fontWeight: 900, fontSize: 13, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "inherit" },
   exitIco: { width: 17, height: 17, fill: "none", stroke: "#64748b", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" },
   empty: { color: "#64748b", fontSize: 13, fontWeight: 700, padding: 8 },
 };

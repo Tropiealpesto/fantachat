@@ -446,10 +446,10 @@ const s: Record<string, React.CSSProperties> = {
 
   head: {
     background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 22,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: 18,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
   },
 
   headTop: {
@@ -463,9 +463,9 @@ const s: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     gap: 7,
-    borderRadius: 999,
+    borderRadius: 8,
     background: "#f8fafc",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #dbe4dd",
     padding: "7px 12px",
     fontSize: 12,
     fontWeight: 1000,
@@ -495,7 +495,7 @@ const s: Record<string, React.CSSProperties> = {
 
   divider: {
     height: 1,
-    background: "#e5e7eb",
+    background: "#dbe4dd",
     margin: "18px 0 14px",
   },
 
@@ -530,11 +530,11 @@ const s: Record<string, React.CSSProperties> = {
 
   teamCard: {
     background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 22,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: 0,
     overflow: "hidden",
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
   },
 
   teamTop: {
@@ -635,8 +635,8 @@ const s: Record<string, React.CSSProperties> = {
 
   players: {
     margin: "0 14px 14px",
-    border: "1px solid #e5e7eb",
-    borderRadius: 16,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     overflow: "hidden",
     background: "white",
   },
@@ -697,13 +697,13 @@ const s: Record<string, React.CSSProperties> = {
 
   emptyCard: {
     background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 18,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: 18,
     color: "#64748b",
     fontWeight: 900,
     textAlign: "center",
-    boxShadow: "0 6px 18px rgba(15,23,42,.06)",
+    boxShadow: "0 8px 18px rgba(19,35,26,.06)",
   },
 
   refresh: {
@@ -719,7 +719,7 @@ const s: Record<string, React.CSSProperties> = {
     background: "#fff1f2",
     color: "#991b1b",
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     fontWeight: 800,
   },
 };

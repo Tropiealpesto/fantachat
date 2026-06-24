@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-const ACCENT = "#15803d";
 const TABS = [
   { path: "/", label: "Home" },
   { path: "/live", label: "Live" },
@@ -14,7 +13,7 @@ const TABS = [
 interface BottomNavProps { onMenuOpen?: () => void; unreadCount?: number; }
 
 function Icon({ path, active }: { path: string; active: boolean }) {
-  const p = { width: 23, height: 23, viewBox: "0 0 24 24", fill: "none", stroke: active ? ACCENT : "#94a3b8", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const p = { width: 23, height: 23, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: active ? 2.35 : 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   switch (path) {
     case "/": return (<svg {...p}><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></svg>);
     case "/live": return (<svg {...p}><path d="M3 12h4l2 6 4-15 2 9h6" /></svg>);
@@ -32,20 +31,27 @@ export default function BottomNav({ unreadCount = 0 }: BottomNavProps) {
 
   return (
     <>
-      <div style={{ height: "70px" }} />
-      <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "70px", background: "rgba(255,255,255,0.96)", borderTop: "1px solid #E5E7EB", display: "flex", alignItems: "stretch", zIndex: 100, boxShadow: "0 -2px 16px rgba(0,0,0,0.06)", paddingBottom: "env(safe-area-inset-bottom, 0px)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
+      <div className="fc-bottom-spacer" />
+      <nav className="fc-bottom-nav" aria-label="Navigazione principale">
         {TABS.map((tab) => {
           const active = isActive(tab.path);
           return (
-            <button key={tab.path} onClick={() => router.push(tab.path)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", background: "none", border: "none", cursor: "pointer", padding: "8px 4px", position: "relative", WebkitTapHighlightColor: "transparent" }}>
-              {active && (<div style={{ position: "absolute", top: 0, left: "20%", right: "20%", height: "2.5px", background: ACCENT, borderRadius: "0 0 3px 3px" }} />)}
-              <div style={{ position: "relative" }}>
+            <button
+              key={tab.path}
+              type="button"
+              aria-current={active ? "page" : undefined}
+              onClick={() => router.push(tab.path)}
+              className={`fc-bottom-tab${active ? " is-active" : ""}`}
+            >
+              <div className="fc-bottom-icon">
                 <Icon path={tab.path} active={active} />
                 {tab.path === "/chat" && unreadCount > 0 && (
-                  <div style={{ position: "absolute", top: "-5px", right: "-9px", background: "#EF4444", color: "white", borderRadius: "10px", fontSize: "9px", fontWeight: 700, padding: "1px 5px", minWidth: "16px", textAlign: "center", lineHeight: "14px", border: "1.5px solid white" }}>{unreadCount > 99 ? "99+" : unreadCount}</div>
+                  <div className="fc-unread-badge">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </div>
                 )}
               </div>
-              <span style={{ fontSize: "10px", color: active ? ACCENT : "#6B7280", fontWeight: active ? 800 : 600 }}>{tab.label}</span>
+              <span className="fc-bottom-label">{tab.label}</span>
             </button>
           );
         })}

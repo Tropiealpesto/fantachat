@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
@@ -79,8 +79,14 @@ export default function Statistiche() {
     return sorted.map((r, i) => ({ ...r, rank: i + 1 }));
   }, [rows, role, q, sortBy]);
 
-  const metricOf = (r: Row) => (sortBy === "avg" ? Number(r.avg_points) || 0 : Number(r.total_points) || 0);
-  const maxMetric = useMemo(() => Math.max(1, ...ranked.map((r) => metricOf(r))), [ranked, sortBy]);
+  const metricOf = useCallback(
+    (r: Row) =>
+      sortBy === "avg"
+        ? Number(r.avg_points) || 0
+        : Number(r.total_points) || 0,
+    [sortBy]
+  );
+  const maxMetric = useMemo(() => Math.max(1, ...ranked.map((r) => metricOf(r))), [ranked, metricOf]);
   const visible = showAll ? ranked : ranked.slice(0, 20);
 
   if (!app.ready || loading) return <LoadingScreen />;
@@ -155,26 +161,26 @@ export default function Statistiche() {
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 10 },
-  head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 4px 16px rgba(15,23,42,.06)" },
+  head: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, boxShadow: "0 12px 28px rgba(19,35,26,.08)" },
   h1: { fontSize: 21, fontWeight: 1000, color: "#0f172a", margin: "10px 0 1px" },
   hsub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: 0 },
-  search: { width: "100%", marginTop: 12, padding: "11px 13px", border: "1px solid #e5e7eb", borderRadius: 11, fontSize: 13, fontWeight: 700, fontFamily: "inherit", outline: "none" },
+  search: { width: "100%", marginTop: 12, padding: "11px 13px", border: "1px solid #cbd8cf", borderRadius: 8, fontSize: 13, fontWeight: 700, fontFamily: "inherit", outline: "none", background: "#fbfdfb" },
   roles: { display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" },
-  rolePill: { flex: 1, minWidth: 52, border: "1.5px solid #e5e7eb", background: "white", color: "#475569", borderRadius: 10, padding: "8px 6px", fontWeight: 1000, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" },
+  rolePill: { flex: 1, minWidth: 52, border: "1px solid #dbe4dd", background: "white", color: "#475569", borderRadius: 8, padding: "8px 6px", fontWeight: 1000, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" },
   sortRow: { display: "flex", alignItems: "center", gap: 10, marginTop: 12 },
   sortLbl: { fontSize: 11, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".04em" },
-  toggle: { marginLeft: "auto", display: "flex", background: "#f1f5f9", borderRadius: 10, padding: 3, gap: 3 },
-  tbtn: { border: 0, background: "transparent", color: "#475569", borderRadius: 8, padding: "6px 14px", fontWeight: 1000, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" },
+  toggle: { marginLeft: "auto", display: "flex", background: "#eef3ef", borderRadius: 8, padding: 3, gap: 3 },
+  tbtn: { border: 0, background: "transparent", color: "#475569", borderRadius: 6, padding: "6px 14px", fontWeight: 1000, fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" },
   list: { display: "grid", gap: 8 },
-  srow: { background: "white", border: "1px solid #e5e7eb", borderRadius: 13, padding: "9px 11px", boxShadow: "0 2px 8px rgba(15,23,42,.04)", textAlign: "left", fontFamily: "inherit", cursor: "pointer", overflow: "hidden" },
+  srow: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: "9px 11px", boxShadow: "0 6px 16px rgba(19,35,26,.05)", textAlign: "left", fontFamily: "inherit", cursor: "pointer", overflow: "hidden" },
   top: { display: "grid", gridTemplateColumns: "28px 34px 1fr auto", gap: 9, alignItems: "center" },
-  rank: { width: 28, height: 28, borderRadius: 9, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 1000, color: "#64748b", background: "#f1f5f9" },
+  rank: { width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 1000, color: "#64748b", background: "#f1f5f9" },
   pn: { fontSize: 13.5, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 800, color: "#64748b" },
   avg: { fontSize: 17, fontWeight: 1000 },
   avgl: { fontSize: 9.5, fontWeight: 900, color: "#94a3b8" },
   bar: { height: 4, borderRadius: 3, background: "#eef2f5", marginTop: 8, overflow: "hidden" },
   barFill: { display: "block", height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#22c55e,#15803d)" },
-  showall: { width: "100%", background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 11, fontWeight: 1000, color: "#15803d", fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
-  empty: { background: "white", border: "1px solid #e5e7eb", borderRadius: 13, padding: 16, color: "#64748b", fontWeight: 800 },
+  showall: { width: "100%", background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: 11, fontWeight: 1000, color: "#15803d", fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
+  empty: { background: "white", border: "1px solid #dbe4dd", borderRadius: 8, padding: 16, color: "#64748b", fontWeight: 800 },
 };

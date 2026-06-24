@@ -827,10 +827,10 @@ const s: Record<string, React.CSSProperties> = {
 
   headerCard: {
     background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 22,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
   },
 
   headerTop: {
@@ -854,7 +854,7 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   statusPill: {
-    borderRadius: 999,
+    borderRadius: 8,
     padding: "6px 12px",
     background: "#f0fdf4",
     color: "#15803d",
@@ -892,7 +892,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: 1,
     background: "#f0fdf4",
     color: "#15803d",
-    borderRadius: 16,
+    borderRadius: 8,
     padding: "8px 12px",
     fontWeight: 1000,
     flexShrink: 0,
@@ -910,8 +910,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 6,
     background: "#f8fafc",
-    border: "1px solid #e5e7eb",
-    borderRadius: 999,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: "4px 9px",
     fontSize: 12,
     fontWeight: 1000,
@@ -921,7 +921,7 @@ const s: Record<string, React.CSSProperties> = {
   warn: {
     marginTop: 12,
     padding: 12,
-    borderRadius: 14,
+    borderRadius: 8,
     background: "#fff7ed",
     border: "1px solid #fed7aa",
     color: "#c2410c",
@@ -932,7 +932,7 @@ const s: Record<string, React.CSSProperties> = {
   ok: {
     marginTop: 12,
     padding: 12,
-    borderRadius: 14,
+    borderRadius: 8,
     background: "#f0fdf4",
     border: "1px solid #86efac",
     color: "#15803d",
@@ -943,7 +943,7 @@ const s: Record<string, React.CSSProperties> = {
   err: {
     marginTop: 12,
     padding: 12,
-    borderRadius: 14,
+    borderRadius: 8,
     background: "#fff1f2",
     border: "1px solid #fecaca",
     color: "#991b1b",
@@ -953,10 +953,10 @@ const s: Record<string, React.CSSProperties> = {
 
   card: {
     background: "white",
-    border: "1px solid #e5e7eb",
-    borderRadius: 22,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
     padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    boxShadow: "0 12px 28px rgba(19,35,26,.08)",
   },
 
   sectionHeader: {
@@ -978,8 +978,8 @@ const s: Record<string, React.CSSProperties> = {
   infoBtn: {
     width: 30,
     height: 30,
-    borderRadius: "50%",
-    border: "1px solid #e5e7eb",
+    borderRadius: 8,
+    border: "1px solid #dbe4dd",
     background: "white",
     color: "#64748b",
     fontWeight: 1000,
@@ -990,10 +990,10 @@ const s: Record<string, React.CSSProperties> = {
     position: "relative",
     width: "100%",
     height: 276,
-    borderRadius: 20,
+    borderRadius: 8,
     overflow: "hidden",
     background: "#15803d",
-    boxShadow: "0 14px 32px rgba(15,23,42,.16)",
+    boxShadow: "0 16px 34px rgba(19,35,26,.18)",
   },
 
   grass: {
@@ -1074,7 +1074,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: 14,
     border: "none",
     color: "white",
-    borderRadius: 14,
+    borderRadius: 8,
     fontWeight: 1000,
     fontFamily: "inherit",
     cursor: "pointer",
@@ -1094,11 +1094,11 @@ const s: Record<string, React.CSSProperties> = {
     gap: 10,
     alignItems: "center",
     minHeight: 76,
-    border: "1px solid #e5e7eb",
+    border: "1px solid #dbe4dd",
     background: "white",
-    borderRadius: 18,
+    borderRadius: 8,
     padding: 12,
-    boxShadow: "0 8px 22px rgba(15,23,42,.07)",
+    boxShadow: "0 10px 22px rgba(19,35,26,.07)",
     textAlign: "left",
     fontFamily: "inherit",
     cursor: "pointer",
@@ -1107,7 +1107,7 @@ const s: Record<string, React.CSSProperties> = {
   infoIcon: {
     width: 42,
     height: 42,
-    borderRadius: "50%",
+    borderRadius: 8,
     background: "#f0fdf4",
     color: "#15803d",
     display: "grid",
@@ -1125,7 +1125,7 @@ const s: Record<string, React.CSSProperties> = {
   sheetLayer: {
     position: "fixed",
     inset: 0,
-    zIndex: 50,
+    zIndex: 150,
     display: "grid",
     alignItems: "end",
     justifyItems: "center",
@@ -1136,7 +1136,7 @@ const s: Record<string, React.CSSProperties> = {
     position: "absolute",
     inset: 0,
     border: 0,
-    background: "rgba(15,23,42,.28)",
+    background: "rgba(13,24,18,.34)",
     pointerEvents: "auto",
   },
 
@@ -1147,7 +1147,7 @@ const s: Record<string, React.CSSProperties> = {
     maxWidth: 520,
     height: "58vh",
     background: "white",
-    borderRadius: "28px 28px 0 0",
+    borderRadius: "8px 8px 0 0",
     padding: "12px 18px calc(18px + env(safe-area-inset-bottom, 0px))",
     boxShadow: "0 -20px 46px rgba(15,23,42,.22)",
     display: "grid",
@@ -1189,8 +1189,8 @@ const s: Record<string, React.CSSProperties> = {
   closeBtn: {
     width: 34,
     height: 34,
-    borderRadius: "50%",
-    border: "1px solid #e5e7eb",
+    borderRadius: 8,
+    border: "1px solid #dbe4dd",
     background: "#f8fafc",
     color: "#64748b",
     fontSize: 24,
@@ -1215,8 +1215,8 @@ const s: Record<string, React.CSSProperties> = {
   sheetSearch: {
     width: "100%",
     height: 48,
-    borderRadius: 14,
-    border: "1px solid #cbd5e1",
+    borderRadius: 8,
+    border: "1px solid #cbd8cf",
     padding: "0 14px 0 42px",
     fontFamily: "inherit",
     fontSize: 15,
@@ -1228,7 +1228,7 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #fecaca",
     background: "#fff1f2",
     color: "#dc2626",
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 10,
     fontFamily: "inherit",
     fontWeight: 1000,
@@ -1237,8 +1237,8 @@ const s: Record<string, React.CSSProperties> = {
 
   resultList: {
     overflowY: "auto",
-    border: "1px solid #e5e7eb",
-    borderRadius: 18,
+    border: "1px solid #dbe4dd",
+    borderRadius: 8,
   },
 
   resultRow: {

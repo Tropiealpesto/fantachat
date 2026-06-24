@@ -6,20 +6,23 @@
   --primary-dark: #16a34a;
   --accent: #f97316;
   --accent-dark: #ea580c;
+  --ink: #102018;
+  --field: #0f5132;
+  --sky: #e8f1ff;
 
-  --text: #0f172a;
-  --muted: #64748b;
-  --bg: #f1f5f1;
+  --text: #13231a;
+  --muted: #65736b;
+  --bg: #eef3ef;
   --card: #ffffff;
-  --border: #e5e7eb;
+  --border: #dbe4dd;
 
-  --shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.10);
-  --radius: 18px;
-  --radius-sm: 12px;
+  --shadow: 0 8px 22px rgba(19, 35, 26, 0.08);
+  --shadow-lg: 0 18px 42px rgba(19, 35, 26, 0.13);
+  --radius: 8px;
+  --radius-sm: 8px;
 
-  --nav-h: 64px;
-  --appbar-h: 68px;
+  --nav-h: 72px;
+  --appbar-h: 72px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -29,14 +32,38 @@
 html, body { height: 100%; }
 
 body {
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.80) 0%, rgba(255,255,255,0) 210px),
+    repeating-linear-gradient(135deg, rgba(20,83,45,0.035) 0 1px, transparent 1px 18px),
+    var(--bg);
   color: var(--text);
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 a { color: inherit; text-decoration: none; }
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--fc-primary, var(--primary)) 26%, transparent);
+  outline-offset: 2px;
+}
 
 .container {
   max-width: 520px;
@@ -64,10 +91,10 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   color: var(--text);
   cursor: pointer;
-  transition: all 0.18s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
-.btn:hover { background: #f9fafb; }
+.btn:hover { background: #f7faf8; border-color: #c8d6cc; }
 .btn:active { transform: scale(.98); }
 
 .btn-primary {
@@ -81,29 +108,75 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  background: rgba(249,252,249,0.86);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-bottom: 1px solid rgba(219,228,221,0.86);
+  box-shadow: 0 10px 26px rgba(19,35,26,0.06);
 }
 
 .appbar-inner {
   max-width: 520px;
   margin: 0 auto;
   height: var(--appbar-h);
-  padding: 0 16px;
+  padding: calc(var(--safe-top) * 0.35) 14px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
+.appbar-menu {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(20,83,45,0.12);
+  background: linear-gradient(180deg, #ffffff, #f4f8f5);
+  color: #244332;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(19,35,26,0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.appbar-menu:hover {
+  border-color: rgba(20,83,45,0.24);
+  box-shadow: 0 10px 22px rgba(19,35,26,0.11);
+}
+
+.appbar-menu:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.appbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.appbar-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background:
+    linear-gradient(135deg, #14532d 0 50%, #f97316 50% 100%);
+  color: white;
+  font-weight: 1000;
+  font-size: 14px;
+  box-shadow: 0 8px 18px rgba(20,83,45,0.20);
+}
+
 .appbar-logo {
   font-family: 'Nunito', sans-serif;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 900;
-  letter-spacing: -0.5px;
+  letter-spacing: 0;
   line-height: 1;
 }
 
@@ -111,20 +184,116 @@ a { color: inherit; text-decoration: none; }
 .appbar-logo .logo-chat  { color: #e07b1a; }
 
 .appbar-sub {
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--muted);
-  letter-spacing: 0.1px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appbar-right {
+  flex-shrink: 0;
 }
 
 .appbar-right .btn {
-  background: transparent;
-  border: 1.5px solid var(--primary-dark);
-  color: var(--primary-dark);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: var(--accent-dark);
   font-size: 13px;
-  padding: 7px 16px;
-  border-radius: 50px;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.fc-bottom-spacer {
+  height: calc(var(--nav-h) + var(--safe-bottom));
+}
+
+.fc-bottom-nav {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: max(10px, var(--safe-bottom));
+  height: var(--nav-h);
+  z-index: 100;
+  max-width: 540px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: stretch;
+  padding: 6px;
+  border: 1px solid rgba(219,228,221,0.92);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 18px 42px rgba(19,35,26,0.18);
+  backdrop-filter: blur(18px) saturate(1.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.16);
+}
+
+.fc-bottom-tab {
+  position: relative;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #6f7d74;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  min-width: 0;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.fc-bottom-tab:hover {
+  background: #f5f8f6;
+}
+
+.fc-bottom-tab:active {
+  transform: translateY(1px);
+}
+
+.fc-bottom-tab.is-active {
+  color: var(--fc-primary, var(--primary-dark));
+  background: color-mix(in srgb, var(--fc-primary, var(--primary-dark)) 12%, white);
+}
+
+.fc-bottom-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+}
+
+.fc-bottom-label {
+  max-width: 100%;
+  color: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-unread-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  min-width: 17px;
+  border-radius: 999px;
+  border: 2px solid white;
+  background: #dc2626;
+  color: white;
+  font-size: 9px;
+  font-weight: 1000;
+  line-height: 14px;
+  padding: 0 5px;
+  text-align: center;
 }
 
 @keyframes blink {
@@ -139,7 +308,8 @@ html {
 
 body {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--fc-primary, #16a34a) 12%, transparent), transparent 32%),
+    linear-gradient(180deg, color-mix(in srgb, var(--fc-primary, #16a34a) 8%, white) 0%, transparent 240px),
+    repeating-linear-gradient(135deg, rgba(20,83,45,0.035) 0 1px, transparent 1px 18px),
     var(--fc-page-bg, var(--bg));
   color: var(--fc-text, var(--text));
 }
@@ -258,9 +428,9 @@ html[data-competition-theme="mondiale"] .fc-themed-bottom-nav {
 
 /* FantaChat common brand surfaces - always green/orange */
 .appbar {
-  background: rgba(255,255,255,0.88) !important;
+  background: rgba(249,252,249,0.88) !important;
   color: var(--text) !important;
-  border-bottom: 1px solid var(--border) !important;
+  border-bottom: 1px solid rgba(219,228,221,0.86) !important;
 }
 
 .appbar-logo .logo-fanta {
@@ -278,15 +448,15 @@ html[data-competition-theme="mondiale"] .fc-themed-bottom-nav {
 .appbar-right .btn,
 .appbar-right button {
   background: #fff7ed !important;
-  border: 1.5px solid #fed7aa !important;
+  border: 1px solid #fed7aa !important;
   color: #ea580c !important;
 }
 
 html[data-competition-theme="champions"] .appbar,
 html[data-competition-theme="mondiale"] .appbar {
-  background: rgba(255,255,255,0.88) !important;
+  background: rgba(249,252,249,0.88) !important;
   color: var(--text) !important;
-  border-bottom: 1px solid var(--border) !important;
+  border-bottom: 1px solid rgba(219,228,221,0.86) !important;
 }
 
 html[data-competition-theme="champions"] .appbar-right .btn,
