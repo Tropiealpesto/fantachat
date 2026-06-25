@@ -88,7 +88,6 @@ const emptyHome: HomeData = {
 };
 
 const ROLE_ORDER = ["A", "C", "D", "P"];
-const TOP_ROLE_ORDER = ["P", "D", "C", "A"];
 
 const ROLE_META: Record<string, { bg: string; fg: string; label: string }> = {
   P: { bg: "#FEF3C7", fg: "#B45309", label: "P" },
@@ -181,6 +180,19 @@ function cleanRank(rank?: number | null) {
   return String(rank);
 }
 
+function formatDeadline(value?: string | null) {
+  if (!value) return null;
+
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+
+  return new Intl.DateTimeFormat("it-IT", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
 function homeHeroBackground() {
   return [
     "linear-gradient(145deg, rgba(8,83,44,.95) 0%, rgba(12,117,61,.96) 55%, rgba(20,166,87,.96) 100%)",
@@ -213,7 +225,6 @@ export default function Home() {
   const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
   const [standings, setStandings] = useState<StandRow[]>([]);
   const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
-  const [topRole, setTopRole] = useState<string>("A");
 
   const [competitionStatus, setCompetitionStatus] =
     useState<CompetitionStatus | null>(null);
@@ -596,9 +607,30 @@ export default function Home() {
   const top5 = standings.slice(0, 5);
   const meInTop = top5.some((r) => r.user_id === app.userId);
   const myRow = standings.find((r) => r.user_id === app.userId);
-  const topPlayersForRole = topPlayers
-    .filter((p) => p.role === topRole)
-    .slice(0, 3);
+  const lineupPlayers = data.lineup?.players ?? [];
+  const lineupModule = lineupGroups.map((g) => g.items.length).join("-");
+  const lineupPoints = data.lineup?.total_points ?? 0;
+  const scoredLineupPlayers = lineupPlayers.filter(
+    (p) => typeof p.points === "number"
+  );
+  const lineupAverage =
+    scoredLineupPlayers.length > 0
+      ? scoredLineupPlayers.reduce((sum, p) => sum + Number(p.points ?? 0), 0) /
+        scoredLineupPlayers.length
+      : null;
+  const bestLineupPlayer = [...scoredLineupPlayers].sort(
+    (a, b) => Number(b.points ?? 0) - Number(a.points ?? 0)
+  )[0];
+  const playerStatRows =
+    topPlayers.length > 0
+      ? [...topPlayers].sort((a, b) => b.points - a.points).slice(0, 3)
+      : lineupPlayers.slice(0, 3).map((p) => ({
+          name: p.name,
+          role: p.role,
+          team: p.team ?? "",
+          points: Number(p.points ?? 0),
+        }));
+  const matchdayDeadline = formatDeadline(data.matchday?.slot_end);
 
   function StandLine({ row, mine }: { row: StandRow; mine: boolean }) {
     const c = memberColors[row.user_id];
@@ -702,6 +734,9 @@ export default function Home() {
           <div style={{ flex: 1 }}>
             <div style={s.label}>Giornata corrente</div>
             <div style={s.matchday}>{data.matchday?.number ?? "—"}</div>
+            {matchdayDeadline && (
+              <div style={s.deadline}>Chiude {matchdayDeadline}</div>
+            )}
           </div>
 
           <span
@@ -770,40 +805,67 @@ export default function Home() {
               <h2 style={s.sectionTitleSm}>Il tuo schieramento</h2>
 
               <span style={s.modulePill}>
-                {lineupGroups.map((g) => g.items.length).join("-")}
+                {lineupModule}
               </span>
             </div>
 
-            <div style={s.compactPitch}>
-              <div style={s.pitchShadow} />
-              <div style={s.pitchBase} />
-              <div style={s.pitchPlane}>
-                <div style={s.pitchOuterLine} />
-                <div style={s.pitchPenaltyTop} />
-                <div style={s.pitchPenaltyBottom} />
-                <div style={s.pitchGoalTop} />
-                <div style={s.pitchGoalBottom} />
-                <div style={s.pitchHalfway} />
-                <div style={s.pitchCircleSmall} />
-              </div>
+            <div style={s.lineupGrid}>
+              <div style={s.lineupPitchWrap}>
+                <div style={s.compactPitch}>
+                  <div style={s.pitchShadow} />
+                  <div style={s.pitchBase} />
+                  <div style={s.pitchPlane}>
+                    <div style={s.pitchOuterLine} />
+                    <div style={s.pitchPenaltyTop} />
+                    <div style={s.pitchPenaltyBottom} />
+                    <div style={s.pitchGoalTop} />
+                    <div style={s.pitchGoalBottom} />
+                    <div style={s.pitchHalfway} />
+                    <div style={s.pitchCircleSmall} />
+                  </div>
 
-              <div style={s.pitchPlayers}>
-                {lineupGroups.map((g) => (
-                  <div key={g.role} style={s.compactPitchRow}>
-                    {g.items.map((p, i) => (
-                      <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                        <RoleDot role={p.role} size={21} />
+                  <div style={s.pitchPlayers}>
+                    {lineupGroups.map((g) => (
+                      <div key={g.role} style={s.compactPitchRow}>
+                        {g.items.map((p, i) => (
+                          <div key={`${p.name}-${i}`} style={s.compactPlayer}>
+                            <RoleDot role={p.role} size={18} />
 
-                        <span style={s.compactPlayerName}>
-                          {p.role === "P"
-                            ? p.team || p.name
-                            : (p.name || "").trim().split(" ")[0] ||
-                              shortName(p.name)}
-                        </span>
+                            <span style={s.compactPlayerName}>
+                              {p.role === "P"
+                                ? p.team || p.name
+                                : (p.name || "").trim().split(" ")[0] ||
+                                  shortName(p.name)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>
-                ))}
+                </div>
+              </div>
+
+              <div style={s.lineupStats}>
+                <div style={s.statLine}>
+                  <span>Titolari</span>
+                  <strong style={s.statValue}>{lineupPlayers.length}</strong>
+                </div>
+                <div style={s.statLine}>
+                  <span>Punti live</span>
+                  <strong style={s.statValue}>{fmt(lineupPoints)}</strong>
+                </div>
+                <div style={s.statLine}>
+                  <span>Media rosa</span>
+                  <strong style={s.statValue}>
+                    {lineupAverage === null ? "—" : fmt(lineupAverage)}
+                  </strong>
+                </div>
+                <div style={s.statLine}>
+                  <span>Top ruolo</span>
+                  <strong style={s.statValue}>
+                    {bestLineupPlayer ? shortName(bestLineupPlayer.name) : "—"}
+                  </strong>
+                </div>
               </div>
             </div>
 
@@ -818,7 +880,7 @@ export default function Home() {
 
         <section style={{ ...s.card, padding: 14 }}>
           <div style={s.sectionHeader}>
-            <h2 style={s.sectionTitleSm}>Top giocatori</h2>
+            <h2 style={s.sectionTitleSm}>Statistiche giocatori</h2>
 
             <button
               onClick={() => router.push("/statistiche")}
@@ -828,29 +890,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div style={s.roleTabs}>
-            {TOP_ROLE_ORDER.map((role) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setTopRole(role)}
-                style={{
-                  ...s.roleTab,
-                  background: topRole === role ? "white" : "transparent",
-                  borderColor: topRole === role ? "#dbe4dd" : "transparent",
-                  color: topRole === role ? "#0f172a" : "#64748b",
-                  boxShadow:
-                    topRole === role
-                      ? "0 3px 10px rgba(15,23,42,.05)"
-                      : "none",
-                }}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
-
-          {topPlayersForRole.length === 0 ? (
+          {playerStatRows.length === 0 ? (
             <div style={s.topEmpty}>
               <b>Statistiche non ancora disponibili.</b>
               <span>
@@ -859,14 +899,22 @@ export default function Home() {
             </div>
           ) : (
             <div style={s.topGrid}>
-              {topPlayersForRole.map((p, i) => (
+              {playerStatRows.map((p, i) => (
                 <div key={`${p.name}-${i}`} style={s.topPlayerCard}>
-                  <span style={s.topRank}>{i + 1}</span>
+                  <span
+                    style={{
+                      ...s.roleMini,
+                      background: roleColor(p.role).bg,
+                      color: roleColor(p.role).fg,
+                    }}
+                  >
+                    {p.role}
+                  </span>
 
                   <PlayerCrest
                     team={p.team || p.name}
                     colors={kitOf(p.team)}
-                    size={28}
+                    size={26}
                   />
 
                   <div style={{ minWidth: 0 }}>
@@ -1121,6 +1169,13 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     textTransform: "uppercase",
     letterSpacing: ".02em",
+  },
+
+  deadline: {
+    marginTop: 3,
+    color: "#ea580c",
+    fontSize: 10.5,
+    fontWeight: 800,
   },
 
   matchday: {
@@ -1400,6 +1455,49 @@ const s: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
 
+  lineupGrid: {
+    display: "grid",
+    gridTemplateColumns: "44% 1fr",
+    gap: 12,
+    alignItems: "stretch",
+  },
+
+  lineupPitchWrap: {
+    minWidth: 0,
+    display: "grid",
+    alignItems: "center",
+  },
+
+  lineupStats: {
+    minWidth: 0,
+    display: "grid",
+    alignContent: "center",
+    gap: 6,
+    padding: "2px 0",
+  },
+
+  statLine: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: 8,
+    alignItems: "baseline",
+    paddingBottom: 6,
+    borderBottom: "1px solid #eef2f7",
+    color: "#64748b",
+    fontSize: 11.5,
+    fontWeight: 700,
+  },
+
+  statValue: {
+    color: "#0f172a",
+    fontSize: 12,
+    fontWeight: 850,
+    textAlign: "right",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+
   secondaryBtn: {
     marginTop: 10,
     width: "100%",
@@ -1462,6 +1560,19 @@ const s: Record<string, React.CSSProperties> = {
     padding: "8px 0",
     background: "transparent",
     borderBottom: "1px solid #f1f5f9",
+  },
+
+  roleMini: {
+    width: 18,
+    height: 18,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background: "#f8fafc",
+    color: "#64748b",
+    border: "1px solid #e5e7eb",
+    fontSize: 10,
+    fontWeight: 900,
   },
 
   topRank: {
