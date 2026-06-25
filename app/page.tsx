@@ -829,13 +829,12 @@ export default function Home() {
                       <div key={g.role} style={s.compactPitchRow}>
                         {g.items.map((p, i) => (
                           <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                            <RoleDot role={p.role} size={18} />
+                            <RoleDot role={p.role} size={16} />
 
                             <span style={s.compactPlayerName}>
-                              {p.role === "P"
-                                ? p.team || p.name
-                                : (p.name || "").trim().split(" ")[0] ||
-                                  shortName(p.name)}
+                              {(p.name || "").trim().split(" ")[0] ||
+                                shortName(p.name) ||
+                                p.team}
                             </span>
                           </div>
                         ))}
@@ -1288,95 +1287,79 @@ const s: Record<string, React.CSSProperties> = {
 
   compactPitch: {
     position: "relative",
-    height: 132,
+    height: 142,
     overflow: "hidden",
     borderRadius: 8,
-    border: "1px solid #d7e2da",
-    background:
-      "linear-gradient(180deg, #f5f8f4 0%, #edf4ed 100%)",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,.85)",
+    border: "1px solid #c9dccd",
+    background: "#4f9f4d",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.16)",
   },
 
   pitchShadow: {
-    position: "absolute",
-    left: "8%",
-    right: "8%",
-    bottom: 5,
-    height: 16,
-    borderRadius: "50%",
-    background: "rgba(15,23,42,.16)",
-    filter: "blur(10px)",
+    display: "none",
   },
 
   pitchBase: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    top: 17,
-    bottom: 8,
-    clipPath: "polygon(17% 0, 83% 0, 100% 88%, 96% 100%, 4% 100%, 0 88%)",
-    background:
-      "linear-gradient(180deg, #4a9148 0%, #2f6f36 88%, #245b2c 100%)",
-    boxShadow: "0 9px 18px rgba(15,23,42,.18)",
+    display: "none",
   },
 
   pitchPlane: {
     position: "absolute",
-    left: 12,
-    right: 12,
-    top: 10,
-    bottom: 17,
+    left: 6,
+    right: 6,
+    top: 6,
+    bottom: 6,
     overflow: "hidden",
-    clipPath: "polygon(17% 0, 83% 0, 96% 100%, 4% 100%)",
+    borderRadius: 5,
     background:
-      "repeating-linear-gradient(180deg, rgba(255,255,255,.075) 0 14px, rgba(0,0,0,.045) 14px 28px), linear-gradient(90deg, rgba(28,89,38,.24), transparent 15%, transparent 85%, rgba(28,89,38,.22)), linear-gradient(180deg, #78bd6d 0%, #56a24f 100%)",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14)",
+      "repeating-linear-gradient(180deg, #62ad5e 0 17px, #58a454 17px 34px)",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.18)",
   },
 
   pitchOuterLine: {
     position: "absolute",
-    left: "8%",
-    right: "8%",
-    top: "8%",
-    bottom: "8%",
-    border: "1px solid rgba(255,255,255,.45)",
+    left: 6,
+    right: 6,
+    top: 6,
+    bottom: 6,
+    border: "1px solid rgba(255,255,255,.46)",
   },
 
   pitchPenaltyTop: {
     position: "absolute",
-    left: "39%",
-    right: "39%",
-    top: "8%",
-    height: "13%",
-    border: "1px solid rgba(255,255,255,.38)",
+    left: "30%",
+    right: "30%",
+    top: 6,
+    height: "17%",
+    border: "1px solid rgba(255,255,255,.42)",
     borderTop: 0,
   },
 
   pitchPenaltyBottom: {
     position: "absolute",
-    left: "25%",
-    right: "25%",
-    bottom: "8%",
-    height: "20%",
-    border: "1px solid rgba(255,255,255,.48)",
+    left: "23%",
+    right: "23%",
+    bottom: 6,
+    height: "19%",
+    border: "1px solid rgba(255,255,255,.46)",
     borderBottom: 0,
   },
 
   pitchGoalTop: {
     position: "absolute",
-    left: "45%",
-    right: "45%",
-    top: "8%",
+    left: "42%",
+    right: "42%",
+    top: 6,
     height: "6%",
-    border: "1px solid rgba(255,255,255,.34)",
+    border: "1px solid rgba(255,255,255,.36)",
     borderTop: 0,
   },
 
   pitchGoalBottom: {
     position: "absolute",
-    left: "40%",
-    right: "40%",
-    bottom: "8%",
+    left: "39%",
+    right: "39%",
+    bottom: 6,
     height: "8%",
     border: "1px solid rgba(255,255,255,.42)",
     borderBottom: 0,
@@ -1384,36 +1367,35 @@ const s: Record<string, React.CSSProperties> = {
 
   pitchPlayers: {
     position: "absolute",
-    left: 18,
-    right: 18,
-    top: 14,
-    bottom: 21,
+    left: 8,
+    right: 8,
+    top: 9,
+    bottom: 9,
     display: "grid",
     alignContent: "space-around",
-    padding: "5px 22px 0",
+    padding: "5px 5px",
     zIndex: 2,
-    clipPath: "polygon(17% 0, 83% 0, 96% 100%, 4% 100%)",
   },
 
   pitchHalfway: {
     position: "absolute",
-    left: "9%",
-    right: "9%",
+    left: 6,
+    right: 6,
     top: "50%",
     height: 1,
-    background: "rgba(255,255,255,.36)",
+    background: "rgba(255,255,255,.42)",
   },
 
   pitchCircleSmall: {
     position: "absolute",
     left: "50%",
     top: "50%",
-    width: 48,
-    height: 19,
-    marginLeft: -24,
-    marginTop: -9.5,
+    width: 42,
+    height: 42,
+    marginLeft: -21,
+    marginTop: -21,
     borderRadius: "50%",
-    border: "1px solid rgba(255,255,255,.36)",
+    border: "1px solid rgba(255,255,255,.38)",
   },
 
   compactPitchRow: {
@@ -1421,27 +1403,27 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 2,
     display: "flex",
     justifyContent: "center",
-    gap: 7,
+    gap: 4,
     alignItems: "center",
   },
 
   compactPlayer: {
     display: "grid",
     justifyItems: "center",
-    gap: 2,
-    minWidth: 30,
+    gap: 1,
+    minWidth: 26,
   },
 
   compactPlayerName: {
-    display: "none",
-    maxWidth: 84,
+    display: "block",
+    maxWidth: 42,
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     color: "white",
-    fontWeight: 750,
-    fontSize: 8.5,
-    textShadow: "0 1px 2px rgba(0,0,0,.35)",
+    fontWeight: 800,
+    fontSize: 7.5,
+    textShadow: "0 1px 2px rgba(0,0,0,.45)",
   },
 
   modulePill: {
