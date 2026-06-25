@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
-import TeamBadge, { BadgePattern } from "../../components/TeamBadge";
+import TeamBadge from "../../components/TeamBadge";
 import { useRequireApp } from "../../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
 import { supabase } from "../../../lib/supabaseClient";
@@ -13,14 +13,20 @@ import { supabase } from "../../../lib/supabaseClient";
 type Player = { role: string; name: string; team: string | null; points: number | null };
 type Row = { user_id: string; team_name: string; total_score: number; rank: number; players: Player[] };
 type Data = { matchday_number: number | null; rows: Row[] };
-type Kit = { primary: string; secondary: string; pattern: BadgePattern };
 
 const RANK_COLOR: Record<number, string> = { 1: "#f59e0b", 2: "#94a3b8", 3: "#b45309" };
 function pLabel(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
 function pSub(p: Player) { return p.role === "P" ? "Portiere" : `${p.role} · ${p.team ?? ""}`; }
-function PlayerCrest({ team, colors, size = 32 }: { team: string; colors: Kit | null; size?: number }) {
-  if (colors) return <TeamBadge name={team} primary={colors.primary} secondary={colors.secondary} pattern={colors.pattern} showInitials={false} size={size} />;
-  return <TeamBadge name={team} showInitials={false} size={size} />;
+const ROLE_META: Record<string, { bg: string; fg: string }> = {
+  P: { bg: "#FEF3C7", fg: "#B45309" },
+  D: { bg: "#DCFCE7", fg: "#15803D" },
+  C: { bg: "#DBEAFE", fg: "#2563EB" },
+  A: { bg: "#FEE2E2", fg: "#DC2626" },
+};
+
+function RoleBadge({ role }: { role: string }) {
+  const c = ROLE_META[role] ?? { bg: "#f1f5f9", fg: "#475569" };
+  return <span style={{ ...s.roleBadge, background: c.bg, color: c.fg }}>{role}</span>;
 }
 
 export default function StoricoDetail() {
@@ -30,12 +36,6 @@ export default function StoricoDetail() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null }>>({});
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
 
   useEffect(() => {
     if (!app.ready || !params?.id) return;
@@ -55,21 +55,6 @@ export default function StoricoDetail() {
     });
     return () => { off = true; };
   }, [app.ready, app.activeLeagueId]);
-
-  useEffect(() => {
-    const lc = app.activeLeagueCompetitionId;
-    if (!lc) return;
-    let off = false;
-    supabase.rpc("get_competition_team_colors", { p_league_competition_id: lc }).then(({ data }) => {
-      if (off || !data) return;
-      const m: Record<string, Kit> = {};
-      (data as any[]).forEach((r) => {
-        if (r.name && r.color_primary) m[String(r.name).trim().toLowerCase()] = { primary: r.color_primary, secondary: r.color_secondary || r.color_primary, pattern: (r.kit_pattern || "split") as BadgePattern };
-      });
-      setTeamColors(m);
-    });
-    return () => { off = true; };
-  }, [app.activeLeagueCompetitionId]);
 
   useEffect(() => {
     if (app.userId && data.rows.some((r) => r.user_id === app.userId)) {
@@ -121,7 +106,7 @@ export default function StoricoDetail() {
                         const v = p.points == null ? null : Number(p.points);
                         return (
                           <div key={i} style={s.prow}>
-                            <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={32} />
+                            <RoleBadge role={p.role} />
                             <div style={{ minWidth: 0 }}>
                               <div style={s.pn}>{pLabel(p)}</div>
                               <div style={s.pt}>{pSub(p)}</div>
@@ -161,6 +146,7 @@ const s: Record<string, React.CSSProperties> = {
   total: { fontSize: 19, fontWeight: 1000, color: "#0f172a", textAlign: "right" },
   players: { marginTop: 11, paddingTop: 10, borderTop: "1px dashed #e5e7eb", display: "grid", gap: 7 },
   prow: { display: "grid", gridTemplateColumns: "32px 1fr auto", gap: 9, alignItems: "center" },
+  roleBadge: { width: 32, height: 32, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 1000, border: "2px solid white", boxShadow: "0 3px 9px rgba(15,23,42,.10)" },
   pn: { fontSize: 13, fontWeight: 900, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 800, color: "#64748b" },
   pp: { fontSize: 13, fontWeight: 1000, padding: "2px 9px", borderRadius: 8 },

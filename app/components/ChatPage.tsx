@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { themeFromType } from "@/lib/competitionThemes";
-import TeamBadge, { BadgePattern } from "./TeamBadge";
+import TeamBadge from "./TeamBadge";
 
 type Mention = { user_id: string; team_name: string };
 type CitedPlayer = { id: string; name: string; role: string; team: string };
@@ -16,7 +16,6 @@ type Message = {
 type Member = { user_id: string; team_name: string; role: string; color_primary?: string | null; color_secondary?: string | null };
 type Competition = { id: string; name: string; competition_type: string | null };
 type PlayerHit = { real_player_id: string; name: string; role: string; team: string; points: number };
-type Kit = { primary: string; secondary: string; pattern: BadgePattern };
 
 type Props = {
   leagueId: string; currentUserId: string; currentTeamName: string;
@@ -32,21 +31,42 @@ function activeToken(text: string) {
 function playerLabel(p: { role: string; name: string; team: string }) { return p.role === "P" ? (p.team || p.name) : p.name; }
 function playerSub(p: { role: string; team: string }) { return p.role === "P" ? "Portiere" : `${(p as any).role ?? ""} · ${p.team}`; }
 
-/** crest a colori maglia (dalla squadra del giocatore); se non ho i colori, ripiego sui colori automatici */
-function PlayerCrest({ team, colors, size = 34 }: { team: string; colors: Kit | null; size?: number }) {
-  if (colors) return <TeamBadge name={team} primary={colors.primary} secondary={colors.secondary} pattern={colors.pattern} showInitials={false} size={size} />;
-  return <TeamBadge name={team} showInitials={false} size={size} />;
-}
+const ROLE_META: Record<string, { bg: string; fg: string }> = {
+  P: { bg: "#FEF3C7", fg: "#B45309" },
+  D: { bg: "#DCFCE7", fg: "#15803D" },
+  C: { bg: "#DBEAFE", fg: "#2563EB" },
+  A: { bg: "#FEE2E2", fg: "#DC2626" },
+};
 
-const ShirtIcon = ({ c = "#15803d", sz = 16 }: { c?: string; sz?: number }) => (
-  <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4l5 2 5-2 3 4-3 2v10H7V10L4 8z" /></svg>
-);
+function RoleBadge({ role, size = 30 }: { role: string; size?: number }) {
+  const c = ROLE_META[role] ?? { bg: "#f1f5f9", fg: "#475569" };
+
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        display: "inline-grid",
+        placeItems: "center",
+        background: c.bg,
+        color: c.fg,
+        fontSize: Math.max(10, size * 0.38),
+        fontWeight: 1000,
+        border: "2px solid white",
+        boxShadow: "0 3px 9px rgba(15,23,42,.10)",
+        flexShrink: 0,
+      }}
+    >
+      {role}
+    </span>
+  );
+}
 
 export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetitionId, competitions = [] }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [pts, setPts] = useState<Record<string, number>>({});
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
   const [input, setInput] = useState("");
   const [token, setToken] = useState<{ kind: string; query: string; start: number } | null>(null);
   const [playerHits, setPlayerHits] = useState<PlayerHit[]>([]);
@@ -64,11 +84,6 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   const activeComp = activeLeagueCompetitionId ? compMap.get(activeLeagueCompetitionId) : null;
   const theme = themeFromType(activeComp?.competition_type ?? null);
   const accent = theme.primary;
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
 
   async function loadMessages() {
     const { data } = await supabase.rpc("get_chat_messages", { p_league_id: leagueId, p_limit: 200 });
@@ -92,21 +107,6 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     })();
     return () => { off = true; };
   }, [leagueId]);
-
-  // colori maglia delle squadre della competizione attiva
-  useEffect(() => {
-    if (!activeLeagueCompetitionId) return;
-    let off = false;
-    supabase.rpc("get_competition_team_colors", { p_league_competition_id: activeLeagueCompetitionId }).then(({ data }) => {
-      if (off || !data) return;
-      const m: Record<string, Kit> = {};
-      (data as any[]).forEach((r) => {
-        if (r.name && r.color_primary) m[String(r.name).trim().toLowerCase()] = { primary: r.color_primary, secondary: r.color_secondary || r.color_primary, pattern: (r.kit_pattern || "split") as BadgePattern };
-      });
-      setTeamColors(m);
-    });
-    return () => { off = true; };
-  }, [activeLeagueCompetitionId]);
 
   useEffect(() => {
     const ch = supabase
@@ -254,7 +254,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
               const isLineup = m.kind === "lineup";
               return (
                 <div key={m.id} style={s.event}>
-                  <div style={s.eventIco}>{isLineup ? <ShirtIcon /> : <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#15803d" }} />}</div>
+                  <div style={s.eventIco}>{isLineup ? <span style={{ fontWeight: 1000, color: "#15803d" }}>R</span> : <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#15803d" }} />}</div>
                   <div>
                     <div style={s.eventTxt}>{isLineup ? `${m.team_name ?? "Un utente"} ha caricato la formazione` : (m.content ?? "Aggiornamento")}</div>
                     <div style={s.eventMeta}>
@@ -288,7 +288,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                     <span style={{ whiteSpace: "pre-wrap" }}>{renderText(m.content)}</span>
                     {players.map((p) => (
                       <span key={p.id} style={s.pchip}>
-                        <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={34} />
+                        <RoleBadge role={p.role} size={30} />
                         <span style={s.pinfo}>
                           <span style={s.pn}>{playerLabel(p)}</span>
                           <span style={s.pt}>{playerSub(p)}</span>
@@ -319,7 +319,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                 ))
               : playerHits.map((p) => (
                   <button key={p.real_player_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPlayer(p); }} style={s.taRow}>
-                    <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={28} />
+                    <RoleBadge role={p.role} size={28} />
                     <span style={s.pinfo}><span style={s.taName}>{playerLabel(p)}</span><span style={s.pt}>{playerSub(p)}</span></span>
                     {ptsTag(p.real_player_id)}
                   </button>
@@ -333,7 +333,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         <div style={s.citedBar}>
           {cited.map((p) => (
             <span key={p.id} style={s.citedChip}>
-              <PlayerCrest team={p.team || p.name} colors={kitOf(p.team)} size={18} />
+              <RoleBadge role={p.role} size={18} />
               {playerLabel(p)}
               <button type="button" onClick={() => setCited((c) => c.filter((x) => x.id !== p.id))} style={s.citedX}>✕</button>
             </span>
@@ -343,7 +343,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
       <div style={s.composer}>
         <button type="button" onClick={() => startToken("person")} style={s.tool}>@</button>
-        <button type="button" onClick={() => startToken("player")} style={s.tool}><ShirtIcon c="#64748b" /></button>
+        <button type="button" onClick={() => startToken("player")} style={s.tool}>P</button>
         <textarea
           ref={taRef} value={input} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}

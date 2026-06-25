@@ -5,6 +5,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
+import { BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -48,6 +49,12 @@ type FixtureRow = {
   home: string;
   away: string;
   status: string;
+};
+
+type Kit = {
+  primary: string;
+  secondary: string;
+  pattern: BadgePattern;
 };
 
 type Slot = {
@@ -102,6 +109,94 @@ function shortName(name?: string | null) {
   return `${parts[0]} ${parts[1]?.[0] ?? ""}.`;
 }
 
+function fallbackColor(seed?: string | null) {
+  const colors = ["#14532d", "#1d4ed8", "#991b1b", "#854d0e", "#0f766e", "#4338ca"];
+  const value = (seed ?? "").split("").reduce((sum, c) => sum + c.charCodeAt(0), 0);
+  return colors[value % colors.length];
+}
+
+function TeamShirt({
+  team,
+  colors,
+  size = 40,
+}: {
+  team?: string | null;
+  colors?: Kit | null;
+  size?: number;
+}) {
+  const primary = colors?.primary ?? fallbackColor(team);
+  const secondary = colors?.secondary ?? "#ffffff";
+  const stripe =
+    colors?.pattern === "stripes"
+      ? `repeating-linear-gradient(90deg, ${primary} 0 7px, ${secondary} 7px 12px)`
+      : colors?.pattern === "split"
+        ? `linear-gradient(90deg, ${primary} 0 50%, ${secondary} 50% 100%)`
+        : `linear-gradient(135deg, ${primary}, ${secondary})`;
+
+  return (
+    <span
+      style={{
+        width: size,
+        height: Math.round(size * 0.92),
+        display: "inline-block",
+        position: "relative",
+        flexShrink: 0,
+        filter: "drop-shadow(0 3px 7px rgba(15,23,42,.18))",
+      }}
+      aria-hidden="true"
+    >
+      <span
+        style={{
+          position: "absolute",
+          inset: `${Math.round(size * 0.16)}px ${Math.round(size * 0.18)}px 0`,
+          background: stripe,
+          borderRadius: "7px 7px 5px 5px",
+          border: "1px solid rgba(255,255,255,.72)",
+        }}
+      />
+      <span
+        style={{
+          position: "absolute",
+          left: 0,
+          top: Math.round(size * 0.2),
+          width: Math.round(size * 0.25),
+          height: Math.round(size * 0.34),
+          background: primary,
+          borderRadius: "6px 2px 4px 4px",
+          transform: "skewY(-16deg)",
+          border: "1px solid rgba(255,255,255,.58)",
+        }}
+      />
+      <span
+        style={{
+          position: "absolute",
+          right: 0,
+          top: Math.round(size * 0.2),
+          width: Math.round(size * 0.25),
+          height: Math.round(size * 0.34),
+          background: primary,
+          borderRadius: "2px 6px 4px 4px",
+          transform: "skewY(16deg)",
+          border: "1px solid rgba(255,255,255,.58)",
+        }}
+      />
+      <span
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: Math.round(size * 0.15),
+          width: Math.round(size * 0.24),
+          height: Math.round(size * 0.16),
+          transform: "translateX(-50%)",
+          background: "#ffffff",
+          borderRadius: "0 0 999px 999px",
+          opacity: 0.9,
+        }}
+      />
+    </span>
+  );
+}
+
 export default function RosaPage() {
   const app = useRequireApp(false);
 
@@ -116,6 +211,12 @@ export default function RosaPage() {
   const [top, setTop] = useState<TopRow[]>([]);
   const [fixtures, setFixtures] = useState<FixtureRow[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
+  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
+
+  function kitOf(team?: string | null): Kit | null {
+    if (!team) return null;
+    return teamColors[team.trim().toLowerCase()] ?? null;
+  }
 
   const roles = useMemo(
     () =>
@@ -232,6 +333,39 @@ export default function RosaPage() {
       off = true;
     };
   }, [form.competition_id, form.matchday?.number]);
+
+  useEffect(() => {
+    const lc = app.activeLeagueCompetitionId;
+    if (!lc) return;
+
+    let off = false;
+
+    supabase
+      .rpc("get_competition_team_colors", {
+        p_league_competition_id: lc,
+      })
+      .then(({ data }) => {
+        if (off || !data) return;
+
+        const m: Record<string, Kit> = {};
+
+        (data as any[]).forEach((r) => {
+          if (r.name && r.color_primary) {
+            m[String(r.name).trim().toLowerCase()] = {
+              primary: r.color_primary,
+              secondary: r.color_secondary || r.color_primary,
+              pattern: (r.kit_pattern || "split") as BadgePattern,
+            };
+          }
+        });
+
+        setTeamColors(m);
+      });
+
+    return () => {
+      off = true;
+    };
+  }, [app.activeLeagueCompetitionId]);
 
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
@@ -430,6 +564,7 @@ export default function RosaPage() {
             selected={selected}
             roles={roles}
             locked={locked}
+            kitOf={kitOf}
             onSlotPress={(role, index) => setActiveSlot({ role, index })}
           />
 
@@ -481,6 +616,7 @@ export default function RosaPage() {
           role={activeSlot.role}
           currentId={currentSlotId}
           options={sheetOptions}
+          kitOf={kitOf}
           onClose={() => setActiveSlot(null)}
           onClear={() => {
             selectPlayer(activeSlot.role, activeSlot.index, "");
@@ -503,6 +639,7 @@ function CampoInterattivo(props: {
   selected: Record<string, string[]>;
   roles: [string, number][];
   locked: boolean;
+  kitOf: (team?: string | null) => Kit | null;
   onSlotPress: (role: string, index: number) => void;
 }) {
   const byId = new Map(props.players.map((p) => [p.id, p]));
@@ -612,7 +749,11 @@ function CampoInterattivo(props: {
                 >
                   {slot.player ? (
                     <>
-                      <RoleBadge role={slot.role} field />
+                      <TeamShirt
+                        team={slot.player.team}
+                        colors={props.kitOf(slot.player.team)}
+                        size={42}
+                      />
                       <span style={s.slotName}>
                         {slot.role === "P"
                           ? slot.player.team || slot.player.name
@@ -641,6 +782,7 @@ function PlayerSheet(props: {
   role: string;
   currentId: string;
   options: Player[];
+  kitOf: (team?: string | null) => Kit | null;
   onClose: () => void;
   onClear: () => void;
   onSelect: (id: string) => void;
@@ -716,7 +858,7 @@ function PlayerSheet(props: {
                 background: p.id === props.currentId ? "#f0fdf4" : "white",
               }}
             >
-              <RoleBadge role={p.role} large />
+              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={42} />
 
               <span style={s.resultText}>
                 <b>{label(p)}</b>

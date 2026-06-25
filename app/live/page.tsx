@@ -5,7 +5,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
-import TeamBadge, { BadgePattern } from "../components/TeamBadge";
+import TeamBadge from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
 import { supabase } from "../../lib/supabaseClient";
@@ -33,12 +33,6 @@ type LiveData = {
     status: string;
   } | null;
   rows: LiveRow[];
-};
-
-type Kit = {
-  primary: string;
-  secondary: string;
-  pattern: BadgePattern;
 };
 
 const empty: LiveData = {
@@ -107,31 +101,6 @@ function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
   );
 }
 
-function PlayerCrest({
-  team,
-  colors,
-  size = 36,
-}: {
-  team: string;
-  colors: Kit | null;
-  size?: number;
-}) {
-  if (colors) {
-    return (
-      <TeamBadge
-        name={team}
-        primary={colors.primary}
-        secondary={colors.secondary}
-        pattern={colors.pattern}
-        showInitials={false}
-        size={size}
-      />
-    );
-  }
-
-  return <TeamBadge name={team} showInitials={false} size={size} />;
-}
-
 export default function LivePage() {
   const app = useRequireApp(true);
 
@@ -142,13 +111,6 @@ export default function LivePage() {
   const [memberColors, setMemberColors] = useState<
     Record<string, { primary: string | null; secondary: string | null }>
   >({});
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
-
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
 
@@ -212,37 +174,6 @@ export default function LivePage() {
       off = true;
     };
   }, [app.ready, app.activeLeagueId]);
-
-  useEffect(() => {
-    const lc = app.activeLeagueCompetitionId;
-    if (!lc) return;
-
-    let off = false;
-
-    supabase
-      .rpc("get_competition_team_colors", { p_league_competition_id: lc })
-      .then(({ data }) => {
-        if (off || !data) return;
-
-        const m: Record<string, Kit> = {};
-
-        (data as any[]).forEach((r) => {
-          if (r.name && r.color_primary) {
-            m[String(r.name).trim().toLowerCase()] = {
-              primary: r.color_primary,
-              secondary: r.color_secondary || r.color_primary,
-              pattern: (r.kit_pattern || "split") as BadgePattern,
-            };
-          }
-        });
-
-        setTeamColors(m);
-      });
-
-    return () => {
-      off = true;
-    };
-  }, [app.activeLeagueCompetitionId]);
 
   useEffect(() => {
     if (app.userId && data.rows.some((r) => r.user_id === app.userId)) {
@@ -386,12 +317,6 @@ export default function LivePage() {
                       r.players.map((p, i) => (
                         <div key={`${p.name}-${i}`} style={s.playerRow}>
                           <div style={s.playerLeft}>
-                            <PlayerCrest
-                              team={p.team || p.name}
-                              colors={kitOf(p.team)}
-                              size={36}
-                            />
-
                             <RoleDot role={p.role} size={24} />
                           </div>
 
@@ -644,7 +569,7 @@ const s: Record<string, React.CSSProperties> = {
   playerRow: {
     minHeight: 62,
     display: "grid",
-    gridTemplateColumns: "52px 1fr auto",
+    gridTemplateColumns: "30px 1fr auto",
     gap: 10,
     alignItems: "center",
     padding: "10px 12px",
@@ -653,8 +578,8 @@ const s: Record<string, React.CSSProperties> = {
 
   playerLeft: {
     position: "relative",
-    width: 52,
-    height: 42,
+    width: 30,
+    height: 30,
     display: "grid",
     alignItems: "center",
   },

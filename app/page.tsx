@@ -6,7 +6,7 @@ import AppBar from "./components/AppBar";
 import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 import CompetitionBadge from "./components/CompetitionBadge";
-import TeamBadge, { BadgePattern } from "./components/TeamBadge";
+import TeamBadge from "./components/TeamBadge";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
 import { supabase } from "../lib/supabaseClient";
@@ -75,12 +75,6 @@ type Recap = {
   mvp_points?: number;
 };
 
-type Kit = {
-  primary: string;
-  secondary: string;
-  pattern: BadgePattern;
-};
-
 const emptyHome: HomeData = {
   matchday: null,
   lineup: null,
@@ -129,31 +123,6 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
       {meta.label}
     </span>
   );
-}
-
-function PlayerCrest({
-  team,
-  colors,
-  size = 40,
-}: {
-  team: string;
-  colors: Kit | null;
-  size?: number;
-}) {
-  if (colors) {
-    return (
-      <TeamBadge
-        name={team}
-        primary={colors.primary}
-        secondary={colors.secondary}
-        pattern={colors.pattern}
-        showInitials={false}
-        size={size}
-      />
-    );
-  }
-
-  return <TeamBadge name={team} showInitials={false} size={size} />;
 }
 
 function ptsStyle(v: number | null | undefined): React.CSSProperties {
@@ -222,18 +191,12 @@ export default function Home() {
   >({});
 
   const [colorsLoaded, setColorsLoaded] = useState(false);
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
   const [standings, setStandings] = useState<StandRow[]>([]);
   const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
 
   const [competitionStatus, setCompetitionStatus] =
     useState<CompetitionStatus | null>(null);
   const [finalStanding, setFinalStanding] = useState<StandRow[]>([]);
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
 
   useEffect(() => {
     if (!app.ready || !app.userId || !app.activeLeagueId) return;
@@ -383,28 +346,6 @@ export default function Home() {
     if (!lc) return;
 
     let off = false;
-
-    supabase
-      .rpc("get_competition_team_colors", {
-        p_league_competition_id: lc,
-      })
-      .then(({ data }) => {
-        if (off || !data) return;
-
-        const m: Record<string, Kit> = {};
-
-        (data as any[]).forEach((r) => {
-          if (r.name && r.color_primary) {
-            m[String(r.name).trim().toLowerCase()] = {
-              primary: r.color_primary,
-              secondary: r.color_secondary || r.color_primary,
-              pattern: (r.kit_pattern || "split") as BadgePattern,
-            };
-          }
-        });
-
-        setTeamColors(m);
-      });
 
     supabase
       .rpc("get_standings", { p_league_competition_id: lc })
@@ -909,12 +850,6 @@ export default function Home() {
                   >
                     {p.role}
                   </span>
-
-                  <PlayerCrest
-                    team={p.team || p.name}
-                    colors={kitOf(p.team)}
-                    size={26}
-                  />
 
                   <div style={{ minWidth: 0 }}>
                     <div style={s.topName}>{shortName(p.name)}</div>
@@ -1534,7 +1469,7 @@ const s: Record<string, React.CSSProperties> = {
 
   topPlayerCard: {
     display: "grid",
-    gridTemplateColumns: "18px 28px 1fr auto",
+    gridTemplateColumns: "20px 1fr auto",
     alignItems: "center",
     gap: 8,
     border: 0,
