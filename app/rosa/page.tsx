@@ -141,17 +141,17 @@ function TeamShirt({
         display: "inline-block",
         position: "relative",
         flexShrink: 0,
-        filter: "drop-shadow(0 3px 7px rgba(15,23,42,.18))",
+        filter: "drop-shadow(0 2px 4px rgba(15,23,42,.12))",
       }}
       aria-hidden="true"
     >
       <span
         style={{
           position: "absolute",
-          inset: `${Math.round(size * 0.16)}px ${Math.round(size * 0.18)}px 0`,
+          inset: `${Math.round(size * 0.18)}px ${Math.round(size * 0.2)}px 0`,
           background: stripe,
-          borderRadius: "7px 7px 5px 5px",
-          border: "1px solid rgba(255,255,255,.72)",
+          borderRadius: "5px 5px 4px 4px",
+          border: "1px solid rgba(255,255,255,.5)",
         }}
       />
       <span
@@ -162,9 +162,9 @@ function TeamShirt({
           width: Math.round(size * 0.25),
           height: Math.round(size * 0.34),
           background: primary,
-          borderRadius: "6px 2px 4px 4px",
+          borderRadius: "4px 1px 3px 3px",
           transform: "skewY(-16deg)",
-          border: "1px solid rgba(255,255,255,.58)",
+          border: "1px solid rgba(255,255,255,.42)",
         }}
       />
       <span
@@ -175,9 +175,9 @@ function TeamShirt({
           width: Math.round(size * 0.25),
           height: Math.round(size * 0.34),
           background: primary,
-          borderRadius: "2px 6px 4px 4px",
+          borderRadius: "1px 4px 3px 3px",
           transform: "skewY(16deg)",
-          border: "1px solid rgba(255,255,255,.58)",
+          border: "1px solid rgba(255,255,255,.42)",
         }}
       />
       <span
@@ -190,7 +190,7 @@ function TeamShirt({
           transform: "translateX(-50%)",
           background: "#ffffff",
           borderRadius: "0 0 999px 999px",
-          opacity: 0.9,
+          opacity: 0.72,
         }}
       />
     </span>
@@ -676,17 +676,17 @@ function CampoInterattivo(props: {
           y="12"
           width="396"
           height="236"
-          rx="10"
+          rx="6"
           fill="none"
-          stroke="rgba(255,255,255,.56)"
-          strokeWidth="3"
+          stroke="rgba(255,255,255,.48)"
+          strokeWidth="2"
         />
         <line
           x1="210"
           y1="12"
           x2="210"
           y2="248"
-          stroke="rgba(255,255,255,.42)"
+          stroke="rgba(255,255,255,.36)"
           strokeWidth="2"
         />
         <circle
@@ -694,17 +694,17 @@ function CampoInterattivo(props: {
           cy="130"
           r="40"
           fill="none"
-          stroke="rgba(255,255,255,.42)"
+          stroke="rgba(255,255,255,.36)"
           strokeWidth="2"
         />
-        <circle cx="210" cy="130" r="3" fill="rgba(255,255,255,.60)" />
+        <circle cx="210" cy="130" r="2.5" fill="rgba(255,255,255,.52)" />
         <rect
           x="12"
           y="82"
           width="54"
           height="96"
           fill="none"
-          stroke="rgba(255,255,255,.42)"
+          stroke="rgba(255,255,255,.36)"
           strokeWidth="2"
         />
         <rect
@@ -713,7 +713,7 @@ function CampoInterattivo(props: {
           width="54"
           height="96"
           fill="none"
-          stroke="rgba(255,255,255,.42)"
+          stroke="rgba(255,255,255,.36)"
           strokeWidth="2"
         />
       </svg>
@@ -733,7 +733,7 @@ function CampoInterattivo(props: {
               const offset =
                 count === 1
                   ? 0
-                  : (i - (count - 1) / 2) * Math.min(68, 170 / count);
+                  : (i - (count - 1) / 2) * Math.min(60, 152 / count);
 
               return (
                 <button
@@ -752,7 +752,7 @@ function CampoInterattivo(props: {
                       <TeamShirt
                         team={slot.player.team}
                         colors={props.kitOf(slot.player.team)}
-                        size={34}
+                        size={30}
                       />
                       <span style={s.slotName}>
                         {slot.role === "P"
@@ -858,7 +858,7 @@ function PlayerSheet(props: {
                 background: p.id === props.currentId ? "#f0fdf4" : "white",
               }}
             >
-              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={38} />
+              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={34} />
 
               <span style={s.resultText}>
                 <b>{label(p)}</b>
@@ -962,17 +962,17 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "10px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
+    padding: "9px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 12px)",
     display: "grid",
-    gap: 10,
+    gap: 9,
   },
 
   headerCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 14,
-    padding: 12,
-    boxShadow: "0 4px 16px rgba(15,23,42,.05)",
+    borderRadius: 10,
+    padding: 10,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
   },
 
   headerTop: {
@@ -991,21 +991,21 @@ const s: Record<string, React.CSSProperties> = {
 
   giornata: {
     color: "#64748b",
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: 900,
   },
 
   statusPill: {
-    borderRadius: 999,
-    padding: "6px 12px",
+    borderRadius: 8,
+    padding: "5px 9px",
     background: "#f0fdf4",
     color: "#15803d",
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: 1000,
   },
 
   titleRow: {
-    marginTop: 12,
+    marginTop: 10,
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "space-between",
@@ -1015,15 +1015,15 @@ const s: Record<string, React.CSSProperties> = {
   title: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: 1000,
-    letterSpacing: "-0.04em",
+    letterSpacing: "-0.035em",
   },
 
   subtitle: {
-    margin: "5px 0 0",
+    margin: "3px 0 0",
     color: "#64748b",
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: 800,
     lineHeight: 1.35,
   },
@@ -1034,17 +1034,17 @@ const s: Record<string, React.CSSProperties> = {
     gap: 1,
     background: "#f0fdf4",
     color: "#15803d",
-    borderRadius: 10,
-    padding: "7px 10px",
+    borderRadius: 8,
+    padding: "6px 9px",
     fontWeight: 1000,
     flexShrink: 0,
   },
 
   rulesMini: {
-    marginTop: 10,
+    marginTop: 9,
     display: "flex",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 6,
   },
 
   rulePill: {
@@ -1053,17 +1053,17 @@ const s: Record<string, React.CSSProperties> = {
     gap: 6,
     background: "#f8fafc",
     border: "1px solid #e5e7eb",
-    borderRadius: 999,
-    padding: "4px 9px",
-    fontSize: 12,
+    borderRadius: 8,
+    padding: "4px 8px",
+    fontSize: 11,
     fontWeight: 1000,
     color: "#0f172a",
   },
 
   warn: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 14,
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
     background: "#fff7ed",
     border: "1px solid #fed7aa",
     color: "#c2410c",
@@ -1072,9 +1072,9 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   ok: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 14,
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
     background: "#f0fdf4",
     border: "1px solid #86efac",
     color: "#15803d",
@@ -1083,9 +1083,9 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   err: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 14,
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
     background: "#fff1f2",
     border: "1px solid #fecaca",
     color: "#991b1b",
@@ -1096,31 +1096,31 @@ const s: Record<string, React.CSSProperties> = {
   card: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 14,
-    padding: 12,
-    boxShadow: "0 4px 16px rgba(15,23,42,.05)",
+    borderRadius: 10,
+    padding: 10,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
   },
 
   sectionHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 8,
     gap: 10,
   },
 
   sectionTitle: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 17,
+    fontSize: 15.5,
     fontWeight: 1000,
     letterSpacing: "-0.03em",
   },
 
   infoBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: "50%",
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     border: "1px solid #e5e7eb",
     background: "white",
     color: "#64748b",
@@ -1131,11 +1131,11 @@ const s: Record<string, React.CSSProperties> = {
   field: {
     position: "relative",
     width: "100%",
-    height: 226,
-    borderRadius: 12,
+    height: 214,
+    borderRadius: 8,
     overflow: "hidden",
     background: "#15803d",
-    boxShadow: "0 8px 22px rgba(15,23,42,.12)",
+    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.2), 0 4px 12px rgba(15,23,42,.08)",
   },
 
   grass: {
@@ -1168,32 +1168,32 @@ const s: Record<string, React.CSSProperties> = {
     padding: 0,
     display: "grid",
     justifyItems: "center",
-    gap: 3,
-    minWidth: 60,
+    gap: 2,
+    minWidth: 52,
     fontFamily: "inherit",
   },
 
   plusCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: "50%",
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     display: "grid",
     placeItems: "center",
     color: "white",
-    background: "rgba(255,255,255,.14)",
-    border: "2px dashed rgba(255,255,255,.72)",
-    fontSize: 22,
+    background: "rgba(255,255,255,.12)",
+    border: "1px dashed rgba(255,255,255,.7)",
+    fontSize: 18,
     fontWeight: 1000,
-    boxShadow: "0 5px 14px rgba(15,23,42,.18)",
+    boxShadow: "0 2px 6px rgba(15,23,42,.14)",
   },
 
   slotName: {
     color: "white",
-    background: "rgba(15,23,42,.78)",
-    borderRadius: 999,
-    padding: "2px 6px",
-    fontSize: 9.5,
-    maxWidth: 74,
+    background: "rgba(15,23,42,.66)",
+    borderRadius: 6,
+    padding: "2px 5px",
+    fontSize: 9,
+    maxWidth: 66,
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
@@ -1203,59 +1203,59 @@ const s: Record<string, React.CSSProperties> = {
 
   slotNameMuted: {
     color: "white",
-    background: "rgba(15,23,42,.52)",
-    borderRadius: 999,
-    padding: "3px 8px",
-    fontSize: 9.5,
+    background: "rgba(15,23,42,.44)",
+    borderRadius: 6,
+    padding: "2px 6px",
+    fontSize: 9,
     fontWeight: 1000,
     textTransform: "uppercase",
   },
 
   btn: {
     width: "100%",
-    padding: 11,
+    padding: 10,
     border: "none",
     color: "white",
-    borderRadius: 10,
+    borderRadius: 8,
     fontWeight: 1000,
     fontFamily: "inherit",
     cursor: "pointer",
-    marginTop: 10,
+    marginTop: 9,
   },
 
   duo: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 10,
+    gap: 9,
     alignItems: "stretch",
   },
 
   infoCard: {
     display: "grid",
-    gridTemplateColumns: "32px 1fr auto",
-    gap: 8,
+    gridTemplateColumns: "28px 1fr auto",
+    gap: 7,
     alignItems: "center",
-    minHeight: 58,
+    minHeight: 52,
     border: "1px solid #e5e7eb",
     background: "white",
-    borderRadius: 12,
-    padding: 10,
-    boxShadow: "0 4px 14px rgba(15,23,42,.05)",
+    borderRadius: 10,
+    padding: 9,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
     textAlign: "left",
     fontFamily: "inherit",
     cursor: "pointer",
   },
 
   infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 7,
     background: "#f0fdf4",
     color: "#15803d",
     display: "grid",
     placeItems: "center",
     fontWeight: 1000,
-    fontSize: 15,
+    fontSize: 13,
   },
 
   chev: {
@@ -1278,7 +1278,7 @@ const s: Record<string, React.CSSProperties> = {
     position: "absolute",
     inset: 0,
     border: 0,
-    background: "rgba(13,24,18,.34)",
+    background: "rgba(13,24,18,.28)",
     pointerEvents: "auto",
   },
 
@@ -1287,20 +1287,20 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 2,
     width: "100%",
     maxWidth: 520,
-    height: "58vh",
+    height: "62vh",
     background: "white",
-    borderRadius: "28px 28px 0 0",
-    padding: "12px 18px calc(18px + env(safe-area-inset-bottom, 0px))",
-    boxShadow: "0 -20px 46px rgba(15,23,42,.22)",
+    borderRadius: "16px 16px 0 0",
+    padding: "10px 12px calc(14px + env(safe-area-inset-bottom, 0px))",
+    boxShadow: "0 -16px 34px rgba(15,23,42,.18)",
     display: "grid",
     gridTemplateRows: "auto auto auto auto 1fr",
-    gap: 12,
+    gap: 9,
     pointerEvents: "auto",
   },
 
   sheetHandle: {
-    width: 52,
-    height: 5,
+    width: 44,
+    height: 4,
     borderRadius: 999,
     background: "#d1d5db",
     justifySelf: "center",
@@ -1316,22 +1316,22 @@ const s: Record<string, React.CSSProperties> = {
   sheetTitle: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 24,
+    fontSize: 19,
     fontWeight: 1000,
-    letterSpacing: "-0.04em",
+    letterSpacing: "-0.035em",
   },
 
   sheetSubtitle: {
-    margin: "4px 0 0",
+    margin: "2px 0 0",
     color: "#64748b",
     fontWeight: 800,
-    fontSize: 13,
+    fontSize: 11.5,
   },
 
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: "50%",
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     border: "1px solid #e5e7eb",
     background: "#f8fafc",
     color: "#64748b",
@@ -1346,22 +1346,22 @@ const s: Record<string, React.CSSProperties> = {
 
   searchIcon: {
     position: "absolute",
-    left: 14,
+    left: 12,
     top: "50%",
     transform: "translateY(-50%)",
     color: "#94a3b8",
-    fontSize: 20,
+    fontSize: 18,
     pointerEvents: "none",
   },
 
   sheetSearch: {
     width: "100%",
-    height: 48,
-    borderRadius: 14,
+    height: 42,
+    borderRadius: 10,
     border: "1px solid #cbd5e1",
-    padding: "0 14px 0 42px",
+    padding: "0 12px 0 36px",
     fontFamily: "inherit",
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 800,
     outline: "none",
   },
@@ -1370,8 +1370,8 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #fecaca",
     background: "#fff1f2",
     color: "#dc2626",
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 10,
+    padding: 9,
     fontFamily: "inherit",
     fontWeight: 1000,
     cursor: "pointer",
@@ -1380,17 +1380,17 @@ const s: Record<string, React.CSSProperties> = {
   resultList: {
     overflowY: "auto",
     border: "1px solid #e5e7eb",
-    borderRadius: 18,
+    borderRadius: 12,
   },
 
   resultRow: {
     width: "100%",
     display: "grid",
-    gridTemplateColumns: "44px 1fr 34px",
+    gridTemplateColumns: "38px 1fr 28px",
     alignItems: "center",
-    gap: 12,
-    minHeight: 70,
-    padding: "10px 12px",
+    gap: 10,
+    minHeight: 58,
+    padding: "8px 10px",
     border: 0,
     borderBottom: "1px solid #f1f5f9",
     textAlign: "left",
@@ -1402,23 +1402,23 @@ const s: Record<string, React.CSSProperties> = {
     display: "grid",
     gap: 2,
     color: "#0f172a",
-    fontSize: 15,
+    fontSize: 13,
   },
 
   addBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: "50%",
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     display: "grid",
     placeItems: "center",
     background: "#16a34a",
     color: "white",
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 1000,
   },
 
   emptyResults: {
-    padding: 18,
+    padding: 16,
     color: "#64748b",
     fontWeight: 800,
     textAlign: "center",
