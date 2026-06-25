@@ -773,9 +773,10 @@ export default function Home() {
                             <RoleDot role={p.role} size={16} />
 
                             <span style={s.compactPlayerName}>
-                              {(p.name || "").trim().split(" ")[0] ||
-                                shortName(p.name) ||
-                                p.team}
+                              {p.role === "P"
+                                ? p.team || p.name
+                                : (p.name || "").trim().split(" ")[0] ||
+                                  shortName(p.name)}
                             </span>
                           </div>
                         ))}

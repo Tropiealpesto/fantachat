@@ -733,7 +733,7 @@ function CampoInterattivo(props: {
               const offset =
                 count === 1
                   ? 0
-                  : (i - (count - 1) / 2) * Math.min(86, 210 / count);
+                  : (i - (count - 1) / 2) * Math.min(68, 170 / count);
 
               return (
                 <button
@@ -752,7 +752,7 @@ function CampoInterattivo(props: {
                       <TeamShirt
                         team={slot.player.team}
                         colors={props.kitOf(slot.player.team)}
-                        size={42}
+                        size={34}
                       />
                       <span style={s.slotName}>
                         {slot.role === "P"
@@ -858,7 +858,7 @@ function PlayerSheet(props: {
                 background: p.id === props.currentId ? "#f0fdf4" : "white",
               }}
             >
-              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={42} />
+              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={38} />
 
               <span style={s.resultText}>
                 <b>{label(p)}</b>
@@ -962,17 +962,17 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "14px 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    padding: "10px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
     display: "grid",
-    gap: 14,
+    gap: 10,
   },
 
   headerCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 14,
+    padding: 12,
+    boxShadow: "0 4px 16px rgba(15,23,42,.05)",
   },
 
   headerTop: {
@@ -1005,7 +1005,7 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   titleRow: {
-    marginTop: 18,
+    marginTop: 12,
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "space-between",
@@ -1015,7 +1015,7 @@ const s: Record<string, React.CSSProperties> = {
   title: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 1000,
     letterSpacing: "-0.04em",
   },
@@ -1023,7 +1023,7 @@ const s: Record<string, React.CSSProperties> = {
   subtitle: {
     margin: "5px 0 0",
     color: "#64748b",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 800,
     lineHeight: 1.35,
   },
@@ -1034,14 +1034,14 @@ const s: Record<string, React.CSSProperties> = {
     gap: 1,
     background: "#f0fdf4",
     color: "#15803d",
-    borderRadius: 16,
-    padding: "8px 12px",
+    borderRadius: 10,
+    padding: "7px 10px",
     fontWeight: 1000,
     flexShrink: 0,
   },
 
   rulesMini: {
-    marginTop: 14,
+    marginTop: 10,
     display: "flex",
     flexWrap: "wrap",
     gap: 8,
@@ -1096,23 +1096,23 @@ const s: Record<string, React.CSSProperties> = {
   card: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 14,
+    padding: 12,
+    boxShadow: "0 4px 16px rgba(15,23,42,.05)",
   },
 
   sectionHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 10,
     gap: 10,
   },
 
   sectionTitle: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 21,
+    fontSize: 17,
     fontWeight: 1000,
     letterSpacing: "-0.03em",
   },
@@ -1131,11 +1131,11 @@ const s: Record<string, React.CSSProperties> = {
   field: {
     position: "relative",
     width: "100%",
-    height: 276,
-    borderRadius: 20,
+    height: 226,
+    borderRadius: 12,
     overflow: "hidden",
     background: "#15803d",
-    boxShadow: "0 14px 32px rgba(15,23,42,.16)",
+    boxShadow: "0 8px 22px rgba(15,23,42,.12)",
   },
 
   grass: {
@@ -1168,21 +1168,21 @@ const s: Record<string, React.CSSProperties> = {
     padding: 0,
     display: "grid",
     justifyItems: "center",
-    gap: 4,
-    minWidth: 78,
+    gap: 3,
+    minWidth: 60,
     fontFamily: "inherit",
   },
 
   plusCircle: {
-    width: 46,
-    height: 46,
+    width: 36,
+    height: 36,
     borderRadius: "50%",
     display: "grid",
     placeItems: "center",
     color: "white",
     background: "rgba(255,255,255,.14)",
     border: "2px dashed rgba(255,255,255,.72)",
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 1000,
     boxShadow: "0 5px 14px rgba(15,23,42,.18)",
   },
@@ -1191,9 +1191,9 @@ const s: Record<string, React.CSSProperties> = {
     color: "white",
     background: "rgba(15,23,42,.78)",
     borderRadius: 999,
-    padding: "3px 8px",
-    fontSize: 10.5,
-    maxWidth: 92,
+    padding: "2px 6px",
+    fontSize: 9.5,
+    maxWidth: 74,
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
@@ -1213,49 +1213,49 @@ const s: Record<string, React.CSSProperties> = {
 
   btn: {
     width: "100%",
-    padding: 14,
+    padding: 11,
     border: "none",
     color: "white",
-    borderRadius: 14,
+    borderRadius: 10,
     fontWeight: 1000,
     fontFamily: "inherit",
     cursor: "pointer",
-    marginTop: 14,
+    marginTop: 10,
   },
 
   duo: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: 12,
+    gap: 10,
     alignItems: "stretch",
   },
 
   infoCard: {
     display: "grid",
-    gridTemplateColumns: "42px 1fr auto",
-    gap: 10,
+    gridTemplateColumns: "32px 1fr auto",
+    gap: 8,
     alignItems: "center",
-    minHeight: 76,
+    minHeight: 58,
     border: "1px solid #e5e7eb",
     background: "white",
-    borderRadius: 18,
-    padding: 12,
-    boxShadow: "0 8px 22px rgba(15,23,42,.07)",
+    borderRadius: 12,
+    padding: 10,
+    boxShadow: "0 4px 14px rgba(15,23,42,.05)",
     textAlign: "left",
     fontFamily: "inherit",
     cursor: "pointer",
   },
 
   infoIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: "50%",
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     background: "#f0fdf4",
     color: "#15803d",
     display: "grid",
     placeItems: "center",
     fontWeight: 1000,
-    fontSize: 18,
+    fontSize: 15,
   },
 
   chev: {

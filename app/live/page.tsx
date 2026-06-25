@@ -65,12 +65,6 @@ function liveColor(v: number) {
   return "#64748b";
 }
 
-function liveBg(v: number) {
-  if (v > 0) return "#dcfce7";
-  if (v < 0) return "#fee2e2";
-  return "#f1f5f9";
-}
-
 function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
   const meta =
     ROLE_META[role] ?? {
@@ -90,9 +84,9 @@ function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
         background: meta.bg,
         color: meta.fg,
         fontSize: Math.max(10, size * 0.38),
-        fontWeight: 1000,
-        border: "2px solid rgba(255,255,255,.9)",
-        boxShadow: "0 3px 8px rgba(15,23,42,.10)",
+        fontWeight: 900,
+        border: "1px solid rgba(255,255,255,.86)",
+        boxShadow: "0 2px 5px rgba(15,23,42,.08)",
         flexShrink: 0,
       }}
     >
@@ -221,23 +215,6 @@ export default function LivePage() {
               : "Nessuna giornata attiva"}
           </p>
 
-          <div style={s.divider} />
-
-          <div style={s.legend}>
-            <span>
-              <span style={{ ...s.legendDot, background: accent }} />
-              <b>Live</b> = punti di oggi
-            </span>
-
-            <span>
-              <span style={{ ...s.legendDot, background: "#94a3b8" }} />
-              <b>Classifica</b> = totale aggiornato
-            </span>
-          </div>
-
-          <p style={s.note}>
-            I punteggi cambiano quando vengono inserite nuove statistiche.
-          </p>
         </section>
 
         {err && <div style={s.err}>{err}</div>}
@@ -271,7 +248,7 @@ export default function LivePage() {
                     name={r.team_name}
                     primary={c?.primary ?? null}
                     secondary={c?.secondary ?? null}
-                    size={46}
+                    size={32}
                   />
 
                   <div style={s.teamInfo}>
@@ -317,7 +294,7 @@ export default function LivePage() {
                       r.players.map((p, i) => (
                         <div key={`${p.name}-${i}`} style={s.playerRow}>
                           <div style={s.playerLeft}>
-                            <RoleDot role={p.role} size={24} />
+                            <RoleDot role={p.role} size={20} />
                           </div>
 
                           <div style={s.playerInfo}>
@@ -328,7 +305,6 @@ export default function LivePage() {
                           <span
                             style={{
                               ...s.playerPoints,
-                              background: liveBg(p.points),
                               color: liveColor(p.points),
                             }}
                           >
@@ -364,17 +340,17 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "16px 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    padding: "12px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
     display: "grid",
-    gap: 14,
+    gap: 10,
   },
 
   head: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 18,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 12,
+    padding: 12,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
   },
 
   headTop: {
@@ -388,88 +364,58 @@ const s: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     gap: 7,
-    borderRadius: 999,
-    background: "#f8fafc",
-    border: "1px solid #e5e7eb",
-    padding: "7px 12px",
-    fontSize: 12,
-    fontWeight: 1000,
+    borderRadius: 8,
+    background: "#fff7ed",
+    border: "1px solid #fed7aa",
+    padding: "5px 8px",
+    fontSize: 10.5,
+    fontWeight: 900,
   },
 
   liveDot: {
-    width: 10,
-    height: 10,
+    width: 7,
+    height: 7,
     borderRadius: "50%",
   },
 
   title: {
-    margin: "20px 0 4px",
-    fontSize: 34,
+    margin: "12px 0 3px",
+    fontSize: 21,
     lineHeight: 1.05,
-    letterSpacing: "-0.05em",
-    fontWeight: 1000,
+    letterSpacing: "-0.02em",
+    fontWeight: 900,
     color: "#0f172a",
   },
 
   sub: {
     margin: 0,
-    fontSize: 17,
-    color: "#15803d",
-    fontWeight: 1000,
-  },
-
-  divider: {
-    height: 1,
-    background: "#e5e7eb",
-    margin: "18px 0 14px",
-  },
-
-  legend: {
-    display: "grid",
-    gap: 8,
-    color: "#475569",
-    fontSize: 13,
-    fontWeight: 850,
-  },
-
-  legendDot: {
-    width: 9,
-    height: 9,
-    borderRadius: "50%",
-    display: "inline-block",
-    marginRight: 8,
-  },
-
-  note: {
-    margin: "12px 0 0",
+    fontSize: 12,
     color: "#64748b",
-    fontSize: 13,
     fontWeight: 750,
-    lineHeight: 1.4,
   },
 
   list: {
     display: "grid",
-    gap: 12,
+    gap: 7,
   },
 
   teamCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
+    borderRadius: 10,
     padding: 0,
     overflow: "hidden",
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    boxShadow: "0 2px 8px rgba(15,23,42,.035)",
   },
 
   teamTop: {
     width: "100%",
     border: 0,
     background: "transparent",
-    padding: "16px 14px",
+    padding: "9px 10px",
     display: "grid",
-    gridTemplateColumns: "32px 46px 1fr auto",
-    gap: 12,
+    gridTemplateColumns: "24px 32px minmax(0,1fr) auto",
+    gap: 8,
     alignItems: "center",
     fontFamily: "inherit",
     cursor: "pointer",
@@ -477,8 +423,8 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   rank: {
-    fontSize: 22,
-    fontWeight: 1000,
+    fontSize: 14,
+    fontWeight: 900,
     textAlign: "center",
   },
 
@@ -495,9 +441,9 @@ const s: Record<string, React.CSSProperties> = {
 
   teamName: {
     color: "#0f172a",
-    fontSize: 19,
-    fontWeight: 1000,
-    letterSpacing: "-0.02em",
+    fontSize: 13.5,
+    fontWeight: 850,
+    letterSpacing: 0,
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
@@ -505,23 +451,23 @@ const s: Record<string, React.CSSProperties> = {
 
   youTag: {
     color: "white",
-    fontSize: 10,
-    fontWeight: 1000,
-    borderRadius: 7,
-    padding: "2px 6px",
+    fontSize: 9,
+    fontWeight: 900,
+    borderRadius: 5,
+    padding: "1px 5px",
     flexShrink: 0,
   },
 
   toggle: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: 900,
+    marginTop: 2,
+    fontSize: 10.5,
+    fontWeight: 750,
   },
 
   scoreBox: {
     display: "grid",
     gridTemplateColumns: "auto 1px auto auto",
-    gap: 10,
+    gap: 7,
     alignItems: "center",
     whiteSpace: "nowrap",
   },
@@ -529,57 +475,57 @@ const s: Record<string, React.CSSProperties> = {
   scorePair: {
     display: "grid",
     justifyItems: "end",
-    gap: 1,
+    gap: 0,
   },
 
   liveScore: {
-    fontSize: 25,
+    fontSize: 15,
     lineHeight: 1,
-    fontWeight: 1000,
+    fontWeight: 900,
   },
 
   projected: {
     color: "#334155",
-    fontSize: 25,
+    fontSize: 15,
     lineHeight: 1,
-    fontWeight: 1000,
+    fontWeight: 900,
   },
 
   scoreSeparator: {
     width: 1,
-    height: 38,
+    height: 24,
     background: "#e5e7eb",
   },
 
   chevron: {
     color: "#64748b",
-    fontSize: 22,
+    fontSize: 15,
     lineHeight: 1,
     paddingLeft: 2,
   },
 
   players: {
-    margin: "0 14px 14px",
-    border: "1px solid #e5e7eb",
-    borderRadius: 16,
+    margin: "0 10px 10px",
+    border: "1px solid #eef2f7",
+    borderRadius: 8,
     overflow: "hidden",
     background: "white",
   },
 
   playerRow: {
-    minHeight: 62,
+    minHeight: 42,
     display: "grid",
-    gridTemplateColumns: "30px 1fr auto",
-    gap: 10,
+    gridTemplateColumns: "24px 1fr auto",
+    gap: 8,
     alignItems: "center",
-    padding: "10px 12px",
+    padding: "7px 9px",
     borderBottom: "1px solid #f1f5f9",
   },
 
   playerLeft: {
     position: "relative",
-    width: 30,
-    height: 30,
+    width: 24,
+    height: 24,
     display: "grid",
     alignItems: "center",
   },
@@ -590,31 +536,32 @@ const s: Record<string, React.CSSProperties> = {
 
   playerName: {
     color: "#0f172a",
-    fontSize: 15,
-    fontWeight: 1000,
+    fontSize: 12.5,
+    fontWeight: 850,
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
   },
 
   playerSub: {
-    marginTop: 2,
+    marginTop: 1,
     color: "#64748b",
-    fontSize: 12,
-    fontWeight: 800,
+    fontSize: 10.5,
+    fontWeight: 650,
   },
 
   playerPoints: {
-    minWidth: 42,
+    minWidth: 36,
     textAlign: "center",
-    padding: "5px 9px",
-    borderRadius: 999,
-    fontSize: 14,
-    fontWeight: 1000,
+    padding: 0,
+    borderRadius: 0,
+    background: "transparent",
+    fontSize: 12.5,
+    fontWeight: 900,
   },
 
   noLineup: {
-    padding: 14,
+    padding: 10,
     color: "#94a3b8",
     fontSize: 13,
     fontWeight: 900,
@@ -623,21 +570,21 @@ const s: Record<string, React.CSSProperties> = {
   emptyCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 10,
+    padding: 14,
     color: "#64748b",
     fontWeight: 900,
     textAlign: "center",
-    boxShadow: "0 8px 22px rgba(15,23,42,.06)",
+    boxShadow: "0 2px 8px rgba(15,23,42,.035)",
   },
 
   refresh: {
     margin: "0",
     textAlign: "center",
     color: "#64748b",
-    fontSize: 13,
-    fontWeight: 850,
-    padding: "4px 0 2px",
+    fontSize: 11.5,
+    fontWeight: 700,
+    padding: "2px 0",
   },
 
   err: {
