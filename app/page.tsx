@@ -115,7 +115,7 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
       style={{
         width: size,
         height: size,
-        borderRadius: "50%",
+        borderRadius: 6,
         display: "inline-grid",
         placeItems: "center",
         background: "rgba(255,255,255,.92)",
@@ -123,7 +123,7 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
         fontSize: Math.max(10, size * 0.36),
         fontWeight: 800,
         border: `1px solid ${meta.bg}`,
-        boxShadow: "0 2px 6px rgba(15,23,42,.08)",
+        boxShadow: "0 2px 5px rgba(15,23,42,.08)",
         flexShrink: 0,
       }}
     >
@@ -775,13 +775,17 @@ export default function Home() {
             </div>
 
             <div style={s.compactPitch}>
-              {/* piano del campo tagliato a trapezio (solo grafica) */}
+              <div style={s.pitchShadow} />
               <div style={s.pitchPlane}>
+                <div style={s.pitchOuterLine} />
+                <div style={s.pitchPenaltyTop} />
+                <div style={s.pitchPenaltyBottom} />
+                <div style={s.pitchGoalTop} />
+                <div style={s.pitchGoalBottom} />
                 <div style={s.pitchHalfway} />
                 <div style={s.pitchCircleSmall} />
               </div>
 
-              {/* giocatori dritti, sopra al piano */}
               <div style={s.pitchPlayers}>
                 {lineupGroups.map((g) => (
                   <div key={g.role} style={s.compactPitchRow}>
@@ -964,7 +968,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 const s: Record<string, React.CSSProperties> = {
   topBtn: {
     border: "1px solid #fed7aa",
-    borderRadius: 999,
+    borderRadius: 10,
     background: "white",
     color: "#ea580c",
     padding: "7px 16px",
@@ -1046,7 +1050,7 @@ const s: Record<string, React.CSSProperties> = {
   kpi: {
     background: "rgba(255,255,255,.12)",
     border: "1px solid rgba(255,255,255,.18)",
-    borderRadius: 14,
+    borderRadius: 9,
     padding: "10px 7px",
     display: "grid",
     gap: 4,
@@ -1081,7 +1085,7 @@ const s: Record<string, React.CSSProperties> = {
   card: {
     background: "white",
     border: "1px solid rgba(226,232,240,.92)",
-    borderRadius: 17,
+    borderRadius: 11,
     padding: 14,
     boxShadow: "0 3px 12px rgba(15,23,42,.035)",
   },
@@ -1089,7 +1093,7 @@ const s: Record<string, React.CSSProperties> = {
   matchdayCard: {
     background: "white",
     border: "1px solid rgba(226,232,240,.92)",
-    borderRadius: 17,
+    borderRadius: 11,
     padding: 14,
     boxShadow: "0 3px 12px rgba(15,23,42,.035)",
     display: "grid",
@@ -1101,7 +1105,7 @@ const s: Record<string, React.CSSProperties> = {
   matchdayIcon: {
     width: 34,
     height: 34,
-    borderRadius: "50%",
+    borderRadius: 8,
     background: "#eef7f0",
     color: "#15803d",
     display: "grid",
@@ -1137,7 +1141,7 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     border: 0,
     color: "white",
-    borderRadius: 13,
+    borderRadius: 9,
     padding: 11,
     fontWeight: 800,
     fontSize: 13,
@@ -1194,7 +1198,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: 8,
     alignItems: "center",
     padding: "8px 7px",
-    borderRadius: 12,
+    borderRadius: 7,
     borderBottom: "1px solid #f1f5f9",
   },
 
@@ -1228,55 +1232,120 @@ const s: Record<string, React.CSSProperties> = {
 
   compactPitch: {
     position: "relative",
-    height: 162,
+    height: 184,
     overflow: "hidden",
-    borderRadius: 13,
-    border: "1px solid #dbe8df",
-    background: "#eef7ef",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.35)",
+    borderRadius: 8,
+    border: "1px solid #d7e2da",
+    background:
+      "linear-gradient(180deg, #eef4ee 0%, #dfe9e0 100%)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.85)",
+  },
+
+  pitchShadow: {
+    position: "absolute",
+    left: "8%",
+    right: "8%",
+    bottom: 8,
+    height: 20,
+    borderRadius: "50%",
+    background: "rgba(15,23,42,.18)",
+    filter: "blur(12px)",
   },
 
   pitchPlane: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    left: 10,
+    right: 10,
+    top: 8,
+    bottom: 10,
+    overflow: "hidden",
+    clipPath: "polygon(13% 0, 87% 0, 100% 100%, 0 100%)",
     background:
-      "repeating-linear-gradient(180deg, #73bd78 0px, #73bd78 25px, #69b570 25px, #69b570 50px)",
+      "radial-gradient(circle at 50% 100%, rgba(255,255,255,.16), transparent 34%), repeating-linear-gradient(180deg, rgba(255,255,255,.06) 0 16px, rgba(0,0,0,.035) 16px 32px), linear-gradient(90deg, rgba(18,92,45,.28), transparent 14%, transparent 86%, rgba(18,92,45,.24)), linear-gradient(180deg, #79bd70 0%, #4d9a4d 100%)",
+    boxShadow: "0 14px 24px rgba(15,23,42,.18)",
+  },
+
+  pitchOuterLine: {
+    position: "absolute",
+    left: "7%",
+    right: "7%",
+    top: "7%",
+    bottom: "7%",
+    border: "1px solid rgba(255,255,255,.52)",
+  },
+
+  pitchPenaltyTop: {
+    position: "absolute",
+    left: "35%",
+    right: "35%",
+    top: "7%",
+    height: "16%",
+    border: "1px solid rgba(255,255,255,.48)",
+    borderTop: 0,
+  },
+
+  pitchPenaltyBottom: {
+    position: "absolute",
+    left: "24%",
+    right: "24%",
+    bottom: "7%",
+    height: "19%",
+    border: "1px solid rgba(255,255,255,.52)",
+    borderBottom: 0,
+  },
+
+  pitchGoalTop: {
+    position: "absolute",
+    left: "43%",
+    right: "43%",
+    top: "7%",
+    height: "7%",
+    border: "1px solid rgba(255,255,255,.42)",
+    borderTop: 0,
+  },
+
+  pitchGoalBottom: {
+    position: "absolute",
+    left: "39%",
+    right: "39%",
+    bottom: "7%",
+    height: "8%",
+    border: "1px solid rgba(255,255,255,.46)",
+    borderBottom: 0,
   },
 
   pitchPlayers: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    left: 14,
+    right: 14,
+    top: 14,
+    bottom: 16,
     display: "grid",
     alignContent: "space-around",
-    padding: "10px 10px",
+    padding: "13px 20px 8px",
     zIndex: 2,
+    clipPath: "polygon(13% 0, 87% 0, 100% 100%, 0 100%)",
   },
 
   pitchHalfway: {
     position: "absolute",
-    left: 0,
-    right: 0,
+    left: "8%",
+    right: "8%",
     top: "50%",
     height: 1,
-    background: "rgba(255,255,255,.30)",
+    background: "rgba(255,255,255,.45)",
   },
 
   pitchCircleSmall: {
     position: "absolute",
     left: "50%",
     top: "50%",
-    width: 62,
-    height: 24,
-    marginLeft: -31,
-    marginTop: -12,
+    width: 58,
+    height: 26,
+    marginLeft: -29,
+    marginTop: -13,
     borderRadius: "50%",
-    border: "1px solid rgba(255,255,255,.32)",
+    border: "1px solid rgba(255,255,255,.44)",
   },
 
   compactPitchRow: {
@@ -1322,7 +1391,7 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     border: "1px solid #e1e7e3",
     background: "#fbfdfb",
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 8,
     color: "#15803d",
     fontWeight: 800,
@@ -1336,14 +1405,14 @@ const s: Record<string, React.CSSProperties> = {
     gap: 3,
     marginBottom: 10,
     padding: 3,
-    borderRadius: 13,
+    borderRadius: 8,
     background: "#f6f8f6",
     border: "1px solid #edf2ee",
   },
 
   roleTab: {
     border: "1px solid transparent",
-    borderRadius: 10,
+    borderRadius: 6,
     padding: "5px 0",
     fontWeight: 800,
     fontSize: 11.5,
@@ -1352,7 +1421,7 @@ const s: Record<string, React.CSSProperties> = {
 
   topEmpty: {
     border: "1px solid #eef2f7",
-    borderRadius: 12,
+    borderRadius: 8,
     padding: "11px 12px",
     display: "grid",
     gap: 3,
@@ -1434,7 +1503,7 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     border: "1px solid rgba(226,232,240,.9)",
     background: "rgba(255,255,255,.72)",
-    borderRadius: 14,
+    borderRadius: 8,
     padding: "10px 12px",
     display: "grid",
     gridTemplateColumns: "22px 1fr auto",
@@ -1448,7 +1517,7 @@ const s: Record<string, React.CSSProperties> = {
   rulesIcon: {
     width: 22,
     height: 22,
-    borderRadius: "50%",
+    borderRadius: 6,
     background: "transparent",
     color: "#15803d",
     display: "grid",
@@ -1471,7 +1540,7 @@ const s: Record<string, React.CSSProperties> = {
   adminCard: {
     background: "rgba(255,255,255,.78)",
     border: "1px solid rgba(226,232,240,.9)",
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 12,
     boxShadow: "none",
     display: "flex",
@@ -1482,7 +1551,7 @@ const s: Record<string, React.CSSProperties> = {
   adminIcon: {
     width: 28,
     height: 28,
-    borderRadius: 10,
+    borderRadius: 6,
     background: "#f6f8f6",
     color: "#64748b",
     display: "grid",
@@ -1511,7 +1580,7 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid #16a34a",
     background: "white",
     color: "#15803d",
-    borderRadius: 12,
+    borderRadius: 8,
     padding: "7px 11px",
     fontWeight: 850,
     fontSize: 12,
