@@ -91,7 +91,7 @@ const s: Record<string, React.CSSProperties> = {
   imgWrap: {
     position: "absolute",
     inset: 8,
-    borderRadius: 8,
+    borderRadius: "50%",
     overflow: "hidden",
     background: "linear-gradient(135deg, #102018, #244332)",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14)",
@@ -99,6 +99,7 @@ const s: Record<string, React.CSSProperties> = {
   img: {
     width: "100%",
     height: "100%",
+    borderRadius: "50%",
     objectFit: "cover",
     objectPosition: "top center",
   },

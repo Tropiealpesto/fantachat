@@ -531,22 +531,28 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   roleLine: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 5,
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gap: 4,
+    minWidth: 0,
   },
 
   roleStat: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "center",
+    gap: 3,
+    minWidth: 0,
     background: "#f8fafc",
     border: "1px solid #e5e7eb",
-    borderRadius: 999,
-    padding: "4px 7px",
+    borderRadius: 7,
+    padding: "3px 4px",
     color: "#64748b",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 900,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+    fontVariantNumeric: "tabular-nums",
   },
 
   totalBox: {

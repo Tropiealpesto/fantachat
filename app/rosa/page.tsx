@@ -128,10 +128,10 @@ function TeamShirt({
   const secondary = colors?.secondary ?? "#ffffff";
   const stripe =
     colors?.pattern === "stripes"
-      ? `repeating-linear-gradient(90deg, ${primary} 0 7px, ${secondary} 7px 12px)`
+      ? `repeating-linear-gradient(90deg, ${primary} 0 8px, ${secondary} 8px 13px)`
       : colors?.pattern === "split"
         ? `linear-gradient(90deg, ${primary} 0 50%, ${secondary} 50% 100%)`
-        : `linear-gradient(135deg, ${primary}, ${secondary})`;
+        : primary;
 
   return (
     <span
@@ -141,17 +141,16 @@ function TeamShirt({
         display: "inline-block",
         position: "relative",
         flexShrink: 0,
-        filter: "drop-shadow(0 2px 4px rgba(15,23,42,.12))",
       }}
       aria-hidden="true"
     >
       <span
         style={{
           position: "absolute",
-          inset: `${Math.round(size * 0.18)}px ${Math.round(size * 0.2)}px 0`,
+          inset: `${Math.round(size * 0.16)}px ${Math.round(size * 0.18)}px 0`,
           background: stripe,
-          borderRadius: "5px 5px 4px 4px",
-          border: "1px solid rgba(255,255,255,.5)",
+          borderRadius: "4px 4px 3px 3px",
+          border: "1px solid rgba(255,255,255,.42)",
         }}
       />
       <span
@@ -164,7 +163,7 @@ function TeamShirt({
           background: primary,
           borderRadius: "4px 1px 3px 3px",
           transform: "skewY(-16deg)",
-          border: "1px solid rgba(255,255,255,.42)",
+          border: "1px solid rgba(255,255,255,.34)",
         }}
       />
       <span
@@ -177,7 +176,7 @@ function TeamShirt({
           background: primary,
           borderRadius: "1px 4px 3px 3px",
           transform: "skewY(16deg)",
-          border: "1px solid rgba(255,255,255,.42)",
+          border: "1px solid rgba(255,255,255,.34)",
         }}
       />
       <span
@@ -190,7 +189,7 @@ function TeamShirt({
           transform: "translateX(-50%)",
           background: "#ffffff",
           borderRadius: "0 0 999px 999px",
-          opacity: 0.72,
+          opacity: 0.78,
         }}
       />
     </span>
