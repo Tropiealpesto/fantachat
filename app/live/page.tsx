@@ -85,8 +85,8 @@ function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
         color: meta.fg,
         fontSize: Math.max(10, size * 0.38),
         fontWeight: 900,
-        border: "1px solid rgba(255,255,255,.86)",
-        boxShadow: "0 2px 5px rgba(15,23,42,.08)",
+        border: "1px solid rgba(255,255,255,.9)",
+        boxShadow: "0 1px 4px rgba(15,23,42,.06)",
         flexShrink: 0,
       }}
     >
@@ -248,7 +248,7 @@ export default function LivePage() {
                     name={r.team_name}
                     primary={c?.primary ?? null}
                     secondary={c?.secondary ?? null}
-                    size={32}
+                    size={30}
                   />
 
                   <div style={s.teamInfo}>
@@ -294,7 +294,7 @@ export default function LivePage() {
                       r.players.map((p, i) => (
                         <div key={`${p.name}-${i}`} style={s.playerRow}>
                           <div style={s.playerLeft}>
-                            <RoleDot role={p.role} size={20} />
+                            <RoleDot role={p.role} size={18} />
                           </div>
 
                           <div style={s.playerInfo}>
@@ -340,17 +340,17 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "12px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
+    padding: "10px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 12px)",
     display: "grid",
-    gap: 10,
+    gap: 8,
   },
 
   head: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 12,
-    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
+    borderRadius: 10,
+    padding: 10,
+    boxShadow: "0 2px 10px rgba(15,23,42,.035)",
   },
 
   headTop: {
@@ -364,11 +364,11 @@ const s: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     gap: 7,
-    borderRadius: 8,
+    borderRadius: 7,
     background: "#fff7ed",
     border: "1px solid #fed7aa",
-    padding: "5px 8px",
-    fontSize: 10.5,
+    padding: "4px 7px",
+    fontSize: 10,
     fontWeight: 900,
   },
 
@@ -379,8 +379,8 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   title: {
-    margin: "12px 0 3px",
-    fontSize: 21,
+    margin: "10px 0 2px",
+    fontSize: 19,
     lineHeight: 1.05,
     letterSpacing: "-0.02em",
     fontWeight: 900,
@@ -389,33 +389,33 @@ const s: Record<string, React.CSSProperties> = {
 
   sub: {
     margin: 0,
-    fontSize: 12,
+    fontSize: 11.5,
     color: "#64748b",
     fontWeight: 750,
   },
 
   list: {
     display: "grid",
-    gap: 7,
+    gap: 6,
   },
 
   teamCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 10,
+    borderRadius: 9,
     padding: 0,
     overflow: "hidden",
-    boxShadow: "0 2px 8px rgba(15,23,42,.035)",
+    boxShadow: "0 1px 6px rgba(15,23,42,.03)",
   },
 
   teamTop: {
     width: "100%",
     border: 0,
     background: "transparent",
-    padding: "9px 10px",
+    padding: "8px 9px",
     display: "grid",
-    gridTemplateColumns: "24px 32px minmax(0,1fr) auto",
-    gap: 8,
+    gridTemplateColumns: "22px 30px minmax(0,1fr) auto",
+    gap: 7,
     alignItems: "center",
     fontFamily: "inherit",
     cursor: "pointer",
@@ -423,7 +423,7 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   rank: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 900,
     textAlign: "center",
   },
@@ -441,7 +441,7 @@ const s: Record<string, React.CSSProperties> = {
 
   teamName: {
     color: "#0f172a",
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: 850,
     letterSpacing: 0,
     overflow: "hidden",
@@ -453,21 +453,21 @@ const s: Record<string, React.CSSProperties> = {
     color: "white",
     fontSize: 9,
     fontWeight: 900,
-    borderRadius: 5,
+    borderRadius: 4,
     padding: "1px 5px",
     flexShrink: 0,
   },
 
   toggle: {
     marginTop: 2,
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: 750,
   },
 
   scoreBox: {
     display: "grid",
     gridTemplateColumns: "auto 1px auto auto",
-    gap: 7,
+    gap: 6,
     alignItems: "center",
     whiteSpace: "nowrap",
   },
@@ -479,14 +479,14 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   liveScore: {
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 1,
     fontWeight: 900,
   },
 
   projected: {
     color: "#334155",
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 1,
     fontWeight: 900,
   },
@@ -505,27 +505,27 @@ const s: Record<string, React.CSSProperties> = {
   },
 
   players: {
-    margin: "0 10px 10px",
+    margin: "0 9px 9px",
     border: "1px solid #eef2f7",
-    borderRadius: 8,
+    borderRadius: 7,
     overflow: "hidden",
     background: "white",
   },
 
   playerRow: {
-    minHeight: 42,
+    minHeight: 38,
     display: "grid",
-    gridTemplateColumns: "24px 1fr auto",
-    gap: 8,
+    gridTemplateColumns: "22px 1fr auto",
+    gap: 7,
     alignItems: "center",
-    padding: "7px 9px",
+    padding: "6px 8px",
     borderBottom: "1px solid #f1f5f9",
   },
 
   playerLeft: {
     position: "relative",
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     display: "grid",
     alignItems: "center",
   },
@@ -536,7 +536,7 @@ const s: Record<string, React.CSSProperties> = {
 
   playerName: {
     color: "#0f172a",
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: 850,
     overflow: "hidden",
     whiteSpace: "nowrap",
@@ -546,7 +546,7 @@ const s: Record<string, React.CSSProperties> = {
   playerSub: {
     marginTop: 1,
     color: "#64748b",
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: 650,
   },
 
@@ -556,7 +556,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: 0,
     borderRadius: 0,
     background: "transparent",
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: 900,
   },
 
@@ -570,12 +570,12 @@ const s: Record<string, React.CSSProperties> = {
   emptyCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 10,
+    borderRadius: 9,
     padding: 14,
     color: "#64748b",
     fontWeight: 900,
     textAlign: "center",
-    boxShadow: "0 2px 8px rgba(15,23,42,.035)",
+    boxShadow: "0 1px 6px rgba(15,23,42,.03)",
   },
 
   refresh: {

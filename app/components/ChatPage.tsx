@@ -53,8 +53,8 @@ function RoleBadge({ role, size = 30 }: { role: string; size?: number }) {
         color: c.fg,
         fontSize: Math.max(10, size * 0.38),
         fontWeight: 1000,
-        border: "2px solid white",
-        boxShadow: "0 3px 9px rgba(15,23,42,.10)",
+        border: "1px solid rgba(255,255,255,.9)",
+        boxShadow: "0 1px 4px rgba(15,23,42,.08)",
         flexShrink: 0,
       }}
     >
@@ -270,11 +270,11 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             const players = m.meta?.players ?? [];
             const author = m.user_id ? memberMap.get(m.user_id) : undefined;
             return (
-              <div key={m.id} style={{ ...s.row, justifyContent: own ? "flex-end" : "flex-start", flexDirection: own ? "row-reverse" : "row" }}>
+              <div key={m.id} style={{ ...s.row, flexDirection: own ? "row-reverse" : "row" }}>
                 {head ? (
-                  <TeamBadge name={m.team_name} primary={author?.color_primary ?? null} secondary={author?.color_secondary ?? null} size={34} />
+                  <TeamBadge name={m.team_name} primary={author?.color_primary ?? null} secondary={author?.color_secondary ?? null} size={30} />
                 ) : (
-                  <div style={{ width: 34, flexShrink: 0 }} />
+                  <div style={{ width: 30, flexShrink: 0 }} />
                 )}
                 <div style={{ ...s.col, alignItems: own ? "flex-end" : "flex-start" }}>
                   {head && (
@@ -284,11 +284,11 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                       {own && <span style={s.whoName}>Tu</span>}
                     </div>
                   )}
-                  <div style={{ ...s.bubble, ...(own ? { background: "#d7f3df", color: "#0f172a", borderTopRightRadius: 5 } : { background: "#ffffff", color: "#0f172a", borderTopLeftRadius: 5, border: "1px solid #eceff3" }) }}>
+                  <div style={{ ...s.bubble, ...(own ? { background: "#dff5e5", color: "#0f172a", borderTopRightRadius: 4 } : { background: "#ffffff", color: "#0f172a", borderTopLeftRadius: 4, border: "1px solid #eceff3" }) }}>
                     <span style={{ whiteSpace: "pre-wrap" }}>{renderText(m.content)}</span>
                     {players.map((p) => (
                       <span key={p.id} style={s.pchip}>
-                        <RoleBadge role={p.role} size={30} />
+                        <RoleBadge role={p.role} size={26} />
                         <span style={s.pinfo}>
                           <span style={s.pn}>{playerLabel(p)}</span>
                           <span style={s.pt}>{playerSub(p)}</span>
@@ -313,13 +313,13 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             {token.kind === "person"
               ? peopleHits.map((m) => (
                   <button key={m.user_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPerson(m); }} style={s.taRow}>
-                    <TeamBadge name={m.team_name} primary={m.color_primary ?? null} secondary={m.color_secondary ?? null} size={28} />
+                    <TeamBadge name={m.team_name} primary={m.color_primary ?? null} secondary={m.color_secondary ?? null} size={26} />
                     <span style={s.taName}>{m.team_name}</span>
                   </button>
                 ))
               : playerHits.map((p) => (
                   <button key={p.real_player_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPlayer(p); }} style={s.taRow}>
-                    <RoleBadge role={p.role} size={28} />
+                    <RoleBadge role={p.role} size={24} />
                     <span style={s.pinfo}><span style={s.taName}>{playerLabel(p)}</span><span style={s.pt}>{playerSub(p)}</span></span>
                     {ptsTag(p.real_player_id)}
                   </button>
@@ -347,7 +347,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         <textarea
           ref={taRef} value={input} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Scrivi un messaggio…  @ persone  @@ giocatori" style={s.textarea} rows={1}
+          placeholder="Scrivi un messaggio..." style={s.textarea} rows={1}
         />
         <button type="button" onClick={send} disabled={sending || !input.trim()} style={{ ...s.send, background: accent, opacity: sending || !input.trim() ? 0.5 : 1 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 11l18-8-8 18-2-7-8-3z" /></svg>
@@ -358,46 +358,46 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 }
 
 const s: Record<string, React.CSSProperties> = {
-  wrap: { display: "flex", flexDirection: "column", height: "100%", background: "linear-gradient(180deg,#f8fbf8 0%,#eef3ef 100%)" },
-  stripe: { height: 4, background: "repeating-linear-gradient(90deg,#14532d 0 18px,#1f9d4d 18px 36px,#fb923c 36px 45px)" },
-  header: { background: "rgba(255,255,255,.94)", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 4px 18px rgba(15,23,42,.04)", backdropFilter: "blur(14px)" },
-  hTitle: { fontWeight: 1000, color: "#0f172a", fontSize: 16 },
+  wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#f4f7f4" },
+  stripe: { height: 3, background: "repeating-linear-gradient(90deg,#14532d 0 22px,#1f9d4d 22px 42px,#fb923c 42px 48px)" },
+  header: { background: "rgba(255,255,255,.96)", borderBottom: "1px solid #e5e7eb", padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 10px rgba(15,23,42,.035)", backdropFilter: "blur(14px)" },
+  hTitle: { fontWeight: 950, color: "#0f172a", fontSize: 15.5 },
   hSub: { fontSize: 11, color: "#64748b", fontWeight: 700 },
-  livePill: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, borderRadius: 999, padding: "6px 10px", fontSize: 11, fontWeight: 800 },
-  liveDot: { width: 7, height: 7, borderRadius: "50%" },
-  messages: { flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 9 },
+  livePill: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 9px", fontSize: 10.5, fontWeight: 850 },
+  liveDot: { width: 6, height: 6, borderRadius: "50%" },
+  messages: { flex: 1, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
   center: { margin: "auto", color: "#9ca3af", fontWeight: 800, textAlign: "center" },
-  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "4px solid #15803d", borderRadius: 18, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 8px 22px rgba(15,23,42,.06)" },
-  eventIco: { width: 30, height: 30, borderRadius: "50%", background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
-  eventTxt: { fontSize: 12.5, color: "#0f172a", fontWeight: 800, lineHeight: 1.25 },
-  eventMeta: { fontSize: 11, color: "#64748b", fontWeight: 800, marginTop: 3, display: "flex", gap: 6, flexWrap: "wrap" },
-  tag: { background: "#f1f5f9", borderRadius: 6, padding: "1px 7px", fontWeight: 900, color: "#475569" },
+  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
+  eventIco: { width: 24, height: 24, borderRadius: 7, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
+  eventTxt: { fontSize: 12, color: "#0f172a", fontWeight: 800, lineHeight: 1.25 },
+  eventMeta: { fontSize: 10.5, color: "#64748b", fontWeight: 800, marginTop: 3, display: "flex", gap: 5, flexWrap: "wrap" },
+  tag: { background: "#f1f5f9", borderRadius: 5, padding: "1px 6px", fontWeight: 850, color: "#475569" },
   tagComp: { background: "#dcfce7", color: "#15803d" },
-  row: { display: "flex", gap: 9, alignItems: "flex-end", maxWidth: "100%" },
-  col: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0, maxWidth: "78%" },
+  row: { width: "100%", display: "flex", justifyContent: "flex-start", gap: 8, alignItems: "flex-end", maxWidth: "100%" },
+  col: { display: "flex", flexDirection: "column", gap: 2, minWidth: 0, maxWidth: "76%" },
   who: { display: "flex", alignItems: "center", gap: 7, padding: "0 2px" },
-  whoName: { fontSize: 12, fontWeight: 1000, color: "#0f172a" },
+  whoName: { fontSize: 11.5, fontWeight: 950, color: "#0f172a" },
   whoTime: { fontSize: 10, color: "#94a3b8", fontWeight: 700 },
-  bubble: { padding: "9px 12px", borderRadius: 18, fontSize: 14, fontWeight: 600, lineHeight: 1.4, display: "flex", flexDirection: "column", gap: 6, boxShadow: "0 4px 12px rgba(15,23,42,.05)" },
+  bubble: { padding: "8px 10px", borderRadius: 12, fontSize: 13.5, fontWeight: 600, lineHeight: 1.38, display: "flex", flexDirection: "column", gap: 5, boxShadow: "0 2px 8px rgba(15,23,42,.04)" },
   mention: { fontWeight: 1000, borderRadius: 5, padding: "0 3px" },
-  pchip: { display: "inline-flex", alignItems: "center", gap: 10, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 14, padding: "7px 9px", alignSelf: "flex-start", maxWidth: "100%" },
+  pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
   pinfo: { display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 },
-  pn: { fontSize: 13.5, fontWeight: 1000, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  pt: { fontSize: 11.5, fontWeight: 700, color: "#64748b" },
-  pts: { marginLeft: 2, fontSize: 13, fontWeight: 800, padding: "3px 9px", borderRadius: 999, flexShrink: 0 },
+  pn: { fontSize: 12.5, fontWeight: 950, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  pt: { fontSize: 10.5, fontWeight: 700, color: "#64748b" },
+  pts: { marginLeft: 2, fontSize: 12, fontWeight: 850, padding: "2px 7px", borderRadius: 7, flexShrink: 0 },
   ptsUp: { background: "#dcfce7", color: "#15803d" },
   ptsDown: { background: "#fee2e2", color: "#dc2626" },
   ptsFlat: { background: "#f1f5f9", color: "#64748b" },
-  ta: { margin: "0 12px", background: "white", border: "1px solid #e5e7eb", borderRadius: 18, boxShadow: "0 16px 34px rgba(15,23,42,.16)", overflow: "hidden" },
+  ta: { margin: "0 12px", background: "white", border: "1px solid #e5e7eb", borderRadius: 12, boxShadow: "0 10px 24px rgba(15,23,42,.12)", overflow: "hidden" },
   taHead: { fontSize: 10, fontWeight: 1000, color: "#64748b", textTransform: "uppercase", letterSpacing: ".04em", padding: "9px 13px 5px" },
   taList: { maxHeight: 240, overflowY: "auto", display: "flex", flexDirection: "column" },
   taRow: { display: "flex", alignItems: "center", gap: 10, padding: "9px 13px", borderTop: "1px solid #f1f5f9", background: "white", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", width: "100%" },
   taName: { fontSize: 13, fontWeight: 900, color: "#0f172a" },
   citedBar: { display: "flex", gap: 6, flexWrap: "wrap", padding: "8px 12px 0" },
-  citedChip: { display: "inline-flex", alignItems: "center", gap: 6, background: "white", border: "1px solid #e5e7eb", borderRadius: 999, padding: "4px 8px", fontSize: 12, fontWeight: 800, color: "#0f172a" },
-  citedX: { border: "none", background: "#e5e7eb", color: "#374151", width: 18, height: 18, borderRadius: "50%", fontWeight: 900, cursor: "pointer", fontSize: 10, lineHeight: 1 },
-  composer: { background: "rgba(248,251,248,.94)", borderTop: "1px solid #e5e7eb", padding: 10, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 -8px 22px rgba(15,23,42,.06)" },
-  tool: { width: 38, height: 38, borderRadius: "50%", background: "#fff", border: "1px solid #e5e7eb", color: "#64748b", fontWeight: 800, fontSize: 15, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },
-  textarea: { flex: 1, border: "1px solid #e5e7eb", borderRadius: 18, padding: "10px 14px", resize: "none", fontFamily: "inherit", fontSize: 14, fontWeight: 600, maxHeight: 110, background: "#fff" },
-  send: { width: 42, height: 42, borderRadius: "50%", border: 0, color: "white", fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },
+  citedChip: { display: "inline-flex", alignItems: "center", gap: 6, background: "white", border: "1px solid #e5e7eb", borderRadius: 9, padding: "4px 8px", fontSize: 12, fontWeight: 800, color: "#0f172a" },
+  citedX: { border: "none", background: "#e5e7eb", color: "#374151", width: 18, height: 18, borderRadius: 6, fontWeight: 900, cursor: "pointer", fontSize: 10, lineHeight: 1 },
+  composer: { background: "rgba(248,251,248,.96)", borderTop: "1px solid #e5e7eb", padding: "8px 10px", display: "flex", alignItems: "center", gap: 7, boxShadow: "0 -4px 14px rgba(15,23,42,.045)" },
+  tool: { width: 34, height: 34, borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb", color: "#64748b", fontWeight: 850, fontSize: 14, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },
+  textarea: { flex: 1, border: "1px solid #e5e7eb", borderRadius: 12, padding: "8px 11px", resize: "none", fontFamily: "inherit", fontSize: 13.5, fontWeight: 600, maxHeight: 96, background: "#fff" },
+  send: { width: 38, height: 38, borderRadius: 12, border: 0, color: "white", fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },
 };

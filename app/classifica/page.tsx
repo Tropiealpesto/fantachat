@@ -33,8 +33,8 @@ function normalizeRows(value: unknown): Row[] {
   return [];
 }
 
-function cleanRank(rank?: number | null, fallback?: number) {
-  if (!rank || rank >= 999) return fallback ? String(fallback) : "—";
+function cleanRank(rank?: number | null) {
+  if (!rank || rank >= 999) return "—";
   return String(rank);
 }
 
@@ -185,7 +185,7 @@ export default function Classifica() {
             {myRow && (
               <div style={{ ...s.positionBox, background: `${theme.primary}12` }}>
                 <span style={{ color: theme.primary }}>
-                  #{cleanRank(myRow.rank, myIndex + 1)}
+                  #{cleanRank(myRow.rank)}
                 </span>
                 <small>posizione</small>
               </div>
@@ -256,8 +256,8 @@ export default function Classifica() {
                         ? "#fde68a"
                         : "#e5e7eb",
                     boxShadow: isMine
-                      ? `0 10px 26px ${theme.primary}18`
-                      : "0 4px 14px rgba(15,23,42,.04)",
+                      ? `0 4px 14px ${theme.primary}14`
+                      : "0 2px 8px rgba(15,23,42,.035)",
                   }}
                 >
                   <div
@@ -275,10 +275,10 @@ export default function Classifica() {
                           : "#f8fafc",
                     }}
                   >
-                    {cleanRank(r.rank, index + 1)}
+                    {cleanRank(r.rank)}
                   </div>
 
-                  <TeamBadge name={r.team_name} size={42} />
+                  <TeamBadge name={r.team_name} size={34} />
 
                   <div style={s.teamBlock}>
                     <div style={s.teamTop}>
@@ -375,21 +375,21 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "16px 14px calc(76px + env(safe-area-inset-bottom, 0px) + 18px)",
+    padding: "12px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
     display: "grid",
-    gap: 14,
+    gap: 10,
   },
 
   head: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 18,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 12,
+    padding: 12,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
   },
 
   titleRow: {
-    marginTop: 20,
+    marginTop: 14,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
@@ -398,10 +398,10 @@ const s: Record<string, React.CSSProperties> = {
 
   title: {
     margin: 0,
-    fontSize: 34,
+    fontSize: 24,
     lineHeight: 1.05,
     fontWeight: 1000,
-    letterSpacing: "-0.05em",
+    letterSpacing: "-0.035em",
     color: "#0f172a",
   },
 
@@ -409,13 +409,13 @@ const s: Record<string, React.CSSProperties> = {
     margin: "5px 0 0",
     color: "#64748b",
     fontWeight: 800,
-    fontSize: 14,
+    fontSize: 12,
   },
 
   positionBox: {
-    minWidth: 86,
-    borderRadius: 18,
-    padding: "10px 12px",
+    minWidth: 74,
+    borderRadius: 10,
+    padding: "7px 10px",
     display: "grid",
     justifyItems: "center",
     gap: 2,
@@ -425,15 +425,15 @@ const s: Record<string, React.CSSProperties> = {
   summaryGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 9,
-    marginTop: 16,
+    gap: 7,
+    marginTop: 12,
   },
 
   summaryItem: {
     background: "#f8fafc",
     border: "1px solid #e5e7eb",
-    borderRadius: 16,
-    padding: "10px 8px",
+    borderRadius: 10,
+    padding: "8px 6px",
     display: "grid",
     gap: 4,
     textAlign: "center",
@@ -442,9 +442,9 @@ const s: Record<string, React.CSSProperties> = {
   card: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 12,
+    padding: 10,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
   },
 
   sectionHeader: {
@@ -452,12 +452,12 @@ const s: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 9,
   },
 
   sectionTitle: {
     margin: 0,
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: 1000,
     letterSpacing: "-0.04em",
     color: "#0f172a",
@@ -466,42 +466,42 @@ const s: Record<string, React.CSSProperties> = {
   smallHint: {
     background: "#f1f5f9",
     color: "#64748b",
-    borderRadius: 999,
-    padding: "6px 10px",
-    fontSize: 12,
+    borderRadius: 8,
+    padding: "5px 8px",
+    fontSize: 11,
     fontWeight: 1000,
   },
 
   leaderboard: {
     display: "grid",
-    gap: 9,
+    gap: 6,
   },
 
   row: {
     display: "grid",
-    gridTemplateColumns: "38px 42px 1fr auto",
-    gap: 10,
+    gridTemplateColumns: "30px 34px 1fr auto",
+    gap: 8,
     alignItems: "center",
     border: "1px solid #e5e7eb",
-    borderRadius: 18,
-    padding: 12,
+    borderRadius: 10,
+    padding: "8px 9px",
   },
 
   rank: {
-    width: 38,
-    height: 38,
-    borderRadius: "50%",
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     display: "grid",
     placeItems: "center",
     fontWeight: 1000,
-    fontSize: 15,
+    fontSize: 13,
     flexShrink: 0,
   },
 
   teamBlock: {
     minWidth: 0,
     display: "grid",
-    gap: 6,
+    gap: 4,
   },
 
   teamTop: {
@@ -517,15 +517,15 @@ const s: Record<string, React.CSSProperties> = {
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     fontWeight: 1000,
-    fontSize: 16,
+    fontSize: 13.5,
     letterSpacing: "-0.02em",
   },
 
   you: {
     color: "white",
-    borderRadius: 7,
+    borderRadius: 6,
     padding: "2px 6px",
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: 1000,
     flexShrink: 0,
   },
@@ -559,7 +559,7 @@ const s: Record<string, React.CSSProperties> = {
     display: "grid",
     justifyItems: "end",
     gap: 0,
-    minWidth: 52,
+    minWidth: 48,
   },
 
   empty: {
@@ -568,37 +568,37 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 900,
     textAlign: "center",
     background: "#f8fafc",
-    borderRadius: 16,
+    borderRadius: 10,
   },
 
   trendCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 22,
-    padding: 16,
-    boxShadow: "0 10px 28px rgba(15,23,42,.08)",
+    borderRadius: 12,
+    padding: 12,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
     display: "grid",
-    gridTemplateColumns: "46px 1fr",
+    gridTemplateColumns: "34px 1fr",
     alignItems: "center",
     gap: 12,
   },
 
   trendIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: "50%",
+    width: 34,
+    height: 34,
+    borderRadius: 9,
     background: "#f0fdf4",
     color: "#15803d",
     display: "grid",
     placeItems: "center",
     fontWeight: 1000,
-    fontSize: 22,
+    fontSize: 16,
   },
 
   trendTitle: {
     margin: 0,
     color: "#0f172a",
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 1000,
     letterSpacing: "-0.03em",
   },
@@ -606,7 +606,7 @@ const s: Record<string, React.CSSProperties> = {
   trendText: {
     margin: "4px 0 0",
     color: "#64748b",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 800,
     lineHeight: 1.4,
   },

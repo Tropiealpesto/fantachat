@@ -1031,9 +1031,10 @@ const s: Record<string, React.CSSProperties> = {
     display: "grid",
     justifyItems: "center",
     gap: 1,
-    background: "#f0fdf4",
+    background: "#f8fafc",
     color: "#15803d",
-    borderRadius: 8,
+    borderRadius: 7,
+    border: "1px solid #e5e7eb",
     padding: "6px 9px",
     fontWeight: 1000,
     flexShrink: 0,
@@ -1052,7 +1053,7 @@ const s: Record<string, React.CSSProperties> = {
     gap: 6,
     background: "#f8fafc",
     border: "1px solid #e5e7eb",
-    borderRadius: 8,
+    borderRadius: 7,
     padding: "4px 8px",
     fontSize: 11,
     fontWeight: 1000,
@@ -1133,7 +1134,7 @@ const s: Record<string, React.CSSProperties> = {
     height: 214,
     borderRadius: 8,
     overflow: "hidden",
-    background: "#15803d",
+    background: "#0f5f2d",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,.2), 0 4px 12px rgba(15,23,42,.08)",
   },
 
@@ -1141,7 +1142,7 @@ const s: Record<string, React.CSSProperties> = {
     position: "absolute",
     inset: 0,
     background:
-      "repeating-linear-gradient(180deg, #2f9e54 0, #2f9e54 12.5%, #2a9350 12.5%, #2a9350 25%)",
+      "repeating-linear-gradient(180deg, #227f42 0, #227f42 12.5%, #1d733b 12.5%, #1d733b 25%)",
   },
 
   lines: {
@@ -1179,8 +1180,8 @@ const s: Record<string, React.CSSProperties> = {
     display: "grid",
     placeItems: "center",
     color: "white",
-    background: "rgba(255,255,255,.12)",
-    border: "1px dashed rgba(255,255,255,.7)",
+    background: "rgba(255,255,255,.1)",
+    border: "1px dashed rgba(255,255,255,.58)",
     fontSize: 18,
     fontWeight: 1000,
     boxShadow: "0 2px 6px rgba(15,23,42,.14)",
@@ -1188,7 +1189,7 @@ const s: Record<string, React.CSSProperties> = {
 
   slotName: {
     color: "white",
-    background: "rgba(15,23,42,.66)",
+    background: "rgba(15,23,42,.72)",
     borderRadius: 6,
     padding: "2px 5px",
     fontSize: 9,

@@ -1226,8 +1226,8 @@ const s: Record<string, React.CSSProperties> = {
     height: 142,
     overflow: "hidden",
     borderRadius: 8,
-    border: "1px solid #c9dccd",
-    background: "#4f9f4d",
+    border: "1px solid #b8d0bf",
+    background: "#1f6f36",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,.16)",
   },
 
@@ -1248,7 +1248,7 @@ const s: Record<string, React.CSSProperties> = {
     overflow: "hidden",
     borderRadius: 5,
     background:
-      "repeating-linear-gradient(180deg, #62ad5e 0 17px, #58a454 17px 34px)",
+      "repeating-linear-gradient(180deg, #2a7f43 0 17px, #23743c 17px 34px)",
     boxShadow: "inset 0 0 0 1px rgba(255,255,255,.18)",
   },
 
