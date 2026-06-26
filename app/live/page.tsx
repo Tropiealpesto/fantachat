@@ -180,6 +180,7 @@ export default function LivePage() {
   if (!app.ready || loading) return <LoadingScreen />;
 
   const accent = app.competitionTheme.primary;
+  const secondary = "#ea580c";
 
   return (
     <>
@@ -197,8 +198,8 @@ export default function LivePage() {
               type={app.competitionType}
             />
 
-            <span style={{ ...s.livePill, color: accent }}>
-              <span style={{ ...s.liveDot, background: accent }} />
+            <span style={{ ...s.livePill, color: secondary }}>
+              <span style={{ ...s.liveDot, background: secondary }} />
               LIVE
             </span>
           </div>
@@ -494,7 +495,7 @@ const s: Record<string, React.CSSProperties> = {
   scoreSeparator: {
     width: 1,
     height: 24,
-    background: "#e5e7eb",
+    background: "#fed7aa",
   },
 
   chevron: {
