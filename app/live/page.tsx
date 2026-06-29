@@ -180,7 +180,7 @@ export default function LivePage() {
   if (!app.ready || loading) return <LoadingScreen />;
 
   const accent = app.competitionTheme.primary;
-  const secondary = "#ea580c";
+  const secondary = "#e07b1a";
 
   return (
     <>
@@ -366,8 +366,8 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "center",
     gap: 7,
     borderRadius: 7,
-    background: "#fff7ed",
-    border: "1px solid #fed7aa",
+    background: "#fff3e4",
+    border: "1px solid #f4c99d",
     padding: "4px 7px",
     fontSize: 10,
     fontWeight: 900,
@@ -495,7 +495,7 @@ const s: Record<string, React.CSSProperties> = {
   scoreSeparator: {
     width: 1,
     height: 24,
-    background: "#fed7aa",
+    background: "#f4c99d",
   },
 
   chevron: {

@@ -136,7 +136,7 @@ const s: Record<string, React.CSSProperties> = {
   prompt: { minHeight: 200, fontFamily: "ui-monospace,Menlo,monospace", fontSize: 12, fontWeight: 600, background: "#f8fafc", color: "#334155", whiteSpace: "pre-wrap" },
   copy: { padding: 12, border: 0, borderRadius: 12, color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   hint: { fontSize: 11.5, color: "#64748b", fontWeight: 700, margin: "2px 0 0" },
-  warn: { background: "#fff7ed", border: "1px solid #fed7aa", color: "#b85c0a", borderRadius: 12, padding: 12, fontWeight: 800, fontSize: 13 },
+  warn: { background: "#fff3e4", border: "1px solid #f4c99d", color: "#b85c0a", borderRadius: 12, padding: 12, fontWeight: 800, fontSize: 13 },
   btn: { padding: 13, border: 0, borderRadius: 12, background: "#15803d", color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
   ok: { color: "#15803d", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 12, padding: 10, fontWeight: 900 },
   err: { color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: 10, fontWeight: 900 },

@@ -29,7 +29,7 @@ export default function SideDrawer(props: Props) {
         <header style={s.header}>
           <div style={s.logoWrap}>
             <span style={s.mark}>FC</span>
-            <div style={s.logo}><span style={{ color: "#bbf7d0" }}>Fanta</span><span style={{ color: "#fed7aa" }}>Chat</span></div>
+            <div style={s.logo}><span style={{ color: "#bbf7d0" }}>Fanta</span><span style={{ color: "#f4c99d" }}>Chat</span></div>
           </div>
           <button onClick={props.onClose} style={s.close} aria-label="Chiudi menu">×</button>
           <div style={s.teamrow}>
@@ -145,7 +145,7 @@ const s: Record<string, React.CSSProperties> = {
   itemIco: { width: 20, height: 20, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
   itemT: { fontWeight: 900, fontSize: 13.5, color: "#0f172a" },
   itemS: { fontSize: 11, color: "#64748b", fontWeight: 700 },
-  adminbox: { background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 16, padding: 8 },
+  adminbox: { background: "#fff3e4", border: "1px solid #f4c99d", borderRadius: 16, padding: 8 },
   alink: { display: "flex", alignItems: "center", gap: 10, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "#0f172a", textDecoration: "none" },
   alinkIco: { width: 17, height: 17, fill: "none", stroke: "#b45309", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
   footer: { padding: 14, borderTop: "1px solid #e8eee9", background: "#f8fbf8" },

@@ -216,7 +216,7 @@ export default function RegolePage() {
         </RuleCard>
 
         {isPro && (
-          <section style={{ ...s.card, borderTop: "3px solid #ea580c" }}>
+          <section style={{ ...s.card, borderTop: "3px solid #e07b1a" }}>
             <h2 style={s.cardTitle}>
               In più nel Pro <span style={s.proPillSmall}>PRO</span>
             </h2>
@@ -298,7 +298,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontWeight: 1000,
     color: "white",
-    background: "#ea580c",
+    background: "#e07b1a",
     borderRadius: 6,
     padding: "2px 9px",
     marginLeft: 10,
@@ -308,7 +308,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 11,
     fontWeight: 1000,
     color: "white",
-    background: "#ea580c",
+    background: "#e07b1a",
     borderRadius: 6,
     padding: "2px 7px",
     marginLeft: 6,

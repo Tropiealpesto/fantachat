@@ -5,7 +5,7 @@ export default function LoadingScreen() {
     <div style={s.wrap}>
       <div style={s.logo}>
         <span style={{ color: "#16a34a" }}>Fanta</span>
-        <span style={{ color: "#ea580c" }}>Chat</span>
+        <span style={{ color: "#e07b1a" }}>Chat</span>
       </div>
 
       <div style={s.spinnerWrap}>

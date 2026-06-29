@@ -23,7 +23,7 @@ export const DEFAULT_THEME: CompetitionTheme = {
   key: "campionato",
   primary: "#16a34a",
   primaryDark: "#15803d",
-  accent: "#f97316",
+  accent: "#e07b1a",
   badgeBg: "#dcfce7",
   badgeText: "#15803d",
   hero: "linear-gradient(160deg,#14532d,#16a34a)",
@@ -67,11 +67,11 @@ export const THEMES: Record<string, CompetitionTheme> = {
 
   coppe: {
     key: "coppe",
-    primary: "#d4a017",
-    primaryDark: "#111827",
-    accent: "#0ea5e9",
-    badgeBg: "#fef3c7",
-    badgeText: "#b45309",
+    primary: "#16a34a",
+    primaryDark: "#15803d",
+    accent: "#e07b1a",
+    badgeBg: "#dcfce7",
+    badgeText: "#15803d",
     hero:
       "radial-gradient(circle at 50% 0%, rgba(212,160,23,0.28), transparent 24%), radial-gradient(circle at 8% 30%, rgba(0,0,0,0.40), transparent 24%), radial-gradient(circle at 95% 18%, rgba(14,165,233,0.18), transparent 22%), linear-gradient(160deg,#ffffff 0%,#f8fafc 46%,#111827 100%)",
     label: "Coppe",
@@ -83,7 +83,7 @@ export const THEMES: Record<string, CompetitionTheme> = {
     border: "#e5e7eb",
     text: "#111827",
     muted: "#64748b",
-    soft: "#fff7d6",
+    soft: "#fff3e4",
     shadow: "0 10px 28px rgba(15,23,42,0.08)",
   },
 
@@ -91,11 +91,11 @@ export const THEMES: Record<string, CompetitionTheme> = {
   // usa comunque il tema Coppe.
   mondiale: {
     key: "coppe",
-    primary: "#d4a017",
-    primaryDark: "#111827",
-    accent: "#0ea5e9",
-    badgeBg: "#fef3c7",
-    badgeText: "#b45309",
+    primary: "#16a34a",
+    primaryDark: "#15803d",
+    accent: "#e07b1a",
+    badgeBg: "#dcfce7",
+    badgeText: "#15803d",
     hero:
       "radial-gradient(circle at 50% 0%, rgba(212,160,23,0.28), transparent 24%), radial-gradient(circle at 8% 30%, rgba(0,0,0,0.40), transparent 24%), radial-gradient(circle at 95% 18%, rgba(14,165,233,0.18), transparent 22%), linear-gradient(160deg,#ffffff 0%,#f8fafc 46%,#111827 100%)",
     label: "Coppe",
@@ -107,7 +107,7 @@ export const THEMES: Record<string, CompetitionTheme> = {
     border: "#e5e7eb",
     text: "#111827",
     muted: "#64748b",
-    soft: "#fff7d6",
+    soft: "#fff3e4",
     shadow: "0 10px 28px rgba(15,23,42,0.08)",
   },
 };

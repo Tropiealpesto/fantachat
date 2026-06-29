@@ -951,10 +951,10 @@ function Kpi({ label, value }: { label: string; value: string }) {
 
 const s: Record<string, React.CSSProperties> = {
   topBtn: {
-    border: "1px solid #fed7aa",
+    border: "1px solid #f4c99d",
     borderRadius: 10,
     background: "white",
-    color: "#ea580c",
+    color: "#e07b1a",
     padding: "7px 16px",
     fontWeight: 800,
     fontSize: 13,
@@ -996,7 +996,7 @@ const s: Record<string, React.CSSProperties> = {
     width: 8,
     height: 8,
     borderRadius: "50%",
-    background: "#f97316",
+    background: "#e07b1a",
     boxShadow: "0 0 0 4px rgba(255,255,255,.16)",
   },
 
@@ -1108,7 +1108,7 @@ const s: Record<string, React.CSSProperties> = {
 
   deadline: {
     marginTop: 3,
-    color: "#ea580c",
+    color: "#e07b1a",
     fontSize: 10.5,
     fontWeight: 800,
   },
@@ -1650,7 +1650,7 @@ const s: Record<string, React.CSSProperties> = {
   recapCard: {
     background: "white",
     border: "1px solid #e5e7eb",
-    borderTop: "3px solid #ea580c",
+    borderTop: "3px solid #e07b1a",
     borderRadius: 18,
     padding: 14,
     boxShadow: "0 8px 22px rgba(15,23,42,.08)",
@@ -1675,7 +1675,7 @@ const s: Record<string, React.CSSProperties> = {
   recapLabel: {
     fontSize: 10,
     fontWeight: 1000,
-    color: "#ea580c",
+    color: "#e07b1a",
     textTransform: "uppercase",
     letterSpacing: ".05em",
   },

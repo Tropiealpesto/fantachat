@@ -343,7 +343,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
       <div style={s.composer}>
         <button type="button" onClick={() => startToken("person")} style={{ ...s.tool, color: "#15803d" }}>@</button>
-        <button type="button" onClick={() => startToken("player")} style={{ ...s.tool, color: "#ea580c", borderColor: "#fed7aa", background: "#fff7ed" }}>P</button>
+        <button type="button" onClick={() => startToken("player")} style={{ ...s.tool, color: "#e07b1a", borderColor: "#f4c99d", background: "#fff3e4" }}>P</button>
         <textarea
           ref={taRef} value={input} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
@@ -359,7 +359,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
 const s: Record<string, React.CSSProperties> = {
   wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#f4f7f4" },
-  stripe: { height: 3, background: "repeating-linear-gradient(90deg,#14532d 0 22px,#1f9d4d 22px 42px,#fb923c 42px 48px)" },
+  stripe: { height: 3, background: "repeating-linear-gradient(90deg,#14532d 0 22px,#1f9d4d 22px 42px,#e07b1a 42px 48px)" },
   header: { background: "rgba(255,255,255,.96)", borderBottom: "1px solid #e5e7eb", padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 10px rgba(15,23,42,.035)", backdropFilter: "blur(14px)" },
   hTitle: { fontWeight: 950, color: "#0f172a", fontSize: 15.5 },
   hSub: { fontSize: 11, color: "#64748b", fontWeight: 700 },
@@ -367,7 +367,7 @@ const s: Record<string, React.CSSProperties> = {
   liveDot: { width: 6, height: 6, borderRadius: "50%" },
   messages: { flex: 1, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
   center: { margin: "auto", color: "#9ca3af", fontWeight: 800, textAlign: "center" },
-  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #fed7aa", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
+  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #f4c99d", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
   eventIco: { width: 24, height: 24, borderRadius: 7, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
   eventTxt: { fontSize: 12, color: "#0f172a", fontWeight: 800, lineHeight: 1.25 },
   eventMeta: { fontSize: 10.5, color: "#64748b", fontWeight: 800, marginTop: 3, display: "flex", gap: 5, flexWrap: "wrap" },
@@ -380,7 +380,7 @@ const s: Record<string, React.CSSProperties> = {
   whoTime: { fontSize: 10, color: "#94a3b8", fontWeight: 700 },
   bubble: { padding: "8px 10px", borderRadius: 12, fontSize: 13.5, fontWeight: 600, lineHeight: 1.38, display: "flex", flexDirection: "column", gap: 5, boxShadow: "0 2px 8px rgba(15,23,42,.04)" },
   mention: { fontWeight: 1000, borderRadius: 5, padding: "0 3px" },
-  pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #fed7aa", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
+  pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #f4c99d", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
   pinfo: { display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 },
   pn: { fontSize: 12.5, fontWeight: 950, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 700, color: "#64748b" },

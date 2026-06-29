@@ -465,7 +465,7 @@ const s: Record<string, React.CSSProperties> = {
   typeCard: { textAlign: "left", border: "1.5px solid #e5e7eb", background: "white", borderRadius: 14, padding: 12, cursor: "pointer", fontFamily: "inherit" },
   typeName: { fontWeight: 1000, color: "#111827", fontSize: 14, display: "flex", alignItems: "center", gap: 6 },
   typeDesc: { fontSize: 11.5, color: "#6b7280", fontWeight: 700, marginTop: 4, lineHeight: 1.35 },
-  proTag: { fontSize: 9, fontWeight: 1000, color: "white", background: "#ea580c", borderRadius: 6, padding: "1px 5px" },
+  proTag: { fontSize: 9, fontWeight: 1000, color: "white", background: "#e07b1a", borderRadius: 6, padding: "1px 5px" },
   input: { padding: 13, borderRadius: 13, border: "1px solid #e5e7eb", fontWeight: 800, fontFamily: "inherit" },
   memberList: { display: "grid", gap: 8 },
   memberRow: { display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, border: "1px solid #e5e7eb", background: "white", fontFamily: "inherit", fontWeight: 800, textAlign: "left" },
@@ -479,5 +479,5 @@ const s: Record<string, React.CSSProperties> = {
   actions: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
   primaryBtn: { padding: 14, border: "none", borderRadius: 13, background: "#16a34a", color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   secondaryBtn: { padding: 14, border: "1px solid #e5e7eb", borderRadius: 13, background: "white", color: "#374151", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
-  err: { background: "#fff7ed", border: "1px solid #fed7aa", color: "#b85c0a", padding: 12, borderRadius: 14, fontWeight: 900 },
+  err: { background: "#fff3e4", border: "1px solid #f4c99d", color: "#b85c0a", padding: 12, borderRadius: 14, fontWeight: 900 },
 };

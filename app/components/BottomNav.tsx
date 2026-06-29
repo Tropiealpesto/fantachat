@@ -42,6 +42,7 @@ export default function BottomNav({ unreadCount = 0 }: BottomNavProps) {
               aria-current={active ? "page" : undefined}
               onClick={() => router.push(tab.path)}
               className={`fc-bottom-tab${active ? " is-active" : ""}`}
+              data-tab-path={tab.path}
             >
               <div className="fc-bottom-icon">
                 <Icon path={tab.path} active={active} />

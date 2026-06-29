@@ -44,7 +44,7 @@ type Props = {
   name?: string | null;
   /** colore primario (es. "#15803d"); se assente usa i colori automatici dal nome */
   primary?: string | null;
-  /** colore secondario (es. "#ea580c") */
+  /** colore secondario (es. "#e07b1a") */
   secondary?: string | null;
   /** "split" = due colori in diagonale (squadre utente), "stripes" = a strisce, "solid" = tinta unita (club) */
   pattern?: BadgePattern;

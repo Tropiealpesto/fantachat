@@ -74,7 +74,7 @@ export default function Statistiche() {
 
   if (!app.ready || loading) return <LoadingScreen />;
   const accent = app.competitionTheme.primary;
-  const secondary = "#ea580c";
+  const secondary = "#e07b1a";
 
   return (
     <>
@@ -165,7 +165,7 @@ const s: Record<string, React.CSSProperties> = {
   avg: { fontSize: 15, fontWeight: 1000, fontVariantNumeric: "tabular-nums" },
   avgl: { fontSize: 9.5, fontWeight: 900, color: "#94a3b8" },
   bar: { height: 3, borderRadius: 3, background: "#eef2f5", marginTop: 7, overflow: "hidden" },
-  barFill: { display: "block", height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#15803d,#ea580c)" },
+  barFill: { display: "block", height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#15803d,#e07b1a)" },
   showall: { width: "100%", background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: 10, fontWeight: 850, color: "#15803d", fontSize: 12.5, cursor: "pointer", fontFamily: "inherit" },
   empty: { background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: 14, color: "#64748b", fontWeight: 800 },
 };

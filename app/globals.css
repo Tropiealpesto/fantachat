@@ -4,8 +4,11 @@
 :root {
   --primary: #22c55e;
   --primary-dark: #16a34a;
-  --accent: #f97316;
-  --accent-dark: #ea580c;
+  --brand-orange: #e07b1a;
+  --brand-orange-soft: #fff3e4;
+  --brand-orange-border: #f4c99d;
+  --accent: var(--brand-orange);
+  --accent-dark: var(--brand-orange);
   --text: #0f172a;
   --muted: #64748b;
   --bg: #f4f7f4;
@@ -18,9 +21,16 @@
   --radius-sm: 14px;
 
   --nav-h: 72px;
-  --appbar-h: 72px;
+  --appbar-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
+  --appbar-safe-top: var(--safe-top);
+}
+
+@media (max-width: 560px) and (pointer: coarse) {
+  :root {
+    --appbar-safe-top: max(env(safe-area-inset-top, 0px), 18px);
+  }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -111,8 +121,8 @@ textarea:focus-visible {
 .appbar-inner {
   max-width: 520px;
   margin: 0 auto;
-  height: var(--appbar-h);
-  padding: calc(var(--safe-top) * 0.35) 14px 0;
+  height: calc(var(--appbar-h) + var(--appbar-safe-top));
+  padding: var(--appbar-safe-top) 14px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -157,7 +167,7 @@ textarea:focus-visible {
 }
 
 .appbar-logo .logo-fanta { color: #1a7a3e; }
-.appbar-logo .logo-chat  { color: #e07b1a; }
+.appbar-logo .logo-chat  { color: var(--brand-orange); }
 
 .appbar-sub {
   margin-top: 4px;
@@ -175,8 +185,8 @@ textarea:focus-visible {
 }
 
 .appbar-right .btn {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: var(--brand-orange-soft);
+  border: 1px solid var(--brand-orange-border);
   color: var(--accent-dark);
   font-size: 13px;
   padding: 8px 14px;
@@ -233,8 +243,13 @@ textarea:focus-visible {
 }
 
 .fc-bottom-tab.is-active {
-  color: var(--fc-primary, var(--primary-dark));
-  background: color-mix(in srgb, var(--fc-primary, var(--primary-dark)) 10%, white);
+  color: var(--primary-dark);
+  background: color-mix(in srgb, var(--primary-dark) 10%, white);
+}
+
+.fc-bottom-tab.is-active[data-tab-path="/chat"] {
+  color: var(--brand-orange);
+  background: color-mix(in srgb, var(--brand-orange) 12%, white);
 }
 
 .fc-bottom-icon {
@@ -335,9 +350,9 @@ html[data-competition-theme="mondiale"] .card {
 
 html[data-competition-theme="mondiale"] .appbar-right .btn,
 html[data-competition-theme="mondiale"] .appbar-right button {
-  background: #fff7d6 !important;
-  border-color: rgba(212,160,23,0.35) !important;
-  color: #9a6b00 !important;
+  background: var(--brand-orange-soft) !important;
+  border-color: var(--brand-orange-border) !important;
+  color: var(--brand-orange) !important;
 }
 
 html[data-competition-theme="mondiale"] main::before {
@@ -369,7 +384,7 @@ html[data-competition-theme="mondiale"] .fc-themed-bottom-nav {
 }
 
 .appbar-logo .logo-chat {
-  color: #e07b1a !important;
+  color: var(--brand-orange) !important;
 }
 
 .appbar-sub {
@@ -378,9 +393,9 @@ html[data-competition-theme="mondiale"] .fc-themed-bottom-nav {
 
 .appbar-right .btn,
 .appbar-right button {
-  background: #fff7ed !important;
-  border: 1px solid #fed7aa !important;
-  color: #ea580c !important;
+  background: var(--brand-orange-soft) !important;
+  border: 1px solid var(--brand-orange-border) !important;
+  color: var(--brand-orange) !important;
 }
 
 html[data-competition-theme="champions"] .appbar,
@@ -394,9 +409,9 @@ html[data-competition-theme="champions"] .appbar-right .btn,
 html[data-competition-theme="champions"] .appbar-right button,
 html[data-competition-theme="mondiale"] .appbar-right .btn,
 html[data-competition-theme="mondiale"] .appbar-right button {
-  background: #fff7ed !important;
-  border-color: #fed7aa !important;
-  color: #ea580c !important;
+  background: var(--brand-orange-soft) !important;
+  border-color: var(--brand-orange-border) !important;
+  color: var(--brand-orange) !important;
 }
 
 /* Coppe theme surfaces - Jabulani inspired */
@@ -417,9 +432,9 @@ html[data-competition-theme="mondiale"] .appbar {
 
 html[data-competition-theme="coppe"] .appbar-right .btn,
 html[data-competition-theme="coppe"] .appbar-right button {
-  background: #fff7d6 !important;
-  border-color: rgba(212,160,23,0.35) !important;
-  color: #9a6b00 !important;
+  background: var(--brand-orange-soft) !important;
+  border-color: var(--brand-orange-border) !important;
+  color: var(--brand-orange) !important;
 }
 
 html[data-competition-theme="coppe"] main::before {

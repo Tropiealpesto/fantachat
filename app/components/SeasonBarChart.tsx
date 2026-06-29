@@ -50,7 +50,7 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
         x={p.x + p.width / 2}
         y={y}
         textAnchor="middle"
-        fill={isPos ? "#4ade80" : "#fb923c"}
+        fill={isPos ? "#4ade80" : "#e07b1a"}
         fontWeight={700}
         fontSize={10}
       >
@@ -62,7 +62,7 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     const v = Number(payload[0].value);
-    const color = v > 0 ? "#4ade80" : v < 0 ? "#fb923c" : "#94a3b8";
+    const color = v > 0 ? "#4ade80" : v < 0 ? "#e07b1a" : "#94a3b8";
     return (
       <div style={{
         background: "rgba(15,23,42,0.92)",
@@ -105,7 +105,7 @@ export default function SeasonBarChart(props: { history: HistoryItem[]; totalMat
             {data.map((d, idx) => (
               <Cell
                 key={idx}
-                fill={d.score > 0 ? "#4ade80" : d.score < 0 ? "#fb923c" : "rgba(255,255,255,0.15)"}
+                fill={d.score > 0 ? "#4ade80" : d.score < 0 ? "#e07b1a" : "rgba(255,255,255,0.15)"}
                 fillOpacity={d.score === 0 ? 0.4 : 0.9}
               />
             ))}

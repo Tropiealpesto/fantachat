@@ -124,7 +124,7 @@ export default function SelezionaLega() {
           <div style={s.ctitle}>Crea nuova lega</div>
           <div style={s.csub}>Diventa admin e invita gli amici</div>
         </span>
-        <span style={{ ...s.chev, color: "#fb923c" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg></span>
+        <span style={{ ...s.chev, color: "#e07b1a" }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg></span>
       </button>
 
       <div style={s.sec}>Entra con un codice</div>
@@ -156,13 +156,13 @@ export default function SelezionaLega() {
 const s: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100dvh", maxWidth: 520, margin: "0 auto", padding: "16px 14px 40px",
-    background: "radial-gradient(circle at 88% 2%, rgba(234,88,12,.10), transparent 32%), radial-gradient(circle at 10% 1%, rgba(21,128,61,.08), transparent 30%), #f6f7f9",
+    background: "radial-gradient(circle at 88% 2%, rgba(224,123,26,.10), transparent 32%), radial-gradient(circle at 10% 1%, rgba(21,128,61,.08), transparent 30%), #f6f7f9",
   },
   topbar: { display: "flex", alignItems: "center", gap: 10, padding: "6px 4px 4px" },
   logo: { fontSize: 22, fontWeight: 1000, letterSpacing: "-.5px" },
   logout: { marginLeft: "auto", width: 38, height: 38, borderRadius: "50%", border: "1px solid #e5e7eb", background: "#fff", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer" },
   h1: { fontSize: 22, fontWeight: 1000, color: "#0f172a", margin: "18px 2px 0" },
-  accent: { width: 40, height: 3.5, borderRadius: 3, background: "linear-gradient(90deg,#15803d,#ea580c)", margin: "7px 2px 0" },
+  accent: { width: 40, height: 3.5, borderRadius: 3, background: "linear-gradient(90deg,#15803d,#e07b1a)", margin: "7px 2px 0" },
   sub: { fontSize: 13, color: "#64748b", fontWeight: 700, margin: "9px 2px 14px" },
   sec: { fontSize: 10.5, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em", margin: "18px 4px 9px" },
   card: { width: "100%", display: "grid", gridTemplateColumns: "48px 1fr 24px", gap: 12, alignItems: "center", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 12, textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 22px rgba(15,23,42,.06)", marginBottom: 9 },
@@ -174,7 +174,7 @@ const s: Record<string, React.CSSProperties> = {
   chev: { color: "#cbd5e1", display: "grid", placeItems: "center" },
   check: { width: 28, height: 28, borderRadius: "50%", background: "#15803d", color: "#fff", display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 15, justifySelf: "center" },
   create: { border: "1px dashed #fdba74", background: "#fff8f3", boxShadow: "none" },
-  plus: { width: 48, height: 48, borderRadius: 14, background: "#ffedd5", color: "#ea580c", display: "grid", placeItems: "center", fontSize: 26, lineHeight: 1 },
+  plus: { width: 48, height: 48, borderRadius: 14, background: "#fff3e4", color: "#e07b1a", display: "grid", placeItems: "center", fontSize: 26, lineHeight: 1 },
   ctitle: { fontSize: 15, fontWeight: 1000, color: "#0f172a" },
   csub: { fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2 },
   join: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, boxShadow: "0 8px 22px rgba(15,23,42,.06)", marginTop: 4 },

@@ -10,14 +10,14 @@ import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
 const PRESETS: [string, string][] = [
-  ["#15803d", "#ea580c"],
+  ["#15803d", "#e07b1a"],
   ["#0b1f6b", "#16161b"],
   ["#c8102e", "#16161b"],
   ["#1ba0d8", "#ffffff"],
   ["#5e2d91", "#ffd400"],
   ["#8e1f2f", "#f0bc42"],
   ["#0d9488", "#fde047"],
-  ["#1d4ed8", "#f97316"],
+  ["#1d4ed8", "#e07b1a"],
 ];
 
 export default function Personalizza() {
@@ -25,7 +25,7 @@ export default function Personalizza() {
   const app = useRequireApp(false);
 
   const [primary, setPrimary] = useState("#15803d");
-  const [secondary, setSecondary] = useState("#ea580c");
+  const [secondary, setSecondary] = useState("#e07b1a");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 

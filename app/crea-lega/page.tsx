@@ -283,8 +283,8 @@ const s: Record<string, React.CSSProperties> = {
   err: {
     color: "#b85c0a",
     fontWeight: 900,
-    background: "#fff7ed",
-    border: "1px solid #fed7aa",
+    background: "#fff3e4",
+    border: "1px solid #f4c99d",
     borderRadius: 10,
     padding: "10px 12px",
   },
