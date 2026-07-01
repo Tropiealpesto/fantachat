@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1250" viewBox="0 0 1600 1250">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="lightA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#31d66f"/>
+      <stop offset=".48" stop-color="#a7ad35"/>
+      <stop offset="1" stop-color="#f28d1b"/>
+    </linearGradient>
+    <linearGradient id="lightB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25c961"/>
+      <stop offset=".48" stop-color="#94a22e"/>
+      <stop offset="1" stop-color="#ee8516"/>
+    </linearGradient>
+    <linearGradient id="lightC" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#19b453"/>
+      <stop offset=".5" stop-color="#828822"/>
+      <stop offset="1" stop-color="#dc7411"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 50px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 22px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .axis { font:900 20px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .label { font:800 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fc { font:1000 72px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-7px; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1250"/>
+  <text x="80" y="86" class="title">FantaChat — FC 6, luminosità × diagonal depth</text>
+  <text x="80" y="124" class="sub">Stessa icona, cambia solo quanto è chiara e quanto si vede il taglio diagonale.</text>
+
+  <text x="310" y="184" text-anchor="middle" class="axis">Depth soft</text>
+  <text x="610" y="184" text-anchor="middle" class="axis">Depth medium</text>
+  <text x="910" y="184" text-anchor="middle" class="axis">Depth strong</text>
+  <text x="1210" y="184" text-anchor="middle" class="axis">Depth bold</text>
+
+  <text x="88" y="310" class="axis">Chiara</text>
+  <text x="88" y="610" class="axis">Media</text>
+  <text x="88" y="910" class="axis">Scura</text>
+
+  <!-- function manually repeated: x positions 220,520,820,1120; y 220,520,820 -->
+  <!-- row light -->
+  <g transform="translate(220 220)">
+    <rect width="180" height="180" rx="42" fill="url(#lightA)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.035)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">A1</text>
+  </g>
+  <g transform="translate(520 220)">
+    <rect width="180" height="180" rx="42" fill="url(#lightA)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.06)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">A2</text>
+  </g>
+  <g transform="translate(820 220)">
+    <rect width="180" height="180" rx="42" fill="url(#lightA)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.09)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">A3</text>
+  </g>
+  <g transform="translate(1120 220)">
+    <rect width="180" height="180" rx="42" fill="url(#lightA)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.13)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">A4</text>
+  </g>
+
+  <!-- row medium -->
+  <g transform="translate(220 520)">
+    <rect width="180" height="180" rx="42" fill="url(#lightB)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.035)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">B1</text>
+  </g>
+  <g transform="translate(520 520)">
+    <rect width="180" height="180" rx="42" fill="url(#lightB)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.06)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">B2</text>
+  </g>
+  <g transform="translate(820 520)">
+    <rect width="180" height="180" rx="42" fill="url(#lightB)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.09)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">B3</text>
+  </g>
+  <g transform="translate(1120 520)">
+    <rect width="180" height="180" rx="42" fill="url(#lightB)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.13)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">B4</text>
+  </g>
+
+  <!-- row dark -->
+  <g transform="translate(220 820)">
+    <rect width="180" height="180" rx="42" fill="url(#lightC)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.035)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">C1</text>
+  </g>
+  <g transform="translate(520 820)">
+    <rect width="180" height="180" rx="42" fill="url(#lightC)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.06)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">C2</text>
+  </g>
+  <g transform="translate(820 820)">
+    <rect width="180" height="180" rx="42" fill="url(#lightC)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.09)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">C3</text>
+  </g>
+  <g transform="translate(1120 820)">
+    <rect width="180" height="180" rx="42" fill="url(#lightC)" filter="url(#shadow)"/>
+    <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.13)"/>
+    <text x="90" y="113" text-anchor="middle" class="fc" fill="#fff">FC</text>
+    <text x="90" y="222" text-anchor="middle" class="label">C4</text>
+  </g>
+
+  <g transform="translate(80 1125)">
+    <text x="0" y="0" class="sub">Mia preferenza: B2 o B3. B2 è più elegante, B3 ha più personalità nella home.</text>
+  </g>
+</svg>

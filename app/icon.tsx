@@ -14,34 +14,43 @@ export default function Icon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#ffffff",
+          background: "linear-gradient(135deg,#25c961 0%,#94a22e 48%,#ee8516 100%)",
           display: "flex",
-          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          borderRadius: 100,
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         <div
           style={{
-            fontSize: 140,
-            fontWeight: 1200,
-            color: "#1a7a3c",
-            lineHeight: 1,
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,.06)",
+            clipPath: "polygon(0 100%, 24.4% 64.4%, 49.4% 43.3%, 100% 23.3%, 100% 100%)",
           }}
-        >
-          Fanta
-        </div>
+        />
 
         <div
           style={{
-            fontSize: 140,
-            fontWeight: 1200,
-            color: "#ff7a20",
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(circle at 18% 0%, rgba(255,255,255,.18), transparent 46%)",
+          }}
+        />
+
+        <div
+          style={{
+            color: "#ffffff",
+            fontSize: 214,
+            fontWeight: 1000,
+            letterSpacing: -16,
             lineHeight: 1,
+            textShadow: "2px 3px 0 rgba(0,0,0,.10)",
           }}
         >
-          Chat
+          FC
         </div>
       </div>
     ),

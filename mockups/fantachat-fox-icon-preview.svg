@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="foxOrange" x1=".1" y1="0" x2=".9" y2="1">
+      <stop offset="0" stop-color="#ffb15b"/>
+      <stop offset=".46" stop-color="#e07b1a"/>
+      <stop offset="1" stop-color="#b85c0a"/>
+    </linearGradient>
+    <linearGradient id="foxDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172033"/>
+      <stop offset="1" stop-color="#050914"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffad55"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 44px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-.8px; }
+      .sub { font:700 21px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .word { font:1000 48px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-2px; }
+      .small { font:900 19px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .micro { font:1000 18px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-.4px; }
+      .curve { fill:none; stroke-linecap:round; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="900"/>
+  <text x="80" y="86" class="title">Proposta icona: FantaChat fox</text>
+  <text x="80" y="124" class="sub">Sfondo bianco, volto stilizzato, curve verde/arancio ai lati e wordmark pulito.</text>
+
+  <g transform="translate(120 185)">
+    <rect width="520" height="520" rx="116" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="18" y="18" width="484" height="484" rx="98" fill="#fff" stroke="#eef2f0" stroke-width="3"/>
+
+    <!-- side curves -->
+    <path class="curve" d="M93 119c53 77 71 145 55 204-13 49-47 90-102 123" stroke="url(#green)" stroke-width="11"/>
+    <path class="curve" d="M427 119c-53 77-71 145-55 204 13 49 47 90 102 123" stroke="url(#orange)" stroke-width="11"/>
+    <path class="curve" d="M129 95c39 69 50 128 34 178" stroke="#e07b1a" stroke-width="6" opacity=".72"/>
+    <path class="curve" d="M391 95c-39 69-50 128-34 178" stroke="#16a34a" stroke-width="6" opacity=".72"/>
+
+    <!-- stylized fox face -->
+    <g transform="translate(145 78)">
+      <!-- ears -->
+      <path d="M55 118 34 16l72 70z" fill="url(#foxOrange)"/>
+      <path d="M205 118 226 16l-72 70z" fill="url(#foxOrange)"/>
+      <path d="M59 82 48 39l30 36z" fill="#fff4e6" opacity=".9"/>
+      <path d="M201 82 212 39l-30 36z" fill="#fff4e6" opacity=".9"/>
+
+      <!-- head outer -->
+      <path d="M130 36c62 0 112 43 112 100 0 54-43 102-112 151C61 238 18 190 18 136 18 79 68 36 130 36z" fill="url(#foxOrange)"/>
+
+      <!-- dark upper mask -->
+      <path d="M52 111c24-45 50-67 78-67s54 22 78 67c-25-15-51-22-78-22s-53 7-78 22z" fill="url(#foxDark)" opacity=".96"/>
+
+      <!-- white cheeks / muzzle facets -->
+      <path d="M31 151c31 6 56 21 76 45l23 91C75 248 43 205 31 151z" fill="#fff7ed"/>
+      <path d="M229 151c-31 6-56 21-76 45l-23 91c55-39 87-82 99-136z" fill="#fff7ed"/>
+      <path d="M96 195h68l-34 92z" fill="#ffffff"/>
+
+      <!-- eyes -->
+      <path d="M72 137c19-11 36-11 52 0-17 7-34 7-52 0z" fill="#050914"/>
+      <path d="M136 137c16-11 33-11 52 0-18 7-35 7-52 0z" fill="#050914"/>
+      <circle cx="105" cy="134" r="3" fill="#22c55e"/>
+      <circle cx="155" cy="134" r="3" fill="#22c55e"/>
+
+      <!-- nose and chat mark -->
+      <path d="M116 177h28l-14 14z" fill="#050914"/>
+      <path d="M105 213c9 10 17 15 25 15s16-5 25-15" fill="none" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>
+      <path d="M98 247h64c14 0 25 10 25 23v6c0 13-11 23-25 23h-31l-23 17v-17H98c-14 0-25-10-25-23v-6c0-13 11-23 25-23z" fill="#15803d"/>
+      <path d="M101 273h42" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="158" cy="273" r="7" fill="#e07b1a"/>
+    </g>
+
+    <text x="260" y="462" text-anchor="middle" class="word">
+      <tspan fill="#15803d">Fanta</tspan><tspan fill="#e07b1a">Chat</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(760 210)">
+    <rect width="300" height="550" rx="58" fill="#0f172a" filter="url(#shadow)"/>
+    <rect x="18" y="18" width="264" height="514" rx="44" fill="#f7faf8"/>
+    <rect x="56" y="42" width="152" height="25" rx="12" fill="#111827"/>
+    <text x="42" y="112" class="small">Preview home screen</text>
+
+    <g transform="translate(38 150) scale(.42)">
+      <rect width="180" height="180" rx="42" fill="#fff" stroke="#eef2f0" stroke-width="2"/>
+      <path class="curve" d="M32 42c18 27 25 51 20 71-5 17-16 31-35 42" stroke="url(#green)" stroke-width="4"/>
+      <path class="curve" d="M148 42c-18 27-25 51-20 71 5 17 16 31 35 42" stroke="url(#orange)" stroke-width="4"/>
+      <g transform="translate(50 27) scale(.31)">
+        <path d="M55 118 34 16l72 70z" fill="url(#foxOrange)"/>
+        <path d="M205 118 226 16l-72 70z" fill="url(#foxOrange)"/>
+        <path d="M130 36c62 0 112 43 112 100 0 54-43 102-112 151C61 238 18 190 18 136 18 79 68 36 130 36z" fill="url(#foxOrange)"/>
+        <path d="M52 111c24-45 50-67 78-67s54 22 78 67c-25-15-51-22-78-22s-53 7-78 22z" fill="url(#foxDark)"/>
+        <path d="M31 151c31 6 56 21 76 45l23 91C75 248 43 205 31 151z" fill="#fff7ed"/>
+        <path d="M229 151c-31 6-56 21-76 45l-23 91c55-39 87-82 99-136z" fill="#fff7ed"/>
+        <path d="M96 195h68l-34 92z" fill="#ffffff"/>
+        <path d="M72 137c19-11 36-11 52 0-17 7-34 7-52 0z" fill="#050914"/>
+        <path d="M136 137c16-11 33-11 52 0-18 7-35 7-52 0z" fill="#050914"/>
+        <path d="M116 177h28l-14 14z" fill="#050914"/>
+        <path d="M98 247h64c14 0 25 10 25 23v6c0 13-11 23-25 23h-31l-23 17v-17H98c-14 0-25-10-25-23v-6c0-13 11-23 25-23z" fill="#15803d"/>
+      </g>
+      <text x="90" y="160" text-anchor="middle" class="micro">
+        <tspan fill="#15803d">Fanta</tspan><tspan fill="#e07b1a">Chat</tspan>
+      </text>
+    </g>
+
+    <text x="42" y="250" class="small" fill="#0f172a">FantaChat</text>
+    <rect x="42" y="286" width="216" height="62" rx="18" fill="#fff" stroke="#e5e7eb"/>
+    <rect x="42" y="365" width="216" height="62" rx="18" fill="#fff" stroke="#e5e7eb"/>
+    <rect x="42" y="444" width="216" height="44" rx="16" fill="#16a34a"/>
+  </g>
+
+  <g transform="translate(80 780)">
+    <text x="0" y="0" class="title" font-size="30">Direzione</text>
+    <text x="0" y="42" class="sub" font-size="19">La mascotte è geometrica e premium: non cartoon, ma abbastanza distintiva da restare impressa.</text>
+    <text x="0" y="76" class="sub" font-size="19">Le curve laterali riprendono energia e competizione, mentre la piccola bubble verde lega il simbolo alla chat.</text>
+  </g>
+</svg>

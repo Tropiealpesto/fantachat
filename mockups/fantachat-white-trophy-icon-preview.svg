@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="gold" x1=".2" y1="0" x2=".86" y2="1">
+      <stop offset="0" stop-color="#ffe27a"/>
+      <stop offset=".35" stop-color="#f2b523"/>
+      <stop offset=".68" stop-color="#d98513"/>
+      <stop offset="1" stop-color="#fff0ad"/>
+    </linearGradient>
+    <linearGradient id="goldDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b85f0d"/>
+      <stop offset=".56" stop-color="#f4c24d"/>
+      <stop offset="1" stop-color="#7a3f09"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffad55"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 44px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-.8px; }
+      .sub { font:700 21px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .word { font:1000 47px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-2px; }
+      .small { font:900 19px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .micro { font:1000 18px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-.4px; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="900"/>
+  <text x="80" y="86" class="title">Proposta icona: sfondo bianco + trofeo stilizzato</text>
+  <text x="80" y="124" class="sub">Wordmark FantaChat nei colori app, trofeo astratto tipo fiamma/lama, premium e memorabile.</text>
+
+  <!-- big icon -->
+  <g transform="translate(120 185)">
+    <rect width="520" height="520" rx="116" fill="#ffffff" filter="url(#shadow)"/>
+    <rect x="18" y="18" width="484" height="484" rx="98" fill="#fff" stroke="#eef2f0" stroke-width="3"/>
+
+    <!-- subtle brand arcs -->
+    <path d="M104 188c31 57 46 107 45 150-1 45-18 83-50 116" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" opacity=".88"/>
+    <path d="M416 188c-31 57-46 107-45 150 1 45 18 83 50 116" fill="none" stroke="#e07b1a" stroke-width="10" stroke-linecap="round" opacity=".82"/>
+
+    <!-- stylized FantaChat trophy -->
+    <g transform="translate(161 68)">
+      <!-- back blade -->
+      <path d="M105 10c62 72 52 136 6 195-30 38-42 70-22 109-58-47-63-103-22-161 34-48 45-88 38-143z"
+            fill="url(#goldDark)"/>
+      <!-- front flame blade -->
+      <path d="M142 28c-20 73-11 119 29 165 45 52 38 111-24 157 22-48 3-84-31-122-46-52-38-121 26-200z"
+            fill="url(#gold)"/>
+      <!-- central negative-feel green cut -->
+      <path d="M121 112c-30 46-30 87 4 126 14 16 24 32 29 49-43-25-72-58-75-97-2-31 12-57 42-78z"
+            fill="url(#green)"/>
+      <!-- orange facet -->
+      <path d="M92 222c25 23 51 34 79 32-5 20-17 39-36 57-28-18-42-47-43-89z"
+            fill="url(#orange)"/>
+      <!-- faceted highlights -->
+      <path d="M105 10l28 91-28 38z" fill="#ffe27a" opacity=".55"/>
+      <path d="M142 28l28 165-33-44z" fill="#fff2a8" opacity=".38"/>
+      <path d="M88 315h96l24 43H64z" fill="url(#gold)"/>
+      <path d="M50 365h172v34H50z" rx="8" fill="#111827"/>
+      <path d="M79 353h113v24H79z" fill="#d98513"/>
+      <circle cx="136" cy="209" r="7" fill="#ffffff"/>
+    </g>
+
+    <!-- wordmark lower -->
+    <text x="260" y="461" text-anchor="middle" class="word">
+      <tspan fill="#15803d">Fanta</tspan><tspan fill="#e07b1a">Chat</tspan>
+    </text>
+  </g>
+
+  <!-- small preview -->
+  <g transform="translate(760 210)">
+    <rect width="300" height="550" rx="58" fill="#0f172a" filter="url(#shadow)"/>
+    <rect x="18" y="18" width="264" height="514" rx="44" fill="#f7faf8"/>
+    <rect x="56" y="42" width="152" height="25" rx="12" fill="#111827"/>
+    <text x="42" y="112" class="small">Preview home screen</text>
+
+    <g transform="translate(38 150) scale(.42)">
+      <rect width="180" height="180" rx="42" fill="#fff" stroke="#eef2f0" stroke-width="2"/>
+      <path d="M36 66c11 20 16 38 16 53 0 16-6 29-17 41" fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+      <path d="M144 66c-11 20-16 38-16 53 0 16 6 29 17 41" fill="none" stroke="#e07b1a" stroke-width="4" stroke-linecap="round"/>
+      <g transform="translate(54 20) scale(.34)">
+        <path d="M105 10c62 72 52 136 6 195-30 38-42 70-22 109-58-47-63-103-22-161 34-48 45-88 38-143z" fill="url(#goldDark)"/>
+        <path d="M142 28c-20 73-11 119 29 165 45 52 38 111-24 157 22-48 3-84-31-122-46-52-38-121 26-200z" fill="url(#gold)"/>
+        <path d="M121 112c-30 46-30 87 4 126 14 16 24 32 29 49-43-25-72-58-75-97-2-31 12-57 42-78z" fill="url(#green)"/>
+        <path d="M92 222c25 23 51 34 79 32-5 20-17 39-36 57-28-18-42-47-43-89z" fill="url(#orange)"/>
+        <path d="M50 365h172v34H50z" fill="#111827"/>
+      </g>
+      <text x="90" y="160" text-anchor="middle" class="micro">
+        <tspan fill="#15803d">Fanta</tspan><tspan fill="#e07b1a">Chat</tspan>
+      </text>
+    </g>
+
+    <text x="42" y="250" class="small" fill="#0f172a">FantaChat</text>
+    <rect x="42" y="286" width="216" height="62" rx="18" fill="#fff" stroke="#e5e7eb"/>
+    <rect x="42" y="365" width="216" height="62" rx="18" fill="#fff" stroke="#e5e7eb"/>
+    <rect x="42" y="444" width="216" height="44" rx="16" fill="#16a34a"/>
+  </g>
+
+  <g transform="translate(80 780)">
+    <text x="0" y="0" class="title" font-size="30">Direzione</text>
+    <text x="0" y="42" class="sub" font-size="19">Il trofeo non è una coppa: è una scultura/fiamma astratta, con taglio verde e base nera premium.</text>
+    <text x="0" y="76" class="sub" font-size="19">Lo sfondo bianco rende l’icona più seria e pulita; FantaChat resta leggibile nei colori ufficiali.</text>
+  </g>
+</svg>

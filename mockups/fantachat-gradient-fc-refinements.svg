@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="g3Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#20b855"/>
+      <stop offset=".54" stop-color="#9b9124"/>
+      <stop offset="1" stop-color="#f08a13"/>
+    </linearGradient>
+    <linearGradient id="g5Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset=".55" stop-color="#9a9425"/>
+      <stop offset="1" stop-color="#f18b18"/>
+    </linearGradient>
+    <linearGradient id="g6Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25c961"/>
+      <stop offset=".48" stop-color="#94a22e"/>
+      <stop offset="1" stop-color="#ee8516"/>
+    </linearGradient>
+    <linearGradient id="g4Dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f5f2d"/>
+      <stop offset=".52" stop-color="#6b6819"/>
+      <stop offset="1" stop-color="#b85c0a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2=".8">
+      <stop offset="0" stop-color="rgba(255,255,255,.24)"/>
+      <stop offset=".42" stop-color="rgba(255,255,255,.05)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 48px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 22px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:900 23px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .desc { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .bold { font:900 70px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-6px; }
+      .heavy { font:1000 72px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-7px; }
+      .soft { font:800 70px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-5px; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="850"/>
+  <text x="80" y="86" class="title">FantaChat — refinement gradient FC</text>
+  <text x="80" y="124" class="sub">3, 5, 6 più chiare. 6 più spessa. 4 più scura e bold.</text>
+
+  <!-- 3 refined -->
+  <g transform="translate(80 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g3Light)"/>
+      <text x="90" y="113" text-anchor="middle" class="soft" fill="#fff">FC</text>
+      <rect x="17" y="17" width="146" height="146" rx="32" fill="none" stroke="rgba(255,255,255,.24)" stroke-width="2"/>
+    </g>
+    <text x="28" y="260" class="label">3 chiara</text>
+    <text x="28" y="289" class="desc">Stessa cornice, più luce e contrasto.</text>
+  </g>
+
+  <!-- 5 refined -->
+  <g transform="translate(440 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g5Light)"/>
+      <text x="90" y="113" text-anchor="middle" class="heavy" fill="#fff">FC</text>
+      <path d="M40 132h100" stroke="rgba(255,255,255,.24)" stroke-width="7" stroke-linecap="round"/>
+    </g>
+    <text x="28" y="260" class="label">5 chiara</text>
+    <text x="28" y="289" class="desc">Più brillante, sempre molto impattante.</text>
+  </g>
+
+  <!-- 6 refined -->
+  <g transform="translate(800 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g6Light)"/>
+      <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.055)"/>
+      <text x="90" y="113" text-anchor="middle" class="heavy" fill="#fff">FC</text>
+    </g>
+    <text x="28" y="260" class="label">6 chiara bold</text>
+    <text x="28" y="289" class="desc">Più luminosa e con scritta più spessa.</text>
+  </g>
+
+  <!-- 4 refined -->
+  <g transform="translate(260 560)">
+    <rect width="320" height="250" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 24)">
+      <rect width="180" height="180" rx="42" fill="url(#g4Dark)"/>
+      <text x="90" y="113" text-anchor="middle" class="heavy" fill="#fff">FC</text>
+      <circle cx="138" cy="48" r="8" fill="rgba(255,255,255,.62)"/>
+    </g>
+    <text x="28" y="220" class="label">4 scura bold</text>
+  </g>
+
+  <!-- 4 refined no dot alternative -->
+  <g transform="translate(620 560)">
+    <rect width="320" height="250" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 24)">
+      <rect width="180" height="180" rx="42" fill="url(#g4Dark)"/>
+      <rect width="180" height="180" rx="42" fill="url(#shine)" opacity=".55"/>
+      <text x="90" y="113" text-anchor="middle" class="heavy" fill="#fff">FC</text>
+    </g>
+    <text x="28" y="220" class="label">4 scura clean</text>
+  </g>
+</svg>
