@@ -17,6 +17,7 @@ export default function CompetitionBadge(props: {
 
   return (
     <span
+      className="fc-competition-badge"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -34,6 +35,7 @@ export default function CompetitionBadge(props: {
       }}
     >
       <span
+        className="fc-competition-badge-icon"
         style={{
           color: theme.key === "mondiale" ? "#111827" : theme.accent,
           fontSize: 13,

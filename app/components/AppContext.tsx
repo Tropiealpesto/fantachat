@@ -353,16 +353,16 @@ const isAdmin =
     root.dataset.competitionTheme = theme.key;
     root.dataset.uiTheme = uiTheme;
 
-    root.style.setProperty("--fc-primary", dark ? "#22e26f" : theme.primary);
-    root.style.setProperty("--fc-primary-dark", dark ? "#16c25d" : theme.primaryDark);
+    root.style.setProperty("--fc-primary", dark ? "#58ff94" : theme.primary);
+    root.style.setProperty("--fc-primary-dark", dark ? "#22e26f" : theme.primaryDark);
     root.style.setProperty("--fc-accent", dark ? "#ff8a26" : theme.accent);
-    root.style.setProperty("--fc-page-bg", dark ? "#020617" : theme.pageBg);
-    root.style.setProperty("--fc-card-bg", dark ? "rgba(7,12,28,0.86)" : theme.cardBg);
-    root.style.setProperty("--fc-border", dark ? "rgba(95,113,150,0.32)" : theme.border);
+    root.style.setProperty("--fc-page-bg", dark ? "#00030a" : theme.pageBg);
+    root.style.setProperty("--fc-card-bg", dark ? "rgba(4,8,22,0.76)" : theme.cardBg);
+    root.style.setProperty("--fc-border", dark ? "rgba(91,110,151,0.30)" : theme.border);
     root.style.setProperty("--fc-text", dark ? "#f8fafc" : theme.text);
     root.style.setProperty("--fc-muted", dark ? "#98a4bd" : theme.muted);
-    root.style.setProperty("--fc-soft", dark ? "rgba(34,226,111,0.13)" : theme.soft);
-    root.style.setProperty("--fc-shadow", dark ? "0 18px 42px rgba(0,0,0,0.42)" : theme.shadow);
+    root.style.setProperty("--fc-soft", dark ? "rgba(88,255,148,0.12)" : theme.soft);
+    root.style.setProperty("--fc-shadow", dark ? "0 18px 42px rgba(0,0,0,0.54)" : theme.shadow);
   }, [competitionTheme, uiTheme]);
   const value = useMemo<AppCtxValue>(
     () => ({

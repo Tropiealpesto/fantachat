@@ -504,7 +504,7 @@ export default function RosaPage() {
 
             <div style={s.headerStatus}>
               <span style={s.giornata}>Giornata {form.matchday?.number ?? "—"}</span>
-              <span style={s.statusPill}>{form.matchday?.status ?? "chiusa"}</span>
+              <span className="fc-dark-neon-pill" style={s.statusPill}>{form.matchday?.status ?? "chiusa"}</span>
             </div>
           </div>
 
@@ -516,7 +516,7 @@ export default function RosaPage() {
               </p>
             </div>
 
-            <div style={s.countBox}>
+            <div className="fc-dark-neon-count" style={s.countBox}>
               <span>{completionLabel}</span>
               <small>giocatori</small>
             </div>
@@ -524,7 +524,7 @@ export default function RosaPage() {
 
           <div style={s.rulesMini}>
             {roles.map(([role, count]) => (
-              <span key={role} style={s.rulePill}>
+              <span key={role} className="fc-dark-neon-pill fc-dark-role-pill" style={s.rulePill}>
                 <RoleBadge role={role} small />
                 {count}
               </span>
@@ -540,13 +540,13 @@ export default function RosaPage() {
           )}
 
           {saved && (
-            <div style={s.ok}>
+            <div className="fc-dark-neon-message" style={s.ok}>
               Rosa già inviata. Per modificarla serve il reset admin.
             </div>
           )}
 
-          {msg && <div style={s.ok}>{msg}</div>}
-          {err && <div style={s.err}>{err}</div>}
+          {msg && <div className="fc-dark-neon-message" style={s.ok}>{msg}</div>}
+          {err && <div className="fc-dark-neon-error" style={s.err}>{err}</div>}
         </section>
 
         <section style={s.card}>
@@ -584,8 +584,8 @@ export default function RosaPage() {
         </section>
 
         <div style={s.duo}>
-          <button type="button" style={s.infoCard}>
-            <span style={s.infoIcon}>▣</span>
+          <button type="button" className="fc-dark-neon-info-card" style={s.infoCard}>
+            <span className="fc-dark-neon-info-icon" style={s.infoIcon}>▣</span>
             <span>
               <b>Partite</b>
               <small>
@@ -597,8 +597,8 @@ export default function RosaPage() {
             <span style={s.chev}>›</span>
           </button>
 
-          <button type="button" style={s.infoCard}>
-            <span style={s.infoIcon}>♛</span>
+          <button type="button" className="fc-dark-neon-info-card" style={s.infoCard}>
+            <span className="fc-dark-neon-info-icon" style={s.infoIcon}>♛</span>
             <span>
               <b>Top squadre</b>
               <small>
@@ -897,6 +897,7 @@ function RoleBadge({
 
   return (
     <span
+      className={`fc-role-badge fc-role-${role}`}
       style={{
         width: size,
         height: size,

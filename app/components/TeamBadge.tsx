@@ -77,6 +77,7 @@ export default function TeamBadge({
 
   return (
     <span
+      className="fc-team-badge"
       title={name ?? undefined}
       style={{
         width: size,

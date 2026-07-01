@@ -43,6 +43,7 @@ function RoleBadge({ role, size = 30 }: { role: string; size?: number }) {
 
   return (
     <span
+      className={`fc-role-badge fc-role-${role}`}
       style={{
         width: size,
         height: size,

@@ -615,3 +615,146 @@ html[data-ui-theme="dark"] input::placeholder,
 html[data-ui-theme="dark"] textarea::placeholder {
   color: #71809c !important;
 }
+
+/* Dark neon refinement */
+html[data-ui-theme="dark"],
+html[data-ui-theme="dark"] body {
+  background: #00030a !important;
+}
+
+html[data-ui-theme="dark"] main,
+html[data-ui-theme="dark"] .container {
+  background: transparent !important;
+}
+
+html[data-ui-theme="dark"] .appbar {
+  background: #00030a !important;
+  border-bottom: 1px solid rgba(34,226,111,.20) !important;
+  box-shadow: 0 0 0 1px rgba(34,226,111,.05), 0 14px 36px rgba(0,0,0,.54) !important;
+}
+
+html[data-ui-theme="dark"] .fc-bottom-nav {
+  background: #00030a !important;
+  border-top: 1px solid rgba(34,226,111,.18) !important;
+}
+
+html[data-ui-theme="dark"] .card,
+html[data-ui-theme="dark"] [style*="background: white"],
+html[data-ui-theme="dark"] [style*="background:white"],
+html[data-ui-theme="dark"] [style*="background: #fff"],
+html[data-ui-theme="dark"] [style*="background:#fff"],
+html[data-ui-theme="dark"] [style*="background: #f8fafc"],
+html[data-ui-theme="dark"] [style*="background:#f8fafc"],
+html[data-ui-theme="dark"] [style*="background: #fbfdfb"],
+html[data-ui-theme="dark"] [style*="background:#fbfdfb"],
+html[data-ui-theme="dark"] [style*="background: #f9fafb"],
+html[data-ui-theme="dark"] [style*="background:#f9fafb"],
+html[data-ui-theme="dark"] [style*="background: #f1f5f9"],
+html[data-ui-theme="dark"] [style*="background:#f1f5f9"],
+html[data-ui-theme="dark"] [style*="background: #f0fdf4"],
+html[data-ui-theme="dark"] [style*="background:#f0fdf4"] {
+  background: rgba(4,8,22,.76) !important;
+  border-color: rgba(91,110,151,.30) !important;
+  color: #f8fafc !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.018),
+    0 0 0 1px rgba(34,226,111,.04),
+    0 18px 42px rgba(0,0,0,.34) !important;
+}
+
+html[data-ui-theme="dark"] .fc-competition-badge {
+  background: rgba(34,226,111,.08) !important;
+  border: 1px solid rgba(34,226,111,.52) !important;
+  color: #58ff94 !important;
+  box-shadow:
+    inset 0 0 18px rgba(34,226,111,.08),
+    0 0 18px rgba(34,226,111,.16) !important;
+  text-shadow: 0 0 10px rgba(34,226,111,.40);
+}
+
+html[data-ui-theme="dark"] .fc-competition-badge-icon {
+  color: #ff8a26 !important;
+  text-shadow: 0 0 12px rgba(255,138,38,.55);
+}
+
+html[data-ui-theme="dark"] .fc-dark-neon-pill,
+html[data-ui-theme="dark"] .fc-dark-neon-count {
+  background: rgba(4,8,22,.78) !important;
+  border-color: rgba(34,226,111,.38) !important;
+  color: #58ff94 !important;
+  box-shadow:
+    inset 0 0 16px rgba(34,226,111,.06),
+    0 0 16px rgba(34,226,111,.12) !important;
+  text-shadow: 0 0 10px rgba(34,226,111,.32);
+}
+
+html[data-ui-theme="dark"] .fc-dark-role-pill {
+  border-color: rgba(91,110,151,.38) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-dark-neon-message {
+  background: rgba(34,226,111,.08) !important;
+  border-color: rgba(34,226,111,.52) !important;
+  color: #b9ffd2 !important;
+  box-shadow: inset 0 0 18px rgba(34,226,111,.08), 0 0 20px rgba(34,226,111,.12) !important;
+}
+
+html[data-ui-theme="dark"] .fc-dark-neon-error {
+  background: rgba(255,77,184,.08) !important;
+  border-color: rgba(255,77,184,.48) !important;
+  color: #ffd2ec !important;
+}
+
+html[data-ui-theme="dark"] .fc-dark-neon-info-card {
+  background: rgba(4,8,22,.72) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.018), 0 0 24px rgba(34,226,111,.05) !important;
+}
+
+html[data-ui-theme="dark"] .fc-dark-neon-info-icon {
+  background: rgba(34,226,111,.10) !important;
+  color: #58ff94 !important;
+  box-shadow: inset 0 0 14px rgba(34,226,111,.10), 0 0 14px rgba(34,226,111,.16);
+}
+
+html[data-ui-theme="dark"] .fc-role-badge {
+  background: rgba(9,14,31,.92) !important;
+  border: 1px solid currentColor !important;
+  box-shadow:
+    inset 0 0 14px color-mix(in srgb, currentColor 16%, transparent),
+    0 0 14px color-mix(in srgb, currentColor 34%, transparent) !important;
+  text-shadow: 0 0 10px currentColor;
+}
+
+html[data-ui-theme="dark"] .fc-role-P { color: #ffd84a !important; }
+html[data-ui-theme="dark"] .fc-role-D { color: #58ff94 !important; }
+html[data-ui-theme="dark"] .fc-role-C { color: #55a6ff !important; }
+html[data-ui-theme="dark"] .fc-role-A { color: #ff5bbf !important; }
+
+html[data-ui-theme="dark"] .fc-team-badge {
+  border-color: rgba(34,226,111,.88) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.10),
+    0 0 16px rgba(34,226,111,.42),
+    0 0 30px rgba(34,226,111,.14) !important;
+}
+
+html[data-ui-theme="dark"] [style*="background: #0f5f2d"],
+html[data-ui-theme="dark"] [style*="background:#0f5f2d"] {
+  background: #06351f !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(88,255,148,.46),
+    inset 0 0 36px rgba(34,226,111,.12),
+    0 0 24px rgba(34,226,111,.18) !important;
+}
+
+html[data-ui-theme="dark"] [style*="repeating-linear-gradient(180deg, #227f42"] {
+  background:
+    linear-gradient(90deg, rgba(88,255,148,.10), transparent 22%, transparent 78%, rgba(88,255,148,.08)),
+    repeating-linear-gradient(180deg, #0b3d25 0, #0b3d25 12.5%, #082f1e 12.5%, #082f1e 25%) !important;
+}
+
+html[data-ui-theme="dark"] button[disabled] {
+  opacity: .55;
+}

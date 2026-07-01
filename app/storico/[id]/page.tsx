@@ -26,7 +26,7 @@ const ROLE_META: Record<string, { bg: string; fg: string }> = {
 
 function RoleBadge({ role }: { role: string }) {
   const c = ROLE_META[role] ?? { bg: "#f1f5f9", fg: "#475569" };
-  return <span style={{ ...s.roleBadge, background: c.bg, color: c.fg }}>{role}</span>;
+  return <span className={`fc-role-badge fc-role-${role}`} style={{ ...s.roleBadge, background: c.bg, color: c.fg }}>{role}</span>;
 }
 
 export default function StoricoDetail() {
