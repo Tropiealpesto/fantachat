@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { DEFAULT_THEME, themeFromType, type CompetitionTheme } from "../../lib/competitionThemes";
 
 type AppRole = "player" | "admin" | "super_admin";
+type UiTheme = "light" | "dark";
 
 type AppContextRow = {
   user_id: string | null;
@@ -50,6 +51,9 @@ type AppCtxValue = {
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
+
+  uiTheme: UiTheme;
+  setUiTheme: (theme: UiTheme) => void;
 };
 
 const Ctx = createContext<AppCtxValue | null>(null);
@@ -89,6 +93,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [row, setRow] = useState<AppContextRow>(emptyCtx);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [uiTheme, setUiThemeState] = useState<UiTheme>("light");
+
+  function setUiTheme(theme: UiTheme) {
+    setUiThemeState(theme);
+    try {
+      window.localStorage.setItem("fantachat-ui-theme", theme);
+    } catch {}
+  }
 
   async function refresh() {
     setReady(false);
@@ -301,6 +313,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refresh();
 
+    try {
+      const saved = window.localStorage.getItem("fantachat-ui-theme");
+      if (saved === "dark" || saved === "light") setUiThemeState(saved);
+    } catch {}
+
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       refresh();
     });
@@ -331,20 +348,22 @@ const isAdmin =
   useEffect(() => {
     const root = document.documentElement;
     const theme = competitionTheme;
+    const dark = uiTheme === "dark";
 
     root.dataset.competitionTheme = theme.key;
+    root.dataset.uiTheme = uiTheme;
 
-    root.style.setProperty("--fc-primary", theme.primary);
-    root.style.setProperty("--fc-primary-dark", theme.primaryDark);
-    root.style.setProperty("--fc-accent", theme.accent);
-    root.style.setProperty("--fc-page-bg", theme.pageBg);
-    root.style.setProperty("--fc-card-bg", theme.cardBg);
-    root.style.setProperty("--fc-border", theme.border);
-    root.style.setProperty("--fc-text", theme.text);
-    root.style.setProperty("--fc-muted", theme.muted);
-    root.style.setProperty("--fc-soft", theme.soft);
-    root.style.setProperty("--fc-shadow", theme.shadow);
-  }, [competitionTheme]);
+    root.style.setProperty("--fc-primary", dark ? "#22e26f" : theme.primary);
+    root.style.setProperty("--fc-primary-dark", dark ? "#16c25d" : theme.primaryDark);
+    root.style.setProperty("--fc-accent", dark ? "#ff8a26" : theme.accent);
+    root.style.setProperty("--fc-page-bg", dark ? "#020617" : theme.pageBg);
+    root.style.setProperty("--fc-card-bg", dark ? "rgba(7,12,28,0.86)" : theme.cardBg);
+    root.style.setProperty("--fc-border", dark ? "rgba(95,113,150,0.32)" : theme.border);
+    root.style.setProperty("--fc-text", dark ? "#f8fafc" : theme.text);
+    root.style.setProperty("--fc-muted", dark ? "#98a4bd" : theme.muted);
+    root.style.setProperty("--fc-soft", dark ? "rgba(34,226,111,0.13)" : theme.soft);
+    root.style.setProperty("--fc-shadow", dark ? "0 18px 42px rgba(0,0,0,0.42)" : theme.shadow);
+  }, [competitionTheme, uiTheme]);
   const value = useMemo<AppCtxValue>(
     () => ({
       ready,
@@ -375,6 +394,9 @@ const isAdmin =
       drawerOpen,
       openDrawer: () => setDrawerOpen(true),
       closeDrawer: () => setDrawerOpen(false),
+
+      uiTheme,
+      setUiTheme,
     }),
     [
       ready,
@@ -383,6 +405,7 @@ const isAdmin =
       isAdmin,
       isSuperAdmin,
       drawerOpen,
+      uiTheme,
     ]
   );
   

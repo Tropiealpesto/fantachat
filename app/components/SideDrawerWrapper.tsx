@@ -81,6 +81,8 @@ export default function SideDrawerWrapper() {
       onSwitchCompetition={switchCompetition}
       teamPrimary={colors.primary}
       teamSecondary={colors.secondary}
+      uiTheme={app.uiTheme}
+      onThemeChange={app.setUiTheme}
     />
   );
 }

@@ -15,11 +15,13 @@ type Props = {
   isAdmin: boolean; isSuperAdmin: boolean; competitions: DrawerCompetition[];
   activeLeagueCompetitionId: string | null; onSwitchCompetition: (id: string) => void;
   teamPrimary?: string | null; teamSecondary?: string | null;
+  uiTheme: "light" | "dark"; onThemeChange: (theme: "light" | "dark") => void;
 };
 
 export default function SideDrawer(props: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const dark = props.uiTheme === "dark";
   useEffect(() => { document.body.style.overflow = props.isOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [props.isOpen]);
 
   return (
@@ -49,10 +51,10 @@ export default function SideDrawer(props: Props) {
             const theme = themeFromType(comp.competition_type);
             const active = comp.id === props.activeLeagueCompetitionId || comp.is_active;
             return (
-              <button key={comp.id} onClick={() => props.onSwitchCompetition(comp.id)} style={{ ...s.comp, borderColor: active ? theme.primary : "#e5e7eb", background: active ? `${theme.primary}10` : "white" }}>
+              <button key={comp.id} onClick={() => props.onSwitchCompetition(comp.id)} style={{ ...s.comp, borderColor: active ? theme.primary : "var(--drawer-border)", background: active ? `${theme.primary}18` : "var(--drawer-card)" }}>
                 <div style={{ ...s.cicon, background: theme.primary }}>{theme.label.charAt(0)}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ ...s.cname, color: active ? theme.primary : "#0f172a" }}>{comp.name}</div>
+                  <div style={{ ...s.cname, color: active ? theme.primary : "var(--drawer-text)" }}>{comp.name}</div>
                   <div style={s.cmeta}>{comp.season_name ?? "Stagione"}{comp.matchday_number ? ` · G${comp.matchday_number}` : ""}</div>
                 </div>
                 {active && <span style={{ ...s.cbadge, background: theme.primary }}>Attiva</span>}
@@ -95,6 +97,28 @@ export default function SideDrawer(props: Props) {
         </div>
 
         <footer style={s.footer}>
+          <div style={s.themeBox}>
+            <div>
+              <div style={s.themeTitle}>Tema</div>
+              <div style={s.themeSub}>{dark ? "Scuro fluo" : "Chiaro classico"}</div>
+            </div>
+            <div style={s.themeSwitch}>
+              <button
+                type="button"
+                onClick={() => props.onThemeChange("light")}
+                style={{ ...s.themeBtn, ...(props.uiTheme === "light" ? s.themeBtnOn : {}) }}
+              >
+                Chiaro
+              </button>
+              <button
+                type="button"
+                onClick={() => props.onThemeChange("dark")}
+                style={{ ...s.themeBtn, ...(props.uiTheme === "dark" ? s.themeBtnOnDark : {}) }}
+              >
+                Scuro
+              </button>
+            </div>
+          </div>
           <button style={s.exit} onClick={() => { props.onClose(); router.push("/seleziona-lega"); }}>
             <svg viewBox="0 0 24 24" style={s.exitIco}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
             Cambia lega
@@ -111,8 +135,8 @@ function Section({ children, style }: { children: React.ReactNode; style?: React
 function Item({ href, title, sub, icon, pathname, onClose }: { href: string; title: string; sub: string; icon: React.ReactNode; pathname: string; onClose: () => void }) {
   const active = pathname.startsWith(href);
   return (
-    <Link href={href} onClick={onClose} style={{ ...s.item, background: active ? "#f0fdf4" : "white", borderColor: active ? "#86efac" : "#e5e7eb" }}>
-      <svg viewBox="0 0 24 24" style={{ ...s.itemIco, stroke: active ? "#15803d" : "#64748b" }}>{icon}</svg>
+    <Link href={href} onClick={onClose} style={{ ...s.item, background: active ? "var(--drawer-active-bg)" : "var(--drawer-card)", borderColor: active ? "var(--drawer-active-border)" : "var(--drawer-border)" }}>
+      <svg viewBox="0 0 24 24" style={{ ...s.itemIco, stroke: active ? "var(--fc-primary)" : "var(--drawer-muted)" }}>{icon}</svg>
       <div><div style={s.itemT}>{title}</div><div style={s.itemS}>{sub}</div></div>
     </Link>
   );
@@ -123,33 +147,40 @@ function AdminLink({ href, label, icon, onClose }: { href: string; label: string
 
 const s: Record<string, React.CSSProperties> = {
   overlay: { position: "fixed", inset: 0, background: "rgba(13,24,18,.42)", zIndex: 200, transition: "opacity .2s", backdropFilter: "blur(3px)" },
-  drawer: { position: "fixed", top: 0, left: 0, bottom: 0, width: 326, maxWidth: "90vw", background: "#f8fbf8", zIndex: 201, display: "flex", flexDirection: "column", transition: "transform .25s ease", boxShadow: "18px 0 46px rgba(13,24,18,.22)" },
-  header: { position: "relative", padding: "26px 20px 18px", background: "linear-gradient(145deg,#0f3d27 0%,#14532d 54%,#1a7d42 100%)", color: "white", boxShadow: "inset 0 -1px 0 rgba(255,255,255,.16)" },
+  drawer: { position: "fixed", top: 0, left: 0, bottom: 0, width: 326, maxWidth: "90vw", background: "var(--drawer-bg)", zIndex: 201, display: "flex", flexDirection: "column", transition: "transform .25s ease", boxShadow: "18px 0 46px rgba(13,24,18,.22)" },
+  header: { position: "relative", padding: "calc(var(--appbar-safe-top) + 20px) 20px 18px", background: "var(--drawer-header)", color: "white", boxShadow: "inset 0 -1px 0 rgba(255,255,255,.16)" },
   logoWrap: { display: "flex", alignItems: "center", gap: 10 },
   mark: { width: 34, height: 34, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.22)", color: "white", fontWeight: 900, fontSize: 13 },
   logo: { fontSize: 23, fontWeight: 1000, letterSpacing: 0 },
-  close: { position: "absolute", top: 14, right: 14, width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.13)", color: "white", fontSize: 21, cursor: "pointer", lineHeight: 1 },
+  close: { position: "absolute", top: "calc(var(--appbar-safe-top) + 10px)", right: 14, width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.13)", color: "white", fontSize: 21, cursor: "pointer", lineHeight: 1 },
   teamrow: { display: "flex", alignItems: "center", gap: 10, marginTop: 14 },
   tring: { borderRadius: "50%", border: "2px solid rgba(255,255,255,.6)", padding: 1, display: "grid", placeItems: "center", flexShrink: 0 },
   tname: { fontWeight: 1000, fontSize: 15, lineHeight: 1.1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
   tleague: { fontSize: 11, opacity: .8, fontWeight: 700, marginTop: 2 },
-  body: { flex: 1, overflowY: "auto", padding: 14 },
+  body: { flex: 1, overflowY: "auto", padding: 14, background: "var(--drawer-bg)" },
   section: { fontSize: 10.5, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em", margin: "6px 4px 9px" },
-  comp: { width: "100%", display: "flex", alignItems: "center", gap: 11, border: "1px solid #e5e7eb", borderRadius: 16, padding: 10, marginBottom: 8, background: "white", cursor: "pointer", textAlign: "left", fontFamily: "inherit", boxShadow: "0 6px 16px rgba(15,23,42,.05)" },
+  comp: { width: "100%", display: "flex", alignItems: "center", gap: 11, border: "1px solid var(--drawer-border)", borderRadius: 16, padding: 10, marginBottom: 8, cursor: "pointer", textAlign: "left", fontFamily: "inherit", boxShadow: "var(--drawer-shadow)" },
   cicon: { width: 36, height: 36, borderRadius: "50%", display: "grid", placeItems: "center", color: "white", fontWeight: 900, flexShrink: 0 },
   cname: { fontWeight: 1000, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  cmeta: { color: "#64748b", fontSize: 11, marginTop: 1, fontWeight: 700 },
+  cmeta: { color: "var(--drawer-muted)", fontSize: 11, marginTop: 1, fontWeight: 700 },
   cbadge: { marginLeft: "auto", color: "white", fontSize: 9.5, fontWeight: 1000, borderRadius: 999, padding: "3px 9px" },
-  addcomp: { width: "100%", border: "1px dashed #d1d5db", background: "#ffffff", color: "#64748b", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
-  item: { display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid #e5e7eb", borderRadius: 14, marginBottom: 7, textDecoration: "none", background: "white", boxShadow: "0 4px 12px rgba(15,23,42,.04)" },
+  addcomp: { width: "100%", border: "1px dashed var(--drawer-border)", background: "var(--drawer-card)", color: "var(--drawer-muted)", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
+  item: { display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid var(--drawer-border)", borderRadius: 14, marginBottom: 7, textDecoration: "none", background: "var(--drawer-card)", boxShadow: "var(--drawer-shadow)" },
   itemIco: { width: 20, height: 20, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
-  itemT: { fontWeight: 900, fontSize: 13.5, color: "#0f172a" },
-  itemS: { fontSize: 11, color: "#64748b", fontWeight: 700 },
-  adminbox: { background: "#fff3e4", border: "1px solid #f4c99d", borderRadius: 16, padding: 8 },
-  alink: { display: "flex", alignItems: "center", gap: 10, background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "#0f172a", textDecoration: "none" },
+  itemT: { fontWeight: 900, fontSize: 13.5, color: "var(--drawer-text)" },
+  itemS: { fontSize: 11, color: "var(--drawer-muted)", fontWeight: 700 },
+  adminbox: { background: "var(--drawer-warm)", border: "1px solid var(--brand-orange-border)", borderRadius: 16, padding: 8 },
+  alink: { display: "flex", alignItems: "center", gap: 10, background: "var(--drawer-card)", border: "1px solid var(--drawer-border)", borderRadius: 12, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "var(--drawer-text)", textDecoration: "none" },
   alinkIco: { width: 17, height: 17, fill: "none", stroke: "#b45309", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
-  footer: { padding: 14, borderTop: "1px solid #e8eee9", background: "#f8fbf8" },
-  exit: { width: "100%", border: "1px solid #e5e7eb", background: "white", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 13, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "inherit" },
-  exitIco: { width: 17, height: 17, fill: "none", stroke: "#64748b", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" },
-  empty: { color: "#64748b", fontSize: 13, fontWeight: 700, padding: 8 },
+  footer: { padding: "12px 14px calc(14px + var(--safe-bottom))", borderTop: "1px solid var(--drawer-border)", background: "var(--drawer-bg)", display: "grid", gap: 9 },
+  themeBox: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 10, border: "1px solid var(--drawer-border)", background: "var(--drawer-card)", borderRadius: 14, padding: 9 },
+  themeTitle: { color: "var(--drawer-text)", fontWeight: 900, fontSize: 12.5 },
+  themeSub: { color: "var(--drawer-muted)", fontWeight: 700, fontSize: 10.5, marginTop: 1 },
+  themeSwitch: { display: "flex", background: "var(--drawer-switch)", borderRadius: 11, padding: 3, gap: 3 },
+  themeBtn: { border: 0, background: "transparent", color: "var(--drawer-muted)", borderRadius: 9, padding: "7px 8px", fontSize: 11, fontWeight: 900, fontFamily: "inherit", cursor: "pointer" },
+  themeBtnOn: { background: "#ffffff", color: "#15803d", boxShadow: "0 2px 8px rgba(15,23,42,.08)" },
+  themeBtnOnDark: { background: "rgba(34,226,111,0.13)", color: "#22e26f", boxShadow: "0 0 18px rgba(34,226,111,.22)" },
+  exit: { width: "100%", border: "1px solid var(--drawer-border)", background: "var(--drawer-card)", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 13, color: "var(--drawer-text)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", fontFamily: "inherit" },
+  exitIco: { width: 17, height: 17, fill: "none", stroke: "var(--drawer-muted)", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" },
+  empty: { color: "var(--drawer-muted)", fontSize: 13, fontWeight: 700, padding: 8 },
 };
