@@ -12,6 +12,8 @@ type Player = { role: string; name: string; team: string | null; points: number 
 type Row = { user_id: string; team_name: string; total_score: number; rank: number; players: Player[] };
 type Detail = { matchday_number: number | null; rows: Row[] };
 
+const EMPTY_DETAIL: Detail = { matchday_number: null, rows: [] };
+
 function pLabel(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
 
 function buildPrompt(detail: Detail, comp: string): string {
@@ -47,7 +49,7 @@ export default function AdminPodcast() {
   const app = useRequireLeagueAdmin();
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [matchdayId, setMatchdayId] = useState("");
-  const [detail, setDetail] = useState<Detail>({ matchday_number: null, rows: [] });
+  const [detail, setDetail] = useState<Detail>(EMPTY_DETAIL);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [copied, setCopied] = useState(false);
@@ -61,11 +63,12 @@ export default function AdminPodcast() {
   }, [app.seasonId]);
 
   useEffect(() => {
-    if (!matchdayId) { setDetail({ matchday_number: null, rows: [] }); return; }
-    rpcJson<Detail>("get_matchday_detail", { p_matchday_id: matchdayId }, { matchday_number: null, rows: [] }).then(setDetail);
+    if (!matchdayId) return;
+    rpcJson<Detail>("get_matchday_detail", { p_matchday_id: matchdayId }, EMPTY_DETAIL).then(setDetail);
   }, [matchdayId]);
 
-  const prompt = useMemo(() => buildPrompt(detail, app.competitionName ?? "Competizione"), [detail, app.competitionName]);
+  const promptDetail = matchdayId ? detail : EMPTY_DETAIL;
+  const prompt = useMemo(() => buildPrompt(promptDetail, app.competitionName ?? "Competizione"), [promptDetail, app.competitionName]);
 
   async function copyPrompt() {
     try { await navigator.clipboard.writeText(prompt); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { setErr("Copia non riuscita: seleziona il testo a mano."); }
@@ -97,7 +100,7 @@ export default function AdminPodcast() {
           <p style={s.sub}>Genera il prompt, fallo scrivere a un'AI, incolla qui il risultato e salva.</p>
 
           <label style={s.lbl}>1 · Scegli la giornata</label>
-          <select value={matchdayId} onChange={(e) => setMatchdayId(e.target.value)} style={s.input}>
+          <select value={matchdayId} onChange={(e) => { setDetail(EMPTY_DETAIL); setMatchdayId(e.target.value); }} style={s.input}>
             <option value="">Nessuna giornata</option>
             {matchdays.map((m) => (<option key={m.id} value={m.id}>Giornata {m.number} ({m.status})</option>))}
           </select>

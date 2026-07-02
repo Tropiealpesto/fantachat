@@ -75,22 +75,6 @@ export default function SuperadminPage() {
     [competitions, competitionId]
   );
 
-  useEffect(() => {
-    async function init() {
-      if (!app.ready) return;
-      const { data, error } = await supabase.rpc("is_current_user_superadmin");
-      if (error || data !== true) {
-        setChecking(false);
-        setIsSuperadmin(false);
-        return;
-      }
-      setIsSuperadmin(true);
-      setChecking(false);
-      await loadCompetitions();
-    }
-    init();
-  }, [app.ready]);
-
   async function loadCompetitions() {
     setErr(null);
     const { data, error } = await supabase.rpc("superadmin_get_competitions");
@@ -110,6 +94,22 @@ export default function SuperadminPage() {
       setCompetitionId("");
     }
   }
+
+  useEffect(() => {
+    async function init() {
+      if (!app.ready) return;
+      const { data, error } = await supabase.rpc("is_current_user_superadmin");
+      if (error || data !== true) {
+        setChecking(false);
+        setIsSuperadmin(false);
+        return;
+      }
+      setIsSuperadmin(true);
+      setChecking(false);
+      await loadCompetitions();
+    }
+    init();
+  }, [app.ready]);
 
   async function setCompetitionStatus(id: string, status: "active" | "wip" | "archived") {
     setMsg(null);

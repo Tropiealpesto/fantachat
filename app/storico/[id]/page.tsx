@@ -56,12 +56,6 @@ export default function StoricoDetail() {
     return () => { off = true; };
   }, [app.ready, app.activeLeagueId]);
 
-  useEffect(() => {
-    if (app.userId && data.rows.some((r) => r.user_id === app.userId)) {
-      setOpen((o) => (o[app.userId!] === undefined ? { ...o, [app.userId!]: true } : o));
-    }
-  }, [data.rows, app.userId]);
-
   if (!app.ready || loading) return <LoadingScreen />;
   const accent = app.competitionTheme.primary;
   const pColor = (v: number) => (v > 0 ? "#15803d" : v < 0 ? "#dc2626" : "#64748b");
@@ -79,7 +73,7 @@ export default function StoricoDetail() {
         <div style={s.list}>
           {data.rows.map((r) => {
             const own = r.user_id === app.userId;
-            const isOpen = !!open[r.user_id];
+            const isOpen = open[r.user_id] ?? own;
             const c = memberColors[r.user_id];
             const rc = RANK_COLOR[r.rank];
             return (
