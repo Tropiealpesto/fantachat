@@ -11,12 +11,12 @@ Stato operativo per preparare l'app a una beta pubblica e poi a un lancio con mo
 | 3 | Test dati realistici | Completato baseline | Dataset visibile creato, verificato, ripulito. Fase carico grande rimandata. |
 | 4 | Stabilita funzionale | Completato | Build ok, lint senza errori, smoke test player/admin/superadmin passato. |
 | 5 | Privacy e documenti legali | Completato baseline | Pagine pubbliche e documenti creati. Da completare dati titolare/fornitori/email privacy prima del lancio. |
-| 6 | Backup e recovery | Da fare | Procedura di ripristino voti/giornate/classifiche. |
-| 7 | Beta chiusa | Da fare | 50-100 utenti reali dopo hardening. |
+| 6 | Backup e recovery | Completato baseline | Snapshot applicativi applicati e testati su lega finta. Restore riuscito. |
+| 7 | Beta chiusa | Pronto per esecuzione | Piano beta, script tester, metriche e log feedback preparati. Serve invitare utenti reali. |
 
 ## Prossima azione
 
-Passare al punto 6: backup e recovery.
+Eseguire beta chiusa Fase A con 10-20 utenti.
 
 ## Registro lavoro
 
@@ -161,3 +161,56 @@ Da completare prima del lancio pubblico:
 Chiusura baseline:
 - punto 5 completato come base prodotto e documentale;
 - resta obbligatorio completare i dati legali reali prima del rilascio pubblico.
+
+### 2026-07-02 - Punto 6
+
+Fatto:
+- creato playbook `docs/backup-recovery.md`;
+- preparata migration `supabase/migrations/019_recovery_snapshots.sql`;
+- migration `019_recovery_snapshots.sql` applicata con successo su Supabase;
+- definito doppio livello di protezione:
+  - backup piattaforma Supabase per disastri gravi;
+  - snapshot applicativo per errori su giornata/classifiche/scores;
+- definite query di controllo post-migration;
+- definita procedura restore e checklist post-restore.
+
+Da fare per chiudere il punto:
+- Punto completato baseline.
+- Prima del lancio pubblico resta da verificare il piano Supabase con backup automatici/point-in-time recovery.
+
+Chiusura baseline:
+- funzioni snapshot verificate come `SECURITY DEFINER`;
+- permessi verificati: `public=false`, `anon=false`, `authenticated=true`;
+- snapshot creato su competizione finta:
+  - `62d293cf-99b3-4091-b59d-a4ffce686977`;
+- restore eseguito con successo;
+- classifica post-restore confermata:
+  - La mia squadra: 10 pt, rank 1;
+  - Pietro11: 7 pt, rank 2;
+  - Steak Hatsie: 2.5 pt, rank 3.
+
+### 2026-07-02 - Punto 7
+
+Fatto:
+- creato piano operativo `docs/closed-beta-plan.md`;
+- creato template feedback `docs/beta-feedback-log.md`;
+- definita beta in due fasi:
+  - Fase A: 10-20 utenti, 3-5 giorni;
+  - Fase B: 50-100 utenti, 7-14 giorni;
+- definito script test per utenti;
+- preparato messaggio onboarding;
+- definite severita bug P0/P1/P2/P3;
+- definite metriche prodotto e tecniche;
+- definite query di controllo beta;
+- definiti criteri per allargare o chiudere positivamente la beta.
+
+Da fare per chiudere davvero il punto:
+- invitare utenti reali;
+- creare 2-3 leghe beta iniziali;
+- raccogliere feedback nel log;
+- correggere eventuali P0/P1;
+- decidere se allargare a Fase B.
+
+Chiusura preparazione:
+- punto 7 pronto per esecuzione;
+- non ancora completato come beta reale perche mancano utenti invitati e feedback reali.

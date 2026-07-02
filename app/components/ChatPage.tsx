@@ -228,9 +228,9 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   }
 
   return (
-    <div style={s.wrap}>
+    <div className="fc-chat-shell" style={s.wrap}>
       <div style={s.stripe} />
-      <div style={s.header}>
+      <div className="fc-chat-header" style={s.header}>
         <div>
           <div style={s.hTitle}>Chat lega</div>
           <div style={s.hSub}>{members.length} partecipanti</div>
@@ -242,7 +242,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         )}
       </div>
 
-      <div style={s.messages}>
+      <div className="fc-chat-messages" style={s.messages}>
         {loading ? (
           <div style={s.center}>Caricamento...</div>
         ) : messages.length === 0 ? (
@@ -254,10 +254,10 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
               const comp = m.league_competition_id ? compMap.get(m.league_competition_id) : null;
               const isLineup = m.kind === "lineup";
               return (
-                <div key={m.id} style={s.event}>
+                <div key={m.id} className="fc-chat-event" style={s.event}>
                   <div style={s.eventIco}>{isLineup ? <span style={{ fontWeight: 1000, color: "#15803d" }}>R</span> : <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#15803d" }} />}</div>
                   <div>
-                    <div style={s.eventTxt}>{isLineup ? `${m.team_name ?? "Un utente"} ha caricato la formazione` : (m.content ?? "Aggiornamento")}</div>
+                    <div className="fc-chat-event-text" style={s.eventTxt}>{isLineup ? `${m.team_name ?? "Un utente"} ha caricato la formazione` : (m.content ?? "Aggiornamento")}</div>
                     <div style={s.eventMeta}>
                       {comp && <span style={{ ...s.tag, ...s.tagComp }}>{comp.name}</span>}
                       {m.matchday_number != null && <span style={s.tag}>Giornata {m.matchday_number}</span>}
@@ -285,10 +285,10 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                       {own && <span style={s.whoName}>Tu</span>}
                     </div>
                   )}
-                  <div style={{ ...s.bubble, ...(own ? { background: "#dff5e5", color: "#0f172a", borderTopRightRadius: 4 } : { background: "#ffffff", color: "#0f172a", borderTopLeftRadius: 4, border: "1px solid #eceff3" }) }}>
+                  <div className={own ? "fc-chat-bubble fc-chat-bubble-own" : "fc-chat-bubble fc-chat-bubble-other"} style={{ ...s.bubble, ...(own ? { background: "#dff5e5", color: "#0f172a", borderTopRightRadius: 4 } : { background: "#ffffff", color: "#0f172a", borderTopLeftRadius: 4, border: "1px solid #eceff3" }) }}>
                     <span style={{ whiteSpace: "pre-wrap" }}>{renderText(m.content)}</span>
                     {players.map((p) => (
-                      <span key={p.id} style={s.pchip}>
+                      <span key={p.id} className="fc-chat-player-chip" style={s.pchip}>
                         <RoleBadge role={p.role} size={26} />
                         <span style={s.pinfo}>
                           <span style={s.pn}>{playerLabel(p)}</span>
@@ -308,18 +308,18 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
       {/* popup menzioni / giocatori */}
       {token && (token.kind === "person" ? peopleHits.length > 0 : playerHits.length > 0) && (
-        <div style={s.ta}>
+        <div className="fc-chat-suggest" style={s.ta}>
           <div style={s.taHead}>{token.kind === "person" ? "Menziona un partecipante" : "Cita un giocatore"}</div>
           <div style={s.taList}>
             {token.kind === "person"
               ? peopleHits.map((m) => (
-                  <button key={m.user_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPerson(m); }} style={s.taRow}>
+                  <button key={m.user_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPerson(m); }} className="fc-chat-suggest-row" style={s.taRow}>
                     <TeamBadge name={m.team_name} primary={m.color_primary ?? null} secondary={m.color_secondary ?? null} size={26} />
                     <span style={s.taName}>{m.team_name}</span>
                   </button>
                 ))
               : playerHits.map((p) => (
-                  <button key={p.real_player_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPlayer(p); }} style={s.taRow}>
+                  <button key={p.real_player_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPlayer(p); }} className="fc-chat-suggest-row" style={s.taRow}>
                     <RoleBadge role={p.role} size={24} />
                     <span style={s.pinfo}><span style={s.taName}>{playerLabel(p)}</span><span style={s.pt}>{playerSub(p)}</span></span>
                     {ptsTag(p.real_player_id)}
@@ -331,7 +331,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
       {/* giocatori citati in attesa di invio */}
       {cited.length > 0 && (
-        <div style={s.citedBar}>
+        <div className="fc-chat-cited" style={s.citedBar}>
           {cited.map((p) => (
             <span key={p.id} style={s.citedChip}>
               <RoleBadge role={p.role} size={18} />
@@ -342,13 +342,13 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         </div>
       )}
 
-      <div style={s.composer}>
-        <button type="button" onClick={() => startToken("person")} style={{ ...s.tool, color: "#15803d" }}>@</button>
-        <button type="button" onClick={() => startToken("player")} style={{ ...s.tool, color: "#e07b1a", borderColor: "#f4c99d", background: "#fff3e4" }}>P</button>
+      <div className="fc-chat-composer" style={s.composer}>
+        <button type="button" onClick={() => startToken("person")} className="fc-chat-tool" style={{ ...s.tool, color: "#15803d" }}>@</button>
+        <button type="button" onClick={() => startToken("player")} className="fc-chat-tool fc-chat-tool-player" style={{ ...s.tool, color: "#e07b1a", borderColor: "#f4c99d", background: "#fff3e4" }}>P</button>
         <textarea
           ref={taRef} value={input} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Scrivi un messaggio..." style={s.textarea} rows={1}
+          placeholder="Scrivi un messaggio..." className="fc-chat-input" style={s.textarea} rows={1}
         />
         <button type="button" onClick={send} disabled={sending || !input.trim()} style={{ ...s.send, background: accent, opacity: sending || !input.trim() ? 0.5 : 1 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 11l18-8-8 18-2-7-8-3z" /></svg>
@@ -360,7 +360,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 
 const s: Record<string, React.CSSProperties> = {
   wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#f4f7f4" },
-  stripe: { height: 3, background: "repeating-linear-gradient(90deg,#14532d 0 22px,#1f9d4d 22px 42px,#e07b1a 42px 48px)" },
+  stripe: { display: "none" },
   header: { background: "rgba(255,255,255,.96)", borderBottom: "1px solid #e5e7eb", padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 10px rgba(15,23,42,.035)", backdropFilter: "blur(14px)" },
   hTitle: { fontWeight: 950, color: "#0f172a", fontSize: 15.5 },
   hSub: { fontSize: 11, color: "#64748b", fontWeight: 700 },

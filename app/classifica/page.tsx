@@ -167,8 +167,8 @@ export default function Classifica() {
         onMenuOpen={app.openDrawer}
       />
 
-      <main style={s.container}>
-        <section style={s.head}>
+      <main className="fc-classifica-page" style={s.container}>
+        <section className="fc-classifica-hero" style={s.head}>
           <CompetitionBadge
             name={app.competitionName}
             type={app.competitionType}
@@ -230,11 +230,11 @@ export default function Classifica() {
 
         {err && <div style={s.err}>Errore: {err}</div>}
 
-        <section style={s.card}>
+        <section className="fc-classifica-card" style={s.card}>
           <div style={s.sectionHeader}>
             <h2 style={s.sectionTitle}>Generale</h2>
 
-            <span style={s.smallHint}>
+            <span className="fc-classifica-count" style={s.smallHint}>
               {rows.length} squadre
             </span>
           </div>
@@ -259,8 +259,10 @@ export default function Classifica() {
                       ? `0 4px 14px ${theme.primary}14`
                       : "0 2px 8px rgba(15,23,42,.035)",
                   }}
+                  className={isMine ? "fc-classifica-row is-mine" : "fc-classifica-row"}
                 >
                   <div
+                    className="fc-classifica-rank"
                     style={{
                       ...s.rank,
                       color: isMine
@@ -334,7 +336,7 @@ export default function Classifica() {
         </section>
 
         {bestRole && (
-          <section style={s.trendCard}>
+          <section className="fc-classifica-insight" style={s.trendCard}>
             <div style={s.trendIcon}>↗</div>
 
             <div style={{ minWidth: 0 }}>
@@ -355,7 +357,7 @@ export default function Classifica() {
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div style={s.summaryItem}>
+    <div className="fc-classifica-summary" style={s.summaryItem}>
       <small>{label}</small>
       <b>{value}</b>
     </div>
@@ -364,7 +366,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 function RoleStat({ label, value }: { label: string; value?: number | null }) {
   return (
-    <span style={s.roleStat}>
+    <span className="fc-classifica-role-stat" style={s.roleStat}>
       <b>{label}</b>
       {roleValue(value)}
     </span>

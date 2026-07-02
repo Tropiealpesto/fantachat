@@ -899,3 +899,154 @@ html[data-ui-theme="dark"] [style*="repeating-linear-gradient(180deg, #227f42"] 
 html[data-ui-theme="dark"] button[disabled] {
   opacity: .55;
 }
+
+html[data-ui-theme="dark"] .fc-chat-shell {
+  background: #00030a !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-header {
+  background: #00030a !important;
+  border-bottom: 1px solid rgba(91,110,151,.28) !important;
+  box-shadow: none !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-messages {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(34,226,111,.09), transparent 30%),
+    radial-gradient(circle at 88% 72%, rgba(255,138,38,.06), transparent 28%),
+    #00030a !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-event {
+  background: rgba(8,13,29,.92) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  border-left-color: rgba(34,226,111,.72) !important;
+  border-right-color: rgba(255,138,38,.52) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.28), 0 0 18px rgba(34,226,111,.06) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-event-text {
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-bubble {
+  border: 1px solid rgba(91,110,151,.30) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-bubble-own {
+  background: rgba(34,226,111,.11) !important;
+  color: #ddffe9 !important;
+  border-color: rgba(34,226,111,.36) !important;
+  box-shadow: inset 0 0 18px rgba(34,226,111,.05), 0 0 18px rgba(34,226,111,.08) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-bubble-other {
+  background: rgba(9,14,31,.94) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-player-chip {
+  background: rgba(2,6,23,.72) !important;
+  border-color: rgba(91,110,151,.34) !important;
+  border-left-color: rgba(255,138,38,.62) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-suggest,
+html[data-ui-theme="dark"] .fc-chat-composer {
+  background: rgba(2,6,23,.96) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  box-shadow: 0 -12px 30px rgba(0,0,0,.30) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-suggest-row {
+  background: transparent !important;
+  color: #f8fafc !important;
+  border-top-color: rgba(91,110,151,.22) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-suggest-row:hover {
+  background: rgba(34,226,111,.08) !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-cited {
+  background: #00030a !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-tool,
+html[data-ui-theme="dark"] .fc-chat-input {
+  background: rgba(9,14,31,.94) !important;
+  border-color: rgba(91,110,151,.36) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-tool {
+  color: #58ff94 !important;
+}
+
+html[data-ui-theme="dark"] .fc-chat-tool-player {
+  color: #ff9d44 !important;
+  border-color: rgba(255,138,38,.42) !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-hero,
+html[data-ui-theme="dark"] .fc-classifica-card,
+html[data-ui-theme="dark"] .fc-classifica-insight,
+html[data-ui-theme="dark"] .fc-history-hero,
+html[data-ui-theme="dark"] .fc-history-card,
+html[data-ui-theme="dark"] .fc-player-hero,
+html[data-ui-theme="dark"] .fc-player-card {
+  background: rgba(4,8,22,.78) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  color: #f8fafc !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.018), 0 18px 42px rgba(0,0,0,.34) !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-summary,
+html[data-ui-theme="dark"] .fc-classifica-count,
+html[data-ui-theme="dark"] .fc-classifica-rank,
+html[data-ui-theme="dark"] .fc-classifica-role-stat,
+html[data-ui-theme="dark"] .fc-history-count,
+html[data-ui-theme="dark"] .fc-history-tile,
+html[data-ui-theme="dark"] .fc-history-pill,
+html[data-ui-theme="dark"] .fc-player-kpi,
+html[data-ui-theme="dark"] .fc-player-count,
+html[data-ui-theme="dark"] .fc-player-history-row,
+html[data-ui-theme="dark"] .fc-player-empty {
+  background: rgba(9,14,31,.92) !important;
+  border-color: rgba(91,110,151,.34) !important;
+  color: #f8fafc !important;
+  box-shadow: inset 0 0 14px rgba(34,226,111,.03) !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-summary small,
+html[data-ui-theme="dark"] .fc-player-kpi small {
+  color: #98a4bd !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-summary b,
+html[data-ui-theme="dark"] .fc-player-kpi b,
+html[data-ui-theme="dark"] .fc-history-count strong {
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-row {
+  background: rgba(6,10,25,.78) !important;
+  border-color: rgba(91,110,151,.28) !important;
+}
+
+html[data-ui-theme="dark"] .fc-classifica-row.is-mine {
+  background: rgba(34,226,111,.08) !important;
+  border-color: rgba(34,226,111,.48) !important;
+  box-shadow: 0 0 22px rgba(34,226,111,.10) !important;
+}
+
+html[data-ui-theme="dark"] .fc-history-card:hover,
+html[data-ui-theme="dark"] .fc-player-history-row:hover {
+  border-color: rgba(34,226,111,.42) !important;
+}
+
+html[data-ui-theme="dark"] .fc-history-pill.is-open {
+  color: #58ff94 !important;
+  border-color: rgba(34,226,111,.34) !important;
+}

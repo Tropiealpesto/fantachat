@@ -32,23 +32,31 @@ export default function Storico() {
   return (
     <>
       <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
-      <main style={s.container}>
-        <div style={s.head}>
+      <main className="fc-history-page" style={s.container}>
+        <div className="fc-history-hero" style={s.head}>
           <CompetitionBadge name={app.competitionName} type={app.competitionType} />
-          <h1 style={s.h1}>Storico</h1>
-          <p style={s.hsub}>Le tue giornate in questa competizione</p>
+          <div style={s.heroRow}>
+            <div>
+              <h1 style={s.h1}>Storico</h1>
+              <p style={s.hsub}>Le tue giornate in questa competizione</p>
+            </div>
+            <div className="fc-history-count" style={s.countBox}>
+              <strong>{rows.length}</strong>
+              <span>giornate</span>
+            </div>
+          </div>
         </div>
 
-        <div style={s.list}>
+        <div className="fc-history-list" style={s.list}>
           {rows.map((r) => {
             const open = r.status === "open";
             return (
-              <button key={r.matchday_id} style={s.card} onClick={() => router.push(`/storico/${r.matchday_id}`)}>
-                <div style={{ ...s.tile, background: `${accent}14`, color: accent }}>{r.matchday_number}</div>
+              <button key={r.matchday_id} className="fc-history-card" style={s.card} onClick={() => router.push(`/storico/${r.matchday_id}`)}>
+                <div className="fc-history-tile" style={{ ...s.tile, background: `${accent}14`, color: accent }}>{r.matchday_number}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={s.title}>Giornata {r.matchday_number}</div>
                   <div style={s.meta}>
-                    <span style={{ ...s.pill, background: open ? `${accent}18` : "#f1f5f9", color: open ? accent : "#64748b" }}>{statusLabel(r.status)}</span>
+                    <span className={open ? "fc-history-pill is-open" : "fc-history-pill"} style={{ ...s.pill, background: open ? `${accent}18` : "#f1f5f9", color: open ? accent : "#64748b" }}>{statusLabel(r.status)}</span>
                     <span style={s.metaTxt}>posizione #{r.rank}</span>
                   </div>
                 </div>
@@ -69,13 +77,15 @@ export default function Storico() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 10 },
-  head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 22, padding: 16, boxShadow: "0 10px 28px rgba(15,23,42,.08)" },
-  h1: { fontSize: 21, fontWeight: 1000, color: "#0f172a", margin: "10px 0 1px" },
+  container: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 100px", display: "grid", gap: 10 },
+  head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.06)" },
+  heroRow: { display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 12 },
+  h1: { fontSize: 22, fontWeight: 1000, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" },
   hsub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: 0 },
+  countBox: { minWidth: 76, borderRadius: 12, padding: "8px 10px", display: "grid", justifyItems: "center", background: "#f8fafc", border: "1px solid #e5e7eb" },
   list: { display: "grid", gap: 8 },
-  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: "11px 12px", boxShadow: "0 4px 14px rgba(15,23,42,.05)", display: "flex", alignItems: "center", gap: 12, textAlign: "left", fontFamily: "inherit", cursor: "pointer", width: "100%" },
-  tile: { width: 42, height: 42, borderRadius: 14, display: "grid", placeItems: "center", fontWeight: 900, fontSize: 18, flexShrink: 0 },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: "10px 11px", boxShadow: "0 3px 12px rgba(15,23,42,.04)", display: "flex", alignItems: "center", gap: 11, textAlign: "left", fontFamily: "inherit", cursor: "pointer", width: "100%" },
+  tile: { width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 17, flexShrink: 0 },
   title: { fontSize: 14.5, fontWeight: 1000, color: "#0f172a" },
   meta: { display: "flex", alignItems: "center", gap: 8, marginTop: 3 },
   pill: { borderRadius: 999, padding: "2px 9px", fontSize: 10.5, fontWeight: 1000 },
