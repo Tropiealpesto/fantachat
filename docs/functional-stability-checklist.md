@@ -51,3 +51,8 @@ Obiettivo: verificare che i flussi principali funzionino dopo hardening sicurezz
 - Nessun crash o schermata bloccata.
 - Warning residui tracciati come debito non bloccante.
 
+## Esito
+
+- Smoke test manuale passato.
+- Punto 4 completato.
+

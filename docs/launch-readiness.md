@@ -9,20 +9,14 @@ Stato operativo per preparare l'app a una beta pubblica e poi a un lancio con mo
 | 1 | Audit sicurezza Supabase | Completato | RLS verificata, RPC anon chiuse, funzioni core/superadmin hardenizzate, smoke test passato. |
 | 2 | Performance database | Completato | Indici live allineati, duplicati puliti, query attuali ok, smoke test passato. |
 | 3 | Test dati realistici | Completato baseline | Dataset visibile creato, verificato, ripulito. Fase carico grande rimandata. |
-| 4 | Stabilita funzionale | In corso | Build ok, lint senza errori, checklist smoke test creata. |
-| 5 | Privacy e documenti legali | Da fare | Privacy policy, termini, cancellazione account, contatto privacy. |
+| 4 | Stabilita funzionale | Completato | Build ok, lint senza errori, smoke test player/admin/superadmin passato. |
+| 5 | Privacy e documenti legali | Completato baseline | Pagine pubbliche e documenti creati. Da completare dati titolare/fornitori/email privacy prima del lancio. |
 | 6 | Backup e recovery | Da fare | Procedura di ripristino voti/giornate/classifiche. |
 | 7 | Beta chiusa | Da fare | 50-100 utenti reali dopo hardening. |
 
 ## Prossima azione
 
-Completare il punto 1 sul database Supabase reale:
-
-1. Lanciare le query di audit in `docs/supabase-security-audit.md`.
-2. Confrontare risultato live con i finding locali.
-3. Applicare, se confermata, la migration `supabase/migrations/013_security_hardening.sql`.
-4. Ripetere le query di audit.
-5. Testare login, home, rosa, live, classifica, chat, admin.
+Passare al punto 6: backup e recovery.
 
 ## Registro lavoro
 
@@ -135,5 +129,35 @@ Fatto:
   - `app/superadmin/page.tsx`.
 
 Da fare:
-- smoke test manuale player/admin/superadmin;
-- decidere se ripulire anche i warning lint prima della beta.
+- Punto completato.
+- Warning lint residui da considerare debito non bloccante prima della beta.
+
+Chiusura:
+- smoke test manuale player/admin/superadmin passato;
+- nessun crash o blocco rilevato.
+
+### 2026-07-02 - Punto 5
+
+Fatto:
+- create pagine pubbliche:
+  - `/privacy`;
+  - `/termini`;
+  - `/cancellazione-account`;
+- aggiunti link legali nella pagina login;
+- aggiunti link legali nel menu laterale;
+- creati documenti di lavoro:
+  - `docs/privacy-policy.md`;
+  - `docs/terms-of-service.md`;
+  - `docs/account-deletion.md`.
+
+Da completare prima del lancio pubblico:
+- dati del titolare del trattamento;
+- email privacy ufficiale;
+- elenco fornitori reali e relativi ruoli privacy;
+- tempi di conservazione;
+- procedura interna di cancellazione/anonymizzazione account;
+- revisione legale/professionale finale.
+
+Chiusura baseline:
+- punto 5 completato come base prodotto e documentale;
+- resta obbligatorio completare i dati legali reali prima del rilascio pubblico.

@@ -97,6 +97,11 @@ export default function SideDrawer(props: Props) {
         </div>
 
         <footer style={s.footer}>
+          <div style={s.legalBox} aria-label="Documenti legali">
+            <Link href="/privacy" onClick={props.onClose} style={s.legalLink}>Privacy</Link>
+            <Link href="/termini" onClick={props.onClose} style={s.legalLink}>Termini</Link>
+            <Link href="/cancellazione-account" onClick={props.onClose} style={s.legalLink}>Account</Link>
+          </div>
           <div style={s.themeBox}>
             <div>
               <div style={s.themeTitle}>Tema</div>
@@ -173,6 +178,8 @@ const s: Record<string, React.CSSProperties> = {
   alink: { display: "flex", alignItems: "center", gap: 10, background: "var(--drawer-card)", border: "1px solid var(--drawer-border)", borderRadius: 12, padding: "9px 11px", marginBottom: 6, fontWeight: 800, fontSize: 12.5, color: "var(--drawer-text)", textDecoration: "none" },
   alinkIco: { width: 17, height: 17, fill: "none", stroke: "#b45309", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
   footer: { padding: "12px 14px calc(14px + var(--safe-bottom))", borderTop: "1px solid var(--drawer-border)", background: "var(--drawer-bg)", display: "grid", gap: 9 },
+  legalBox: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 },
+  legalLink: { border: "1px solid var(--drawer-border)", background: "var(--drawer-card)", borderRadius: 12, padding: "8px 4px", textAlign: "center", color: "var(--drawer-muted)", fontSize: 10.5, fontWeight: 900, textDecoration: "none" },
   themeBox: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 10, border: "1px solid var(--drawer-border)", background: "var(--drawer-card)", borderRadius: 14, padding: 9 },
   themeTitle: { color: "var(--drawer-text)", fontWeight: 900, fontSize: 12.5 },
   themeSub: { color: "var(--drawer-muted)", fontWeight: 700, fontSize: 10.5, marginTop: 1 },

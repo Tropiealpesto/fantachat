@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -142,6 +142,12 @@ export default function LoginPage() {
         <div style={s.hint}>
           Dopo l'accesso vedrai le tue leghe se sei stato invitato, oppure potrai crearne una nuova.
         </div>
+
+        <div style={s.legalLinks} aria-label="Link legali">
+          <a href="/privacy" style={s.legalLink}>Privacy</a>
+          <a href="/termini" style={s.legalLink}>Termini</a>
+          <a href="/cancellazione-account" style={s.legalLink}>Cancella account</a>
+        </div>
       </div>
     </main>
   );
@@ -207,5 +213,12 @@ const s: Record<string, React.CSSProperties> = {
   hint: {
     marginTop: 16, color: "#5a8a6e", fontWeight: 700, fontSize: 12,
     lineHeight: 1.5, textAlign: "center",
+  },
+  legalLinks: {
+    display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 10,
+    marginTop: 16, paddingTop: 14, borderTop: "1px solid #e5e7eb",
+  },
+  legalLink: {
+    color: "#64748b", fontSize: 11.5, fontWeight: 800, textDecoration: "none",
   },
 };
