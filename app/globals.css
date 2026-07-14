@@ -35,6 +35,7 @@
   --nav-h: 72px;
   --appbar-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-safe-bottom: 0px;
   --safe-top: env(safe-area-inset-top, 0px);
   --appbar-safe-top: var(--safe-top);
 }
@@ -206,7 +207,7 @@ textarea:focus-visible {
 }
 
 .fc-bottom-spacer {
-  height: calc(var(--nav-h) + var(--safe-bottom));
+  height: var(--nav-h);
 }
 
 .fc-bottom-nav {
@@ -214,14 +215,14 @@ textarea:focus-visible {
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--nav-h) + var(--safe-bottom));
+  height: var(--nav-h);
   z-index: 100;
   max-width: none;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   align-items: stretch;
-  padding: 6px 10px calc(6px + var(--safe-bottom));
+  padding: 6px 10px;
   border-top: 1px solid rgba(219,228,221,0.92);
   border-radius: 0;
   background: rgba(255,255,255,0.96);

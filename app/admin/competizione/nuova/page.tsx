@@ -102,6 +102,7 @@ export default function NuovaCompetizione() {
   const [coachEnabled, setCoachEnabled] = useState(false);
 
   const [busy, setBusy] = useState(false);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   const accent = app.competitionTheme.primary;
@@ -112,10 +113,12 @@ export default function NuovaCompetizione() {
   );
 
   const grouped = useMemo(() => {
+    const typeOf = (c: Competition) => (c.type ?? "").toLowerCase();
+
     return {
-      campionato: competitions.filter((c) => c.type === "campionato"),
-      champions: competitions.filter((c) => c.type === "champions"),
-      coppa: competitions.filter((c) => c.type === "coppa"),
+      campionato: competitions.filter((c) => typeOf(c) === "campionato"),
+      champions: competitions.filter((c) => typeOf(c) === "champions"),
+      coppa: competitions.filter((c) => typeOf(c) === "coppa" || typeOf(c) === "coppe"),
     };
   }, [competitions]);
 
@@ -136,15 +139,31 @@ export default function NuovaCompetizione() {
     async function load() {
       if (!app.activeLeagueId) return;
 
-      const { data: comps } = await supabase
-        .from("competitions")
-        .select("id,name,slug,type,description,rules_summary,launch_label,visibility_status,default_total_matchdays,default_top_n,scope")
-        .eq("active", true)
-        .order("type", { ascending: true })
-        .order("name", { ascending: true });
+      setCatalogLoading(true);
+      setErr(null);
+
+      let comps: any[] | null = null;
+      let catalogError: string | null = null;
+
+      const rpcResult = await supabase.rpc("get_competition_catalog");
+
+      if (rpcResult.error) {
+        const fallback = await supabase
+          .from("competitions")
+          .select("id,name,slug,type,description,rules_summary,launch_label,visibility_status,default_total_matchdays,default_top_n,scope")
+          .eq("active", true)
+          .order("type", { ascending: true })
+          .order("name", { ascending: true });
+
+        comps = fallback.data ?? null;
+        catalogError = fallback.error?.message ?? null;
+      } else {
+        comps = rpcResult.data ?? [];
+      }
 
       const list = (comps ?? []) as Competition[];
       setCompetitions(list);
+      if (catalogError) setErr(catalogError);
 
       const firstAvailable = list.find((c) => c.visibility_status !== "wip");
       setCompetitionId(firstAvailable?.id ?? "");
@@ -158,6 +177,7 @@ export default function NuovaCompetizione() {
       const membersList = (mems ?? []) as Member[];
       setMembers(membersList);
       setSelectedUsers(new Set(membersList.map((m) => m.user_id)));
+      setCatalogLoading(false);
     }
 
     load();
@@ -167,14 +187,24 @@ export default function NuovaCompetizione() {
     async function loadSeasons() {
       if (!competitionId) return;
 
-      const { data } = await supabase
-        .from("seasons")
-        .select("id,name,competition_id,total_matchdays")
-        .eq("competition_id", competitionId)
-        .eq("active", true)
-        .order("created_at", { ascending: false });
+      let seasonsData: any[] | null = null;
+      const rpcResult = await supabase.rpc("get_competition_seasons", {
+        p_competition_id: competitionId,
+      });
 
-      const list = (data ?? []) as Season[];
+      if (rpcResult.error) {
+        const fallback = await supabase
+          .from("seasons")
+          .select("id,name,competition_id,total_matchdays")
+          .eq("competition_id", competitionId)
+          .eq("active", true)
+          .order("created_at", { ascending: false });
+        seasonsData = fallback.data ?? null;
+      } else {
+        seasonsData = rpcResult.data ?? [];
+      }
+
+      const list = (seasonsData ?? []) as Season[];
       setSeasons(list);
       setSeasonId(list[0]?.id ?? "");
 
@@ -307,19 +337,28 @@ export default function NuovaCompetizione() {
         {err && <div style={s.err}>{err}</div>}
 
         {step === 1 && (
-          <div style={s.stack}>
-            <Section title="Campionato">
-              {grouped.campionato.map(renderCompetitionCard)}
-            </Section>
+          catalogLoading ? (
+            <div style={s.emptyCard}>Caricamento competizioni...</div>
+          ) : competitions.length === 0 ? (
+            <div style={s.emptyCard}>
+              Nessuna competizione disponibile. Applica la migrazione del catalogo
+              o controlla le policy Supabase.
+            </div>
+          ) : (
+            <div style={s.stack}>
+              <Section title="Campionato">
+                {grouped.campionato.length ? grouped.campionato.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
 
-            <Section title="Champions">
-              {grouped.champions.map(renderCompetitionCard)}
-            </Section>
+              <Section title="Champions">
+                {grouped.champions.length ? grouped.champions.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
 
-            <Section title="Coppe">
-              {grouped.coppa.map(renderCompetitionCard)}
-            </Section>
-          </div>
+              <Section title="Coppe">
+                {grouped.coppa.length ? grouped.coppa.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
+            </div>
+          )
         )}
 
         {step === 2 && selectedCompetition && (
@@ -511,6 +550,10 @@ function Info(props: { label: string; value: string }) {
   );
 }
 
+function EmptySection() {
+  return <div style={s.emptySection}>Nessuna competizione in questa sezione.</div>;
+}
+
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 14 },
   header: { display: "grid", gridTemplateColumns: "38px 1fr", gap: 12, alignItems: "start" },
@@ -549,4 +592,6 @@ const s: Record<string, React.CSSProperties> = {
   primaryBtn: { padding: 14, border: "none", borderRadius: 13, background: "#16a34a", color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   secondaryBtn: { padding: 14, border: "1px solid #e5e7eb", borderRadius: 13, background: "white", color: "#374151", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   err: { background: "#fff3e4", border: "1px solid #f4c99d", color: "#b85c0a", padding: 12, borderRadius: 14, fontWeight: 900 },
+  emptyCard: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, color: "#64748b", fontWeight: 800, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  emptySection: { border: "1px dashed #d1d5db", borderRadius: 14, padding: 12, color: "#94a3b8", fontSize: 12, fontWeight: 800 },
 };
