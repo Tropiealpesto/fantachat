@@ -29,6 +29,11 @@ type HomeData = {
   lineup?: {
     total_points: number;
     players: LineupPlayer[];
+    coach?: {
+      name: string;
+      team?: string | null;
+      points: number | null;
+    } | null;
   } | null;
   stats?: {
     rank: number | null;
@@ -88,6 +93,7 @@ const ROLE_META: Record<string, { bg: string; fg: string; label: string }> = {
   D: { bg: "#DCFCE7", fg: "#15803D", label: "D" },
   C: { bg: "#DBEAFE", fg: "#2563EB", label: "C" },
   A: { bg: "#FEE2E2", fg: "#DC2626", label: "A" },
+  AL: { bg: "#F5F3FF", fg: "#7C3AED", label: "AL" },
 };
 
 function roleColor(role: string) {
@@ -542,7 +548,7 @@ export default function Home() {
     );
   }
 
-  const hasLineup = Boolean(data.lineup?.players?.length);
+  const hasLineup = Boolean(data.lineup?.players?.length || data.lineup?.coach);
   const mvpLabel =
     recap?.mvp_role === "P" ? recap?.mvp_team || recap?.mvp_name : recap?.mvp_name;
 
@@ -550,6 +556,7 @@ export default function Home() {
   const meInTop = top5.some((r) => r.user_id === app.userId);
   const myRow = standings.find((r) => r.user_id === app.userId);
   const lineupPlayers = data.lineup?.players ?? [];
+  const lineupCoach = data.lineup?.coach ?? null;
   const lineupModule = lineupGroups.map((g) => g.items.length).join("-");
   const lineupPoints = data.lineup?.total_points ?? 0;
   const scoredLineupPlayers = lineupPlayers.filter(
@@ -792,6 +799,14 @@ export default function Home() {
                   <span>Titolari</span>
                   <strong style={s.statValue}>{lineupPlayers.length}</strong>
                 </div>
+                {lineupCoach && (
+                  <div style={s.statLine}>
+                    <span>Allenatore</span>
+                    <strong style={s.statValue}>
+                      {shortName(lineupCoach.name)}
+                    </strong>
+                  </div>
+                )}
                 <div style={s.statLine}>
                   <span>Punti live</span>
                   <strong style={s.statValue}>{fmt(lineupPoints)}</strong>

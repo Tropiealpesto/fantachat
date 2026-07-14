@@ -15,13 +15,14 @@ type Row = { user_id: string; team_name: string; total_score: number; rank: numb
 type Data = { matchday_number: number | null; rows: Row[] };
 
 const RANK_COLOR: Record<number, string> = { 1: "#f59e0b", 2: "#94a3b8", 3: "#b45309" };
-function pLabel(p: Player) { return p.role === "P" ? (p.team || p.name) : p.name; }
+function pLabel(p: Player) { return p.role === "AL" ? p.name : p.role === "P" ? (p.team || p.name) : p.name; }
 function pSub(p: Player) { return p.role === "P" ? "Portiere" : `${p.role} · ${p.team ?? ""}`; }
 const ROLE_META: Record<string, { bg: string; fg: string }> = {
   P: { bg: "#FEF3C7", fg: "#B45309" },
   D: { bg: "#DCFCE7", fg: "#15803D" },
   C: { bg: "#DBEAFE", fg: "#2563EB" },
   A: { bg: "#FEE2E2", fg: "#DC2626" },
+  AL: { bg: "#F5F3FF", fg: "#7C3AED" },
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -103,7 +104,9 @@ export default function StoricoDetail() {
                             <RoleBadge role={p.role} />
                             <div style={{ minWidth: 0 }}>
                               <div style={s.pn}>{pLabel(p)}</div>
-                              <div style={s.pt}>{pSub(p)}</div>
+                              <div style={s.pt}>
+                                {p.role === "AL" ? `Allenatore - ${p.team ?? ""}` : pSub(p)}
+                              </div>
                             </div>
                             <span style={{ ...s.pp, background: v == null ? "#f1f5f9" : pBg(v), color: v == null ? "#94a3b8" : pColor(v) }}>{v == null ? "—" : signedFmt(v)}</span>
                           </div>

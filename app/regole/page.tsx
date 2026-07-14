@@ -9,20 +9,27 @@ import { supabase } from "../../lib/supabaseClient";
 export default function RegolePage() {
   const app = useApp();
   const [ruleset, setRuleset] = useState<string | null>(null);
+  const [coachEnabled, setCoachEnabled] = useState(false);
 
   useEffect(() => {
     if (!app.activeLeagueCompetitionId) return;
     let off = false;
     supabase
       .from("league_competitions")
-      .select("scoring_ruleset")
+      .select("scoring_ruleset,coach_enabled")
       .eq("id", app.activeLeagueCompetitionId)
       .maybeSingle()
-      .then(({ data }) => { if (!off) setRuleset((data as any)?.scoring_ruleset ?? null); });
+      .then(({ data }) => {
+        if (!off) {
+          setRuleset((data as any)?.scoring_ruleset ?? null);
+          setCoachEnabled(Boolean((data as any)?.coach_enabled));
+        }
+      });
     return () => { off = true; };
   }, [app.activeLeagueCompetitionId]);
 
   const isPro = ruleset === "pro";
+  const isNonStandard = ruleset === "non_standard";
 
   return (
     <>
@@ -38,6 +45,8 @@ export default function RegolePage() {
           <h1 style={s.title}>
             Regole competizioni
             {isPro && <span style={s.proPill}>PRO</span>}
+            {isNonStandard && <span style={s.proPill}>STATISTICO</span>}
+            {coachEnabled && <span style={s.proPill}>ALLENATORE</span>}
           </h1>
           <p style={s.subtitle}>
             Regole principali per formazione, capitani, Top squadre e punteggi.
@@ -247,6 +256,69 @@ export default function RegolePage() {
               </p>
             </div>
           </section>
+        )}
+
+        {isNonStandard && (
+          <section style={{ ...s.card, borderTop: "3px solid #e07b1a" }}>
+            <h2 style={s.cardTitle}>
+              Punteggi non standard <span style={s.proPillSmall}>NON STANDARD</span>
+            </h2>
+            <div style={s.text}>
+              <p>
+                Questa modalita aggiunge moltiplicatori statistici ai bonus e
+                malus comuni.
+              </p>
+
+              <h3 style={s.subTitle}>Eventi principali</h3>
+              <ul style={s.list}>
+                <li>Gol segnato: +3</li>
+                <li>Assist: +1</li>
+                <li>Ammonizione: -0,5</li>
+                <li>Espulsione: -1</li>
+                <li>Rigore sbagliato: -3</li>
+              </ul>
+
+              <h3 style={s.subTitle}>Statistiche avanzate</h3>
+              <ul style={s.list}>
+                <li>Passaggi riusciti: +0,005 ciascuno</li>
+                <li>Precisione passaggi: +0,3 se oltre 85% e almeno 20 passaggi riusciti</li>
+                <li>Tackle: +0,10 ciascuno</li>
+                <li>Intercetto: +0,10 ciascuno</li>
+                <li>npxG: valore pieno x1</li>
+                <li>xA / expected assist: valore pieno x1</li>
+              </ul>
+
+              <h3 style={s.subTitle}>Portieri e clean sheet</h3>
+              <ul style={s.list}>
+                <li>Porta inviolata portiere: +1</li>
+                <li>Porta inviolata difensore: +1</li>
+                <li>Gol subito dal portiere: -1 ciascuno</li>
+                <li>Percentuale parate portiere: +0,5 se oltre 80%</li>
+                <li>Bonus parate rafforzato: +1 se oltre 80% e almeno 5 parate</li>
+                <li>Rigore parato portiere: +3</li>
+              </ul>
+            </div>
+          </section>
+        )}
+
+        {coachEnabled && (
+          <RuleCard title="Allenatore">
+            <p>
+              L'allenatore è obbligatorio nelle modalità che lo includono. È uno
+              slot separato: non rientra nel limite delle Top squadre e può
+              appartenere alla stessa squadra di un giocatore già scelto.
+            </p>
+
+            <ul style={s.list}>
+              <li>Vittoria: +1</li>
+              <li>Pareggio: 0</li>
+              <li>Sconfitta: -1</li>
+              <li>npxG squadra: ×1</li>
+              <li>Possesso palla almeno 60%: +0,5</li>
+              <li>Tetto massimo positivo: +3</li>
+              <li>Tetto minimo: -1</li>
+            </ul>
+          </RuleCard>
         )}
       </main>
 

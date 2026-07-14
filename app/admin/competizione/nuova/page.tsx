@@ -35,7 +35,14 @@ type Member = {
 };
 
 type Step = 1 | 2 | 3 | 4;
-type Ruleset = "classico" | "pro";
+type Ruleset = "classico" | "non_standard";
+type GameMode = {
+  key: string;
+  name: string;
+  desc: string;
+  ruleset: Ruleset;
+  coachEnabled: boolean;
+};
 
 const ROLE_LABELS: Record<string, string> = {
   P: "Portieri",
@@ -45,6 +52,37 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const DEFAULT_ROLES = { P: 1, D: 1, C: 1, A: 1 };
+
+const GAME_MODES: GameMode[] = [
+  {
+    key: "classico",
+    name: "Classico",
+    desc: "Bonus/malus standard: gol, assist, cartellini, rigori, clean sheet.",
+    ruleset: "classico",
+    coachEnabled: false,
+  },
+  {
+    key: "classico_coach",
+    name: "Classico + allenatore",
+    desc: "Regole classiche con uno slot allenatore obbligatorio e separato.",
+    ruleset: "classico",
+    coachEnabled: true,
+  },
+  {
+    key: "statistico",
+    name: "Statistico",
+    desc: "Passaggi, precisione, tackle, intercetti, npxG, xA e parate.",
+    ruleset: "non_standard",
+    coachEnabled: false,
+  },
+  {
+    key: "statistico_coach",
+    name: "Statistico + allenatore",
+    desc: "Punteggi statistici completi con allenatore obbligatorio.",
+    ruleset: "non_standard",
+    coachEnabled: true,
+  },
+];
 
 export default function NuovaCompetizione() {
   const app = useRequireLeagueAdmin();
@@ -61,6 +99,7 @@ export default function NuovaCompetizione() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [roles, setRoles] = useState<Record<string, number>>(DEFAULT_ROLES);
   const [ruleset, setRuleset] = useState<Ruleset>("classico");
+  const [coachEnabled, setCoachEnabled] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -83,6 +122,14 @@ export default function NuovaCompetizione() {
   const totalPlayers = useMemo(
     () => Object.values(roles).reduce((sum, n) => sum + (Number(n) || 0), 0),
     [roles]
+  );
+
+  const selectedMode = useMemo(
+    () =>
+      GAME_MODES.find(
+        (mode) => mode.ruleset === ruleset && mode.coachEnabled === coachEnabled
+      ) ?? GAME_MODES[0],
+    [coachEnabled, ruleset]
   );
 
   useEffect(() => {
@@ -216,13 +263,19 @@ export default function NuovaCompetizione() {
     const id = (data as any)?.league_competition_id ?? data;
 
     if (id) {
-      // imposta il tipo di punteggio scelto (Classico/Pro)
-      try {
-        await supabase.rpc("set_scoring_ruleset", {
-          p_league_competition_id: String(id),
-          p_ruleset: ruleset,
-        });
-      } catch {}
+      // Imposta tipo di punteggio e presenza dell'allenatore.
+      const { error: rulesError } = await supabase.rpc("set_scoring_ruleset", {
+        p_league_competition_id: String(id),
+        p_ruleset: ruleset,
+      });
+      if (rulesError) { setBusy(false); return setErr(rulesError.message); }
+
+      const { error: coachError } = await supabase.rpc("set_coach_mode", {
+        p_league_competition_id: String(id),
+        p_enabled: coachEnabled,
+      });
+      if (coachError) { setBusy(false); return setErr(coachError.message); }
+
       await app.setActiveCompetition(String(id));
     }
 
@@ -287,24 +340,36 @@ export default function NuovaCompetizione() {
             </div>
 
             <div>
-              <div style={s.typeLabel}>Tipo di punteggio</div>
+              <div style={s.typeLabel}>Modalità di gioco</div>
               <div style={s.typeRow}>
-                <button
-                  type="button"
-                  onClick={() => setRuleset("classico")}
-                  style={{ ...s.typeCard, ...(ruleset === "classico" ? { borderColor: accent, background: `${accent}0d` } : {}) }}
-                >
-                  <div style={s.typeName}>Classico</div>
-                  <div style={s.typeDesc}>Bonus/malus standard: gol, assist, cartellini, rigori, clean sheet.</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRuleset("pro")}
-                  style={{ ...s.typeCard, ...(ruleset === "pro" ? { borderColor: accent, background: `${accent}0d` } : {}) }}
-                >
-                  <div style={s.typeName}>Pro <span style={s.proTag}>PRO</span></div>
-                  <div style={s.typeDesc}>Tutto il Classico più statistiche avanzate (xG, xA).</div>
-                </button>
+                {GAME_MODES.map((mode) => {
+                  const active =
+                    mode.ruleset === ruleset &&
+                    mode.coachEnabled === coachEnabled;
+
+                  return (
+                    <button
+                      key={mode.key}
+                      type="button"
+                      onClick={() => {
+                        setRuleset(mode.ruleset);
+                        setCoachEnabled(mode.coachEnabled);
+                      }}
+                      style={{
+                        ...s.typeCard,
+                        ...(active
+                          ? { borderColor: accent, background: `${accent}0d` }
+                          : {}),
+                      }}
+                    >
+                      <div style={s.typeName}>
+                        {mode.name}
+                        {mode.coachEnabled && <span style={s.proTag}>AL</span>}
+                      </div>
+                      <div style={s.typeDesc}>{mode.desc}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -404,7 +469,11 @@ export default function NuovaCompetizione() {
             </div>
 
             <div style={s.summaryType}>
-              Punteggio: <b>{ruleset === "pro" ? "Pro (con xG / xA)" : "Classico"}</b>
+              Modalità: <b>{selectedMode.name}</b>
+              <br />
+              <span>
+                Allenatore: <b>{coachEnabled ? "obbligatorio" : "non attivo"}</b>
+              </span>
             </div>
 
             <div style={s.actions}>
@@ -461,7 +530,7 @@ const s: Record<string, React.CSSProperties> = {
   ruleGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
   infoBox: { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 14, padding: 11, display: "grid", gap: 3 },
   typeLabel: { fontSize: 13, fontWeight: 1000, color: "#374151", marginBottom: 6 },
-  typeRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
+  typeRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 8 },
   typeCard: { textAlign: "left", border: "1.5px solid #e5e7eb", background: "white", borderRadius: 14, padding: 12, cursor: "pointer", fontFamily: "inherit" },
   typeName: { fontWeight: 1000, color: "#111827", fontSize: 14, display: "flex", alignItems: "center", gap: 6 },
   typeDesc: { fontSize: 11.5, color: "#6b7280", fontWeight: 700, marginTop: 4, lineHeight: 1.35 },

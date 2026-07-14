@@ -38,6 +38,15 @@ type Stats = {
   pen_saved: number;
   pen_missed: number;
   clean_sheet: boolean;
+  xg: number;
+  xa: number;
+  passes_completed: number;
+  pass_accuracy: number;
+  tackles: number;
+  interceptions: number;
+  npxg: number;
+  saves: number;
+  save_pct: number;
 };
 
 type TopTeam = { id: string; real_team_id: string; team_name: string; rank: number };
@@ -54,6 +63,8 @@ type Fixture = {
 const EMPTY_STATS: Stats = {
   goals: 0, assists: 0, yellow: 0, red: 0,
   goals_conceded: 0, pen_saved: 0, pen_missed: 0, clean_sheet: false,
+  xg: 0, xa: 0, passes_completed: 0, pass_accuracy: 0,
+  tackles: 0, interceptions: 0, npxg: 0, saves: 0, save_pct: 0,
 };
 
 export default function SuperadminPage() {
@@ -463,6 +474,12 @@ function StatisticheTab(props: {
   const [selected, setSelected] = useState<Player | null>(null);
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [saving, setSaving] = useState(false);
+  const [coachTeam, setCoachTeam] = useState<Team | null>(null);
+  const [coachName, setCoachName] = useState("");
+  const [coachResult, setCoachResult] = useState<"win" | "draw" | "loss">("draw");
+  const [coachNpxg, setCoachNpxg] = useState(0);
+  const [coachPossession, setCoachPossession] = useState(0);
+  const [savingCoach, setSavingCoach] = useState(false);
 
   async function pickPlayer(p: Player) {
     setSelected(p);
@@ -487,6 +504,15 @@ function StatisticheTab(props: {
       pen_saved: Number(data?.pen_saved ?? 0),
       pen_missed: Number(data?.pen_missed ?? 0),
       clean_sheet: Boolean(data?.clean_sheet ?? false),
+      xg: Number(data?.xg ?? 0),
+      xa: Number(data?.xa ?? 0),
+      passes_completed: Number(data?.passes_completed ?? 0),
+      pass_accuracy: Number(data?.pass_accuracy ?? 0),
+      tackles: Number(data?.tackles ?? 0),
+      interceptions: Number(data?.interceptions ?? 0),
+      npxg: Number(data?.npxg ?? 0),
+      saves: Number(data?.saves ?? 0),
+      save_pct: Number(data?.save_pct ?? 0),
     });
   }
 
@@ -514,38 +540,84 @@ function StatisticheTab(props: {
       p_pen_saved: stats.pen_saved,
       p_pen_missed: stats.pen_missed,
       p_clean_sheet: stats.clean_sheet,
+      p_xg: stats.xg,
+      p_xa: stats.xa,
+      p_passes_completed: stats.passes_completed,
+      p_pass_accuracy: stats.pass_accuracy,
+      p_tackles: stats.tackles,
+      p_interceptions: stats.interceptions,
+      p_npxg: stats.npxg,
+      p_saves: stats.saves,
+      p_save_pct: stats.save_pct,
     });
     setSaving(false);
     if (error) { props.setErr(error.message); return; }
     props.setMsg(`Statistiche salvate ✅ Totale: ${data?.total_points_base ?? 0}`);
   }
 
+  async function saveCoach() {
+    props.setErr(null);
+    props.setMsg(null);
+    if (!props.competition.active_season_id) { props.setErr("Competizione senza season attiva."); return; }
+    if (!coachTeam) { props.setErr("Seleziona la squadra dell'allenatore."); return; }
+    if (!coachName.trim()) { props.setErr("Scrivi il nome dell'allenatore."); return; }
+
+    setSavingCoach(true);
+    const { error: coachError } = await supabase.rpc("superadmin_upsert_coach", {
+      p_competition_id: props.competition.id,
+      p_real_team_id: coachTeam.id,
+      p_name: coachName.trim(),
+      p_active: true,
+    });
+
+    if (coachError) {
+      setSavingCoach(false);
+      props.setErr(coachError.message);
+      return;
+    }
+
+    const { error: statsError } = await supabase.rpc("superadmin_upsert_coach_stats", {
+      p_competition_id: props.competition.id,
+      p_season_id: props.competition.active_season_id,
+      p_matchday_number: props.matchday,
+      p_real_team_id: coachTeam.id,
+      p_result: coachResult,
+      p_npxg: coachNpxg,
+      p_possession: coachPossession,
+    });
+
+    setSavingCoach(false);
+    if (statsError) { props.setErr(statsError.message); return; }
+    props.setMsg(`Allenatore salvato: ${coachName.trim()} (${coachTeam.name}) ✅`);
+  }
+
   return (
-    <section style={s.card}>
-      <h2 style={s.cardTitle}>Statistiche giocatore</h2>
-      <p style={s.muted}>Scrivi il nome del giocatore o della squadra e selezionalo dall'elenco che compare.</p>
+    <div style={s.stack}>
+      <section style={s.card}>
+        <h2 style={s.cardTitle}>Statistiche giocatore</h2>
+        <p style={s.muted}>Scrivi il nome del giocatore o della squadra e selezionalo dall'elenco che compare.</p>
 
-      <Typeahead<Player>
-        placeholder="Cerca giocatore o squadra"
-        search={async (q) => {
-          const { data, error } = await supabase.rpc("superadmin_search_players_for_vote", {
-            p_competition_id: props.competition.id,
-            p_query: q,
-          });
-          if (error) { props.setErr(error.message); return []; }
-          return (data ?? []) as Player[];
-        }}
-        renderItem={(p) => (
-          <span style={s.taItem}>
-            <b>{p.name}</b>
-            <small>{p.role}{p.team_name ? ` · ${p.team_name}` : ""}</small>
-          </span>
-        )}
-        onPick={pickPlayer}
-      />
+        <Typeahead<Player>
+          placeholder="Cerca giocatore o squadra"
+          search={async (q) => {
+            const { data, error } = await supabase.rpc("superadmin_search_players_for_vote", {
+              p_competition_id: props.competition.id,
+              p_query: q,
+            });
+            if (error) { props.setErr(error.message); return []; }
+            return (data ?? []) as Player[];
+          }}
+          renderItem={(p) => (
+            <span style={s.taItem}>
+              <b>{p.name}</b>
+              <small>{p.role}{p.team_name ? ` · ${p.team_name}` : ""}</small>
+            </span>
+          )}
+          onPick={pickPlayer}
+        />
 
-      {selected && (
-        <div style={s.statsBox}>
+        {selected && (
+          <div style={s.statsBox}>
           <h3 style={s.selectedTitle}>
             {selected.name}
             <small>{selected.role} · {selected.team_name || "—"}</small>
@@ -557,13 +629,30 @@ function StatisticheTab(props: {
             <NumberField label="Giallo" value={stats.yellow} onChange={(v) => setStat("yellow", v)} />
             <NumberField label="Rosso" value={stats.red} onChange={(v) => setStat("red", v)} />
             <NumberField label="Rigore sbagliato" value={stats.pen_missed} onChange={(v) => setStat("pen_missed", v)} />
-            {selected.role === "P" && (
-              <>
+          </div>
+
+          <h4 style={s.microTitle}>Statistiche non standard</h4>
+          <div style={s.statsGrid}>
+            <NumberField label="Passaggi riusciti" value={stats.passes_completed} onChange={(v) => setStat("passes_completed", v)} />
+            <NumberField label="% passaggi" value={stats.pass_accuracy} step={0.1} onChange={(v) => setStat("pass_accuracy", v)} />
+            <NumberField label="Tackle" value={stats.tackles} onChange={(v) => setStat("tackles", v)} />
+            <NumberField label="Intercetti" value={stats.interceptions} onChange={(v) => setStat("interceptions", v)} />
+            <NumberField label="npxG" value={stats.npxg} step={0.01} onChange={(v) => setStat("npxg", v)} />
+            <NumberField label="xA" value={stats.xa} step={0.01} onChange={(v) => setStat("xa", v)} />
+            <NumberField label="xG" value={stats.xg} step={0.01} onChange={(v) => setStat("xg", v)} />
+          </div>
+
+          {selected.role === "P" && (
+            <>
+              <h4 style={s.microTitle}>Portiere</h4>
+              <div style={s.statsGrid}>
                 <NumberField label="Gol subito" value={stats.goals_conceded} onChange={(v) => setStat("goals_conceded", v)} />
                 <NumberField label="Rigore parato" value={stats.pen_saved} onChange={(v) => setStat("pen_saved", v)} />
-              </>
-            )}
-          </div>
+                <NumberField label="Parate" value={stats.saves} onChange={(v) => setStat("saves", v)} />
+                <NumberField label="% parate" value={stats.save_pct} step={0.1} onChange={(v) => setStat("save_pct", v)} />
+              </div>
+            </>
+          )}
 
           {(selected.role === "P" || selected.role === "D") && (
             <label style={s.checkboxRow}>
@@ -575,9 +664,64 @@ function StatisticheTab(props: {
           <button type="button" onClick={saveStats} disabled={saving} style={s.saveBtn}>
             {saving ? "Salvataggio..." : "Salva statistiche"}
           </button>
+          </div>
+        )}
+      </section>
+
+      <section style={s.card}>
+        <h2 style={s.cardTitle}>Allenatore</h2>
+        <p style={s.muted}>
+          Associa il nome dell'allenatore alla squadra e salva le statistiche
+          semplici della giornata.
+        </p>
+
+        <Typeahead<Team>
+          placeholder="Scrivi e scegli la squadra"
+          search={async (q) => {
+            const { data, error } = await supabase.rpc("superadmin_search_teams", {
+              p_competition_id: props.competition.id,
+              p_query: q,
+            });
+            if (error) { props.setErr(error.message); return []; }
+            return (data ?? []) as Team[];
+          }}
+          renderItem={(t) => (
+            <span style={s.taItem}><b>{t.name}</b>{t.country ? <small>{t.country}</small> : null}</span>
+          )}
+          onPick={setCoachTeam}
+        />
+
+        {coachTeam && <div style={s.picked}>Squadra: <b>{coachTeam.name}</b></div>}
+
+        <label style={s.label}>Nome allenatore</label>
+        <input
+          value={coachName}
+          onChange={(e) => setCoachName(e.target.value)}
+          placeholder="Es. Simone Inzaghi"
+          style={s.input}
+        />
+
+        <label style={s.label}>Risultato</label>
+        <select
+          value={coachResult}
+          onChange={(e) => setCoachResult(e.target.value as "win" | "draw" | "loss")}
+          style={s.input}
+        >
+          <option value="win">Vittoria</option>
+          <option value="draw">Pareggio</option>
+          <option value="loss">Sconfitta</option>
+        </select>
+
+        <div style={s.statsGrid}>
+          <NumberField label="npxG squadra" value={coachNpxg} step={0.01} onChange={setCoachNpxg} />
+          <NumberField label="Possesso %" value={coachPossession} step={0.1} max={100} onChange={setCoachPossession} />
         </div>
-      )}
-    </section>
+
+        <button type="button" onClick={saveCoach} disabled={savingCoach} style={s.saveBtn}>
+          {savingCoach ? "Salvataggio..." : "Salva allenatore"}
+        </button>
+      </section>
+    </div>
   );
 }
 
@@ -784,26 +928,27 @@ function PartiteTab(props: {
   );
 }
 
-function NumberField(props: { label: string; value: number; onChange: (value: number) => void; min?: number; max?: number }) {
+function NumberField(props: { label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; step?: number }) {
   const min = props.min ?? 0;
+  const step = props.step ?? 1;
   const clamp = (v: number) => {
     let x = isNaN(v) ? min : v;
     x = Math.max(min, x);
     if (props.max != null) x = Math.min(props.max, x);
-    return x;
+    return Number(x.toFixed(step < 1 ? 2 : 0));
   };
   return (
     <label style={s.numberField}>
       <span>{props.label}</span>
       <div style={s.stepper}>
-        <button type="button" onClick={() => props.onChange(clamp(props.value - 1))} style={s.stepBtn} aria-label="meno">−</button>
+        <button type="button" onClick={() => props.onChange(clamp(props.value - step))} style={s.stepBtn} aria-label="meno">−</button>
         <input
-          inputMode="numeric"
+          inputMode="decimal"
           value={String(props.value)}
-          onChange={(e) => props.onChange(clamp(parseInt(e.target.value.replace(/[^0-9]/g, ""), 10)))}
+          onChange={(e) => props.onChange(clamp(Number(e.target.value.replace(",", "."))))}
           style={s.stepInput}
         />
-        <button type="button" onClick={() => props.onChange(clamp(props.value + 1))} style={s.stepBtn} aria-label="più">+</button>
+        <button type="button" onClick={() => props.onChange(clamp(props.value + step))} style={s.stepBtn} aria-label="più">+</button>
       </div>
     </label>
   );
@@ -817,6 +962,7 @@ const s: Record<string, React.CSSProperties> = {
   tabs: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
   tab: { padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, display: "grid", gap: 12, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  stack: { display: "grid", gap: 12 },
   cardTitle: { margin: 0, fontSize: 21, fontWeight: 1000, color: "#111827" },
   muted: { margin: 0, color: "#6b7280", fontSize: 13, fontWeight: 700, lineHeight: 1.45 },
   list: { display: "grid", gap: 8 },
@@ -838,6 +984,7 @@ const s: Record<string, React.CSSProperties> = {
   playerRow: { display: "grid", gap: 3, textAlign: "left", border: "1px solid #e5e7eb", borderRadius: 13, background: "white", padding: 12, fontFamily: "inherit", cursor: "pointer" },
   statsBox: { display: "grid", gap: 12, borderTop: "1px solid #e5e7eb", paddingTop: 14 },
   selectedTitle: { margin: 0, display: "grid", gap: 3, color: "#111827", fontWeight: 1000 },
+  microTitle: { margin: "4px 0 -4px", fontSize: 11, fontWeight: 1000, color: "#64748b", textTransform: "uppercase", letterSpacing: ".05em" },
   statsGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 },
   numberField: { display: "grid", gap: 5, color: "#374151", fontSize: 12, fontWeight: 900 },
   stepper: { display: "flex", alignItems: "stretch", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden", background: "white" },

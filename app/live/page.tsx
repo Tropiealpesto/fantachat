@@ -45,13 +45,16 @@ const ROLE_META: Record<string, { bg: string; fg: string; label: string }> = {
   D: { bg: "#DCFCE7", fg: "#15803D", label: "D" },
   C: { bg: "#DBEAFE", fg: "#2563EB", label: "C" },
   A: { bg: "#FEE2E2", fg: "#DC2626", label: "A" },
+  AL: { bg: "#F5F3FF", fg: "#7C3AED", label: "AL" },
 };
 
 function pLabel(p: LivePlayer) {
+  if (p.role === "AL") return p.name;
   return p.role === "P" ? p.team || p.name : p.name;
 }
 
 function pSub(p: LivePlayer) {
+  if (p.role === "AL") return `Allenatore - ${p.team}`;
   return p.role === "P" ? "Portiere" : `${p.role} · ${p.team}`;
 }
 

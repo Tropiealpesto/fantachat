@@ -16,6 +16,13 @@ type Player = {
   team: string;
 };
 
+type Coach = {
+  id: string;
+  name: string;
+  team: string;
+  real_team_id?: string | null;
+};
+
 type Matchday = {
   id: string;
   number: number;
@@ -29,6 +36,11 @@ type LineupData = {
     role: string;
     real_player_id: string;
   }[];
+  coach?: {
+    real_coach_id: string;
+    name?: string | null;
+    team?: string | null;
+  } | null;
 };
 
 type FormData = {
@@ -37,6 +49,8 @@ type FormData = {
   matchday: Matchday | null;
   players_per_role: Record<string, number>;
   players: Player[];
+  coach_enabled: boolean;
+  coaches: Coach[];
   lineup: LineupData | null;
 };
 
@@ -74,6 +88,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   D: { bg: "#DCFCE7", color: "#15803D" },
   C: { bg: "#DBEAFE", color: "#2563EB" },
   A: { bg: "#FEE2E2", color: "#DC2626" },
+  AL: { bg: "#F5F3FF", color: "#7C3AED" },
 };
 
 const EMPTY_FORM: FormData = {
@@ -82,6 +97,8 @@ const EMPTY_FORM: FormData = {
   matchday: null,
   players_per_role: { P: 1, D: 1, C: 1, A: 1 },
   players: [],
+  coach_enabled: false,
+  coaches: [],
   lineup: null,
 };
 
@@ -210,6 +227,8 @@ export default function RosaPage() {
   const [top, setTop] = useState<TopRow[]>([]);
   const [fixtures, setFixtures] = useState<FixtureRow[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
+  const [coachSheetOpen, setCoachSheetOpen] = useState(false);
+  const [selectedCoachId, setSelectedCoachId] = useState("");
   const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
 
   function kitOf(team?: string | null): Kit | null {
@@ -235,9 +254,16 @@ export default function RosaPage() {
     [roles]
   );
 
+  const totalRequired = totalPlayers + (form.coach_enabled ? 1 : 0);
+
   const byId = useMemo(
     () => new Map(form.players.map((p) => [p.id, p])),
     [form.players]
+  );
+
+  const coachById = useMemo(
+    () => new Map(form.coaches.map((c) => [c.id, c])),
+    [form.coaches]
   );
 
   const topNames = useMemo(
@@ -264,6 +290,7 @@ export default function RosaPage() {
 
         setForm(nextForm);
         setSelected(buildInitialSelected(nextForm.players_per_role, nextForm.lineup));
+        setSelectedCoachId(nextForm.lineup?.coach?.real_coach_id ?? "");
         setSaved(Boolean(nextForm.lineup?.id));
       } catch (e: any) {
         setErr(e?.message ?? String(e));
@@ -413,6 +440,10 @@ export default function RosaPage() {
       return "Non puoi selezionare due volte lo stesso giocatore.";
     }
 
+    if (form.coach_enabled && !selectedCoachId) {
+      return "Seleziona l'allenatore.";
+    }
+
     return null;
   }
 
@@ -445,6 +476,7 @@ export default function RosaPage() {
         p_league_competition_id: app.activeLeagueCompetitionId,
         p_matchday_id: form.matchday.id,
         p_players: payload,
+        p_coach_id: form.coach_enabled ? selectedCoachId : null,
       });
 
       if (error) throw error;
@@ -474,8 +506,17 @@ export default function RosaPage() {
   const accent = app.competitionTheme.primary;
   const locked = saved || !form.is_participant || !form.matchday;
 
-  const selectedCount = selectedIds.length;
-  const completionLabel = `${selectedCount}/${totalPlayers}`;
+  const selectedCount = selectedIds.length + (form.coach_enabled && selectedCoachId ? 1 : 0);
+  const completionLabel = `${selectedCount}/${totalRequired}`;
+  const selectedCoach =
+    selectedCoachId
+      ? coachById.get(selectedCoachId) ??
+        {
+          id: selectedCoachId,
+          name: form.lineup?.coach?.name ?? "Allenatore",
+          team: form.lineup?.coach?.team ?? "",
+        }
+      : null;
 
   const currentSlotId =
     activeSlot && selected[activeSlot.role]
@@ -518,7 +559,7 @@ export default function RosaPage() {
 
             <div className="fc-dark-neon-count" style={s.countBox}>
               <span>{completionLabel}</span>
-              <small>giocatori</small>
+              <small>{form.coach_enabled ? "slot" : "giocatori"}</small>
             </div>
           </div>
 
@@ -529,6 +570,12 @@ export default function RosaPage() {
                 {count}
               </span>
             ))}
+            {form.coach_enabled && (
+              <span className="fc-dark-neon-pill fc-dark-role-pill" style={s.rulePill}>
+                <RoleBadge role="AL" small />
+                1
+              </span>
+            )}
           </div>
 
           {!form.is_participant && (
@@ -564,6 +611,9 @@ export default function RosaPage() {
             roles={roles}
             locked={locked}
             kitOf={kitOf}
+            coachEnabled={form.coach_enabled}
+            coach={selectedCoach}
+            onCoachPress={() => setCoachSheetOpen(true)}
             onSlotPress={(role, index) => setActiveSlot({ role, index })}
           />
 
@@ -628,6 +678,22 @@ export default function RosaPage() {
         />
       )}
 
+      {coachSheetOpen && (
+        <CoachSheet
+          currentId={selectedCoachId}
+          options={form.coaches}
+          onClose={() => setCoachSheetOpen(false)}
+          onClear={() => {
+            setSelectedCoachId("");
+            setCoachSheetOpen(false);
+          }}
+          onSelect={(id) => {
+            setSelectedCoachId(id);
+            setCoachSheetOpen(false);
+          }}
+        />
+      )}
+
       <BottomNav />
     </>
   );
@@ -639,6 +705,9 @@ function CampoInterattivo(props: {
   roles: [string, number][];
   locked: boolean;
   kitOf: (team?: string | null) => Kit | null;
+  coachEnabled: boolean;
+  coach: Coach | null;
+  onCoachPress: () => void;
   onSlotPress: (role: string, index: number) => void;
 }) {
   const byId = new Map(props.players.map((p) => [p.id, p]));
@@ -773,6 +842,24 @@ function CampoInterattivo(props: {
           </div>
         );
       })}
+
+      {props.coachEnabled && (
+        <button
+          type="button"
+          disabled={props.locked}
+          onClick={props.onCoachPress}
+          style={{
+            ...s.coachSlot,
+            cursor: props.locked ? "default" : "pointer",
+          }}
+        >
+          <RoleBadge role="AL" />
+          <span style={props.coach ? s.coachName : s.slotNameMuted}>
+            {props.coach ? shortName(props.coach.name) : "Allenatore"}
+          </span>
+          {props.coach?.team && <small style={s.coachTeam}>{props.coach.team}</small>}
+        </button>
+      )}
     </div>
   );
 }
@@ -877,6 +964,97 @@ function PlayerSheet(props: {
   );
 }
 
+function CoachSheet(props: {
+  currentId: string;
+  options: Coach[];
+  onClose: () => void;
+  onClear: () => void;
+  onSelect: (id: string) => void;
+}) {
+  const [q, setQ] = useState("");
+
+  const matches = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+
+    if (!needle) return props.options.slice(0, 12);
+
+    return props.options
+      .filter((c) => `${c.name} ${c.team}`.toLowerCase().includes(needle))
+      .slice(0, 20);
+  }, [q, props.options]);
+
+  return (
+    <div style={s.sheetLayer}>
+      <button
+        type="button"
+        aria-label="Chiudi selezione"
+        style={s.sheetBackdrop}
+        onClick={props.onClose}
+      />
+
+      <div style={s.sheet}>
+        <div style={s.sheetHandle} />
+
+        <div style={s.sheetHead}>
+          <div>
+            <h2 style={s.sheetTitle}>Seleziona allenatore</h2>
+            <p style={s.sheetSubtitle}>Cerca per nome allenatore o squadra.</p>
+          </div>
+
+          <button type="button" onClick={props.onClose} style={s.closeBtn}>
+            ×
+          </button>
+        </div>
+
+        <div style={s.searchWrap}>
+          <span style={s.searchIcon}>⌕</span>
+
+          <input
+            value={q}
+            autoFocus
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Scrivi il nome dell'allenatore"
+            style={s.sheetSearch}
+          />
+        </div>
+
+        {props.currentId && (
+          <button type="button" onClick={props.onClear} style={s.clearCurrent}>
+            Rimuovi allenatore selezionato
+          </button>
+        )}
+
+        <div style={s.resultList}>
+          {matches.map((coach) => (
+            <button
+              key={coach.id}
+              type="button"
+              onClick={() => props.onSelect(coach.id)}
+              style={{
+                ...s.resultRow,
+                background: coach.id === props.currentId ? "#f0fdf4" : "white",
+              }}
+            >
+              <RoleBadge role="AL" />
+
+              <span style={s.resultText}>
+                <b>{coach.name}</b>
+                <small>{coach.team}</small>
+              </span>
+
+              <span style={s.addBtn}>+</span>
+            </button>
+          ))}
+
+          {matches.length === 0 && (
+            <div style={s.emptyResults}>Nessun risultato trovato.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RoleBadge({
   role,
   small = false,
@@ -889,8 +1067,8 @@ function RoleBadge({
   field?: boolean;
 }) {
   const c = ROLE_COLORS[role] ?? {
-    bg: "#f3f4f6",
-    color: "#6b7280",
+    bg: role === "AL" ? "#F5F3FF" : "#f3f4f6",
+    color: role === "AL" ? "#7C3AED" : "#6b7280",
   };
 
   const size = large ? 44 : field ? 46 : small ? 22 : 34;
@@ -913,7 +1091,7 @@ function RoleBadge({
         flexShrink: 0,
       }}
     >
-      {role}
+      {role === "AL" ? "AL" : role}
     </span>
   );
 }
@@ -930,6 +1108,8 @@ function normalizeFormData(value: any): FormData {
     matchday: value?.matchday ?? null,
     players_per_role: ppr,
     players: Array.isArray(value?.players) ? value.players : [],
+    coach_enabled: Boolean(value?.coach_enabled),
+    coaches: Array.isArray(value?.coaches) ? value.coaches : [],
     lineup: value?.lineup ?? null,
   };
 }
@@ -1210,6 +1390,47 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 9,
     fontWeight: 1000,
     textTransform: "uppercase",
+  },
+
+  coachSlot: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+    zIndex: 4,
+    border: "1px solid rgba(255,255,255,.22)",
+    borderRadius: 8,
+    background: "rgba(15,23,42,.58)",
+    padding: "6px 7px",
+    display: "grid",
+    justifyItems: "center",
+    gap: 2,
+    minWidth: 74,
+    maxWidth: 92,
+    color: "white",
+    fontFamily: "inherit",
+    boxShadow: "0 8px 18px rgba(15,23,42,.18)",
+    backdropFilter: "blur(8px)",
+  },
+
+  coachName: {
+    color: "white",
+    fontSize: 9.5,
+    lineHeight: 1.05,
+    maxWidth: 74,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    fontWeight: 1000,
+  },
+
+  coachTeam: {
+    color: "rgba(255,255,255,.72)",
+    fontSize: 8.5,
+    fontWeight: 900,
+    maxWidth: 74,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
   },
 
   btn: {
