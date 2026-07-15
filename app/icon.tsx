@@ -43,14 +43,19 @@ export default function Icon() {
         <div
           style={{
             color: "#ffffff",
-            fontSize: 214,
             fontWeight: 1000,
-            letterSpacing: -16,
             lineHeight: 1,
             textShadow: "2px 3px 0 rgba(0,0,0,.10)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            width: 340,
+            transform: "translateX(3px)",
           }}
         >
-          FC
+          <span style={{ fontSize: 214, lineHeight: 1 }}>F</span>
+          <span style={{ fontSize: 214, lineHeight: 1 }}>C</span>
         </div>
       </div>
     ),
