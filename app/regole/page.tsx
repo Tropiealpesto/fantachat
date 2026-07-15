@@ -15,12 +15,12 @@ export default function RegolePage() {
     if (!app.activeLeagueCompetitionId) return;
     let off = false;
     supabase
-      .from("league_competitions")
-      .select("scoring_ruleset,coach_enabled")
-      .eq("id", app.activeLeagueCompetitionId)
-      .maybeSingle()
-      .then(({ data }) => {
+      .rpc("get_league_competition_rules", {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+      })
+      .then(({ data, error }) => {
         if (!off) {
+          if (error) return;
           setRuleset((data as any)?.scoring_ruleset ?? null);
           setCoachEnabled(Boolean((data as any)?.coach_enabled));
         }

@@ -37,27 +37,7 @@ export default function SideDrawerWrapper() {
 
     async function load() {
       const { data, error } = await supabase.rpc("get_league_competitions", { p_league_id: app.activeLeagueId });
-      if (!error && data) {
-        setCompetitions(data as DrawerCompetition[]);
-        return;
-      }
-
-      const { data: rows } = await supabase
-        .from("league_competitions")
-        .select("id, name, competitions(slug,type), seasons(name)")
-        .eq("league_id", app.activeLeagueId)
-        .eq("status", "active")
-        .order("created_at", { ascending: true });
-
-      setCompetitions(((rows ?? []) as any[]).map((r) => ({
-        id: r.id,
-        name: r.name,
-        competition_type: r.competitions?.type ?? null,
-        competition_slug: r.competitions?.slug ?? null,
-        season_name: r.seasons?.name ?? null,
-        matchday_number: null,
-        is_active: r.id === app.activeLeagueCompetitionId,
-      })));
+      setCompetitions(!error && data ? (data as DrawerCompetition[]) : []);
     }
 
     load();

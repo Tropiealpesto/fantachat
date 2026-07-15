@@ -4,7 +4,7 @@ const sections: LegalSection[] = [
   {
     title: "Come richiederla",
     body: [
-      "Per chiedere la cancellazione dell'account invia una richiesta a [DA COMPLETARE: email privacy] dall'indirizzo email associato al tuo account FantaChat.",
+      "Per chiedere la cancellazione dell'account usa il canale di contatto ufficiale indicato dal gestore dell'app o invia una richiesta dall'indirizzo email associato al tuo account FantaChat.",
       "Nella richiesta indica che vuoi cancellare l'account e, se possibile, il nome della lega o della squadra collegata. Non inviare password o dati sensibili non necessari.",
     ],
   },
@@ -24,7 +24,7 @@ const sections: LegalSection[] = [
   {
     title: "Tempi",
     body: [
-      "La richiesta viene presa in carico il prima possibile. Prima del lancio pubblico va definito un tempo massimo operativo, ad esempio 30 giorni, salvo necessita tecniche o obblighi di legge.",
+      "La richiesta viene presa in carico il prima possibile e normalmente entro 30 giorni, salvo necessita tecniche, richieste particolarmente complesse o obblighi di legge.",
     ],
   },
   {
@@ -46,9 +46,9 @@ export default function AccountDeletionPage() {
     <LegalPage
       eyebrow="Gestione account"
       title="Cancellazione account"
-      updated="2 luglio 2026"
+      updated="15 luglio 2026"
       intro="Questa pagina spiega come richiedere la cancellazione dell'account FantaChat e cosa aspettarsi durante la procedura."
-      note="Prima del lancio pubblico conviene sostituire questa procedura manuale con un flusso in-app o con una richiesta guidata."
+      note="La procedura manuale e' adatta alla beta. Per un lancio pubblico e' consigliabile aggiungere anche un flusso in-app guidato."
       sections={sections}
     />
   );

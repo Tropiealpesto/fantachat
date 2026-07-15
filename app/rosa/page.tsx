@@ -315,42 +315,21 @@ export default function RosaPage() {
     let off = false;
 
     async function loadContext() {
-      const { data: teams } = await supabase
-        .from("real_teams")
-        .select("id,name")
-        .eq("competition_id", competitionId);
-
-      const map = new Map(((teams ?? []) as any[]).map((t) => [t.id, t.name]));
-
-      const { data: topTeams } = await supabase
-        .from("top_teams")
-        .select("rank,real_team_id")
-        .eq("competition_id", competitionId)
-        .eq("matchday_number", matchdayNumber)
-        .order("rank", { ascending: true });
-
-      const { data: games } = await supabase
-        .from("fixtures")
-        .select("home_team_id,away_team_id,status")
-        .eq("competition_id", competitionId)
-        .eq("matchday_number", matchdayNumber);
+      const { data, error } = await supabase.rpc("get_lineup_context_data", {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+        p_matchday_number: matchdayNumber,
+      });
 
       if (off) return;
 
-      setTop(
-        ((topTeams ?? []) as any[]).map((r) => ({
-          rank: r.rank,
-          name: map.get(r.real_team_id) ?? "—",
-        }))
-      );
+      if (error) {
+        setTop([]);
+        setFixtures([]);
+        return;
+      }
 
-      setFixtures(
-        ((games ?? []) as any[]).map((r) => ({
-          home: map.get(r.home_team_id) ?? "—",
-          away: map.get(r.away_team_id) ?? "—",
-          status: r.status,
-        }))
-      );
+      setTop(((data as any)?.top_teams ?? []) as TopRow[]);
+      setFixtures(((data as any)?.fixtures ?? []) as FixtureRow[]);
     }
 
     loadContext();
@@ -358,7 +337,7 @@ export default function RosaPage() {
     return () => {
       off = true;
     };
-  }, [form.competition_id, form.matchday?.number]);
+  }, [app.activeLeagueCompetitionId, form.competition_id, form.matchday?.number]);
 
   useEffect(() => {
     const lc = app.activeLeagueCompetitionId;

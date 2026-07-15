@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import CompetitionBadge from "../components/CompetitionBadge";
@@ -86,7 +86,7 @@ export default function SuperadminPage() {
     [competitions, competitionId]
   );
 
-  async function loadCompetitions() {
+  const loadCompetitions = useCallback(async () => {
     setErr(null);
     const { data, error } = await supabase.rpc("superadmin_get_competitions");
     if (error) { setErr(error.message); return; }
@@ -95,16 +95,18 @@ export default function SuperadminPage() {
       return status !== "archived" && c.active !== false;
     });
     setCompetitions(list);
-    if (list.length) {
-      const stillExists = list.some((c) => c.id === competitionId);
-      if (!competitionId || !stillExists) {
+    setCompetitionId((current) => {
+      if (list.length) {
+        const stillExists = list.some((c) => c.id === current);
+        if (!current || !stillExists) {
         const first = list.find((c) => c.visibility_status === "active") ?? list[0];
-        setCompetitionId(first.id);
+          return first.id;
+        }
+        return current;
       }
-    } else {
-      setCompetitionId("");
-    }
-  }
+      return "";
+    });
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -120,7 +122,7 @@ export default function SuperadminPage() {
       await loadCompetitions();
     }
     init();
-  }, [app.ready]);
+  }, [app.ready, loadCompetitions]);
 
   async function setCompetitionStatus(id: string, status: "active" | "wip" | "archived") {
     setMsg(null);

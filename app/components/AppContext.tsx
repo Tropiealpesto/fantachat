@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { DEFAULT_THEME, themeFromType, type CompetitionTheme } from "../../lib/competitionThemes";
 
@@ -95,14 +95,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [uiTheme, setUiThemeState] = useState<UiTheme>("light");
 
-  function setUiTheme(theme: UiTheme) {
+  const setUiTheme = useCallback((theme: UiTheme) => {
     setUiThemeState(theme);
     try {
       window.localStorage.setItem("fantachat-ui-theme", theme);
     } catch {}
-  }
+  }, []);
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setReady(false);
 
     try {
@@ -140,100 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.warn("get_app_context fallback:", error.message);
       }
 
-      // 2. Fallback compatibile se la RPC non risponde correttamente
-      const { data: ctx } = await supabase
-        .from("user_context")
-        .select("active_league_id, active_league_competition_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-
-      const activeLeagueId = ctx?.active_league_id ?? null;
-
-      if (!activeLeagueId) {
-        setRow(fallback);
-        setReady(true);
-        return;
-      }
-
-      const { data: member } = await supabase
-        .from("league_members")
-        .select("team_name, role")
-        .eq("league_id", activeLeagueId)
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-
-      const { data: league } = await supabase
-        .from("leagues")
-        .select("name")
-        .eq("id", activeLeagueId)
-        .maybeSingle();
-
-      let leagueCompetitionId = ctx?.active_league_competition_id ?? null;
-      let competitionData: Partial<AppContextRow> = {};
-
-      // Se l'utente ha una lega attiva ma nessuna competizione attiva,
-      // prende la prima competizione attiva della lega.
-      if (!leagueCompetitionId) {
-        const { data: firstLc } = await supabase
-          .from("league_competitions")
-          .select("id")
-          .eq("league_id", activeLeagueId)
-          .eq("status", "active")
-          .order("created_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-        leagueCompetitionId = firstLc?.id ?? null;
-
-        if (leagueCompetitionId) {
-          await supabase
-            .from("user_context")
-            .upsert(
-              {
-                user_id: auth.user.id,
-                active_league_id: activeLeagueId,
-                active_league_competition_id: leagueCompetitionId,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "user_id" }
-            );
-        }
-      }
-
-      if (leagueCompetitionId) {
-        const { data: lc } = await supabase
-          .from("league_competitions")
-          .select(`
-            id,
-            competition_id,
-            season_id,
-            competitions(name, slug, type),
-            seasons(name)
-          `)
-          .eq("id", leagueCompetitionId)
-          .maybeSingle();
-
-        const comp = (lc as any)?.competitions;
-
-        competitionData = {
-          active_league_competition_id: leagueCompetitionId,
-          competition_id: (lc as any)?.competition_id ?? null,
-          season_id: (lc as any)?.season_id ?? null,
-          competition_name: comp?.name ?? null,
-          competition_slug: comp?.slug ?? null,
-          competition_type: comp?.type ?? null,
-        };
-      }
-
-      setRow({
-        ...fallback,
-        active_league_id: activeLeagueId,
-        league_name: league?.name ?? "â€”",
-        team_name: member?.team_name ?? "â€”",
-        role: (member?.role as AppRole | undefined) ?? "player",
-        ...competitionData,
-      });
-
+      setRow(fallback);
       setReady(true);
     } catch (e) {
       console.error("AppContext refresh error:", e);
@@ -256,77 +163,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setReady(true);
     }
-  }
+  }, []);
 
-  async function setActiveLeague(leagueId: string) {
+  const setActiveLeague = useCallback(async (leagueId: string) => {
     const { error } = await supabase.rpc("set_active_league", {
       p_league_id: leagueId,
     });
 
     if (error) {
       console.error("set_active_league error:", error.message);
-
-      const { data: auth } = await supabase.auth.getUser();
-
-      if (auth.user) {
-        await supabase
-          .from("user_context")
-          .upsert(
-            {
-              user_id: auth.user.id,
-              active_league_id: leagueId,
-              active_league_competition_id: null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id" }
-          );
-      }
     }
 
     await refresh();
-  }
+  }, [refresh]);
 
-  async function setActiveCompetition(leagueCompetitionId: string) {
+  const setActiveCompetition = useCallback(async (leagueCompetitionId: string) => {
     const { error } = await supabase.rpc("set_active_competition", {
       p_league_competition_id: leagueCompetitionId,
     });
 
     if (error) {
       console.error("set_active_competition error:", error.message);
-
-      const { data: auth } = await supabase.auth.getUser();
-
-      if (auth.user) {
-        await supabase
-          .from("user_context")
-          .update({
-            active_league_competition_id: leagueCompetitionId,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", auth.user.id);
-      }
     }
 
     await refresh();
-  }
+  }, [refresh]);
 
   useEffect(() => {
-    refresh();
+    let active = true;
 
-    try {
-      const saved = window.localStorage.getItem("fantachat-ui-theme");
-      if (saved === "dark" || saved === "light") setUiThemeState(saved);
-    } catch {}
+    queueMicrotask(() => {
+      if (!active) return;
+
+      void refresh();
+
+      try {
+        const saved = window.localStorage.getItem("fantachat-ui-theme");
+        if (saved === "dark" || saved === "light") setUiThemeState(saved);
+      } catch {}
+    });
 
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      refresh();
+      void refresh();
     });
 
     return () => {
+      active = false;
       sub.subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
 const isSuperAdmin =
   row.role === "super_admin" ||
@@ -406,6 +291,10 @@ const isAdmin =
       isSuperAdmin,
       drawerOpen,
       uiTheme,
+      refresh,
+      setActiveLeague,
+      setActiveCompetition,
+      setUiTheme,
     ]
   );
   

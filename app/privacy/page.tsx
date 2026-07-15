@@ -4,8 +4,9 @@ const sections: LegalSection[] = [
   {
     title: "Chi tratta i dati",
     body: [
-      "Il titolare del trattamento e' [DA COMPLETARE: nome o societa titolare di FantaChat]. Per richieste privacy puoi scrivere a [DA COMPLETARE: email privacy].",
-      "Questa pagina descrive il trattamento dei dati degli utenti che usano FantaChat per partecipare a leghe fantasy, inviare formazioni, consultare classifiche e usare la chat di lega.",
+      "FantaChat tratta i dati personali necessari a erogare il servizio fantasy/social calcistico. Il gestore del servizio determina finalita e mezzi del trattamento e agisce come titolare del trattamento.",
+      "Per richieste privacy, accesso ai dati o cancellazione dell'account puoi usare il canale di contatto ufficiale indicato dal gestore dell'app o la pagina Cancellazione account.",
+      "Questa informativa spiega quali dati usiamo quando crei un account, partecipi a una lega, invii formazioni, consulti classifiche o usi la chat di lega.",
     ],
   },
   {
@@ -20,21 +21,24 @@ const sections: LegalSection[] = [
     title: "Perche usiamo i dati",
     body: [
       "Usiamo i dati per creare e gestire l'account, permettere l'accesso alle leghe, salvare la formazione, calcolare risultati e classifiche, mostrare la chat di lega e proteggere il servizio da abusi o accessi non autorizzati.",
-      "Le basi giuridiche principali sono l'esecuzione del servizio richiesto dall'utente, l'interesse legittimo alla sicurezza e al miglioramento tecnico, e gli eventuali obblighi di legge applicabili.",
+      "Le basi giuridiche principali sono l'esecuzione del servizio richiesto dall'utente, l'interesse legittimo alla sicurezza e al corretto funzionamento tecnico, e gli eventuali obblighi di legge applicabili.",
+      "Non vendiamo i dati personali degli utenti e non usiamo la chat o le formazioni per profilazione pubblicitaria.",
     ],
   },
   {
     title: "Condivisione e fornitori",
     body: [
-      "I dati possono essere trattati da fornitori tecnici che aiutano a erogare FantaChat, ad esempio servizi di autenticazione, database, hosting, log e manutenzione.",
-      "Prima del lancio pubblico vanno indicati in modo preciso i fornitori effettivi, i relativi ruoli privacy e l'eventuale trasferimento di dati fuori dallo Spazio Economico Europeo.",
+      "I dati possono essere trattati da fornitori tecnici che aiutano a erogare FantaChat, ad esempio servizi di autenticazione, database, hosting, log tecnici e manutenzione.",
+      "I fornitori trattano i dati solo per finalita tecniche collegate al servizio. Se alcuni fornitori trattano dati fuori dallo Spazio Economico Europeo, il trasferimento deve avvenire con garanzie adeguate previste dalla normativa applicabile.",
+      "I dati di lega, classifica e chat possono essere visibili agli altri partecipanti della stessa lega nei limiti necessari al funzionamento dell'app.",
     ],
   },
   {
     title: "Conservazione",
     body: [
       "Conserviamo i dati dell'account finche l'account resta attivo o finche sono necessari per gestire leghe, classifiche, sicurezza e richieste dell'utente.",
-      "Alcuni dati sportivi o di classifica possono essere conservati in forma aggregata o anonimizzata per mantenere la coerenza storica delle competizioni. I tempi precisi di conservazione vanno definiti prima del lancio pubblico.",
+      "Messaggi, formazioni e risultati possono restare associati alla lega per mantenere la coerenza storica della competizione. Quando possibile, in caso di cancellazione account, i dati vengono eliminati, anonimizzati o dissociati dall'utente.",
+      "I log tecnici e di sicurezza vengono conservati per il tempo necessario a proteggere il servizio, risolvere errori e rispettare eventuali obblighi di legge.",
     ],
   },
   {
@@ -47,7 +51,7 @@ const sections: LegalSection[] = [
   {
     title: "Minori",
     body: [
-      "FantaChat non e' pensata per raccogliere consapevolmente dati di bambini. Prima della distribuzione pubblica va definita una soglia di eta e una procedura coerente con il mercato di rilascio.",
+      "FantaChat non e' pensata per bambini. Se il servizio viene usato da minorenni, l'uso deve avvenire nel rispetto delle regole applicabili e, quando richiesto, con il consenso o la supervisione di chi esercita la responsabilita genitoriale.",
     ],
   },
   {
@@ -63,9 +67,9 @@ export default function PrivacyPage() {
     <LegalPage
       eyebrow="Documento privacy"
       title="Privacy Policy"
-      updated="2 luglio 2026"
-      intro="Questa e' una base operativa per rendere FantaChat piu trasparente prima della beta. Deve essere completata con i dati reali del titolare, dei fornitori e dei tempi di conservazione."
-      note="Nota: questo testo non sostituisce una revisione legale. Prima del lancio pubblico va validato con i dati definitivi del progetto."
+      updated="15 luglio 2026"
+      intro="Questa informativa descrive in modo semplice come FantaChat raccoglie e usa i dati personali necessari al funzionamento dell'app."
+      note="Nota: il testo e' una base operativa per la beta e va verificato con i dati ufficiali del gestore prima della pubblicazione definitiva."
       sections={sections}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { themeFromType } from "@/lib/competitionThemes";
 import TeamBadge from "./TeamBadge";
@@ -86,11 +86,11 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   const theme = themeFromType(activeComp?.competition_type ?? null);
   const accent = theme.primary;
 
-  async function loadMessages() {
+  const loadMessages = useCallback(async () => {
     const { data } = await supabase.rpc("get_chat_messages", { p_league_id: leagueId, p_limit: 200 });
     setMessages((data ?? []) as Message[]);
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 50);
-  }
+  }, [leagueId]);
 
   useEffect(() => {
     let off = false;
@@ -107,7 +107,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
       setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 60);
     })();
     return () => { off = true; };
-  }, [leagueId]);
+  }, [leagueId, loadMessages]);
 
   useEffect(() => {
     const ch = supabase
@@ -116,7 +116,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         () => { loadMessages(); })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [leagueId]);
+  }, [leagueId, loadMessages]);
 
   const citedIds = useMemo(
     () => Array.from(new Set(messages.flatMap((m) => (m.meta?.players ?? []).map((p) => p.id)))),
@@ -135,7 +135,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     run();
     const iv = setInterval(run, 30000);
     return () => { off = true; clearInterval(iv); };
-  }, [citedIds.join(","), activeLeagueCompetitionId]);
+  }, [citedIds, activeLeagueCompetitionId]);
 
   function onChange(v: string) {
     setInput(v);

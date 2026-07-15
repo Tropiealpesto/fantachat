@@ -1,4 +1,0 @@
-"use client";
-import { useParams } from "next/navigation"; import AppBar from "../../../../components/AppBar"; import BottomNav from "../../../../components/BottomNav"; import { useRequireSuperAdmin } from "../../../../hooks/useRequireApp";
-export default function Partite(){const app=useRequireSuperAdmin();const p=useParams();return <><AppBar league="FantaChat" team="SUPERADMIN" onMenuOpen={app.openDrawer}/><main style={s.container}><div style={s.card}><h1>Partite globali</h1><p>Competition ID: {String(p.competitionId)}</p><p>TODO UI: usare RPC <b>upsert_fixture</b>. La migration contiene la funzione base e lo schema.</p></div></main><BottomNav/></>}
-const s={container:{maxWidth:520,margin:"0 auto",padding:"16px 14px 100px"},card:{background:"white",border:"1px solid #e5e7eb",borderRadius:18,padding:16}} as const;

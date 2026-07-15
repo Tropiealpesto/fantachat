@@ -149,53 +149,36 @@ export default function NuovaCompetizione() {
       setCatalogLoading(true);
       setErr(null);
 
-      let comps: any[] | null = null;
-      let catalogError: string | null = null;
-
       const rpcResult = await supabase.rpc("get_competition_catalog");
-
       if (rpcResult.error) {
-        const fallback = await supabase
-          .from("competitions")
-          .select("id,name,slug,type,description,rules_summary,launch_label,visibility_status,default_total_matchdays,default_top_n,scope")
-          .eq("active", true)
-          .order("type", { ascending: true })
-          .order("name", { ascending: true });
-
-        comps = fallback.data ?? null;
-        catalogError = fallback.error?.message ?? null;
-      } else {
-        comps = rpcResult.data ?? [];
+        setErr(rpcResult.error.message);
+        setCompetitions([]);
+        setCatalogLoading(false);
+        setMembersLoading(false);
+        return;
       }
 
-      const list = (comps ?? []) as Competition[];
+      const list = (rpcResult.data ?? []) as Competition[];
       setCompetitions(list);
-      if (catalogError) setErr(catalogError);
 
       const firstAvailable = list.find((c) => c.visibility_status !== "wip");
       setCompetitionId(firstAvailable?.id ?? "");
 
       setMembersLoading(true);
 
-      let mems: any[] | null = null;
       const membersRpc = await supabase.rpc("get_league_members", {
         p_league_id: app.activeLeagueId,
       });
 
       if (membersRpc.error) {
-        const fallback = await supabase
-          .from("league_members")
-          .select("user_id,team_name")
-          .eq("league_id", app.activeLeagueId)
-          .order("team_name", { ascending: true });
-
-        mems = fallback.data ?? null;
-        if (fallback.error) setErr(fallback.error.message);
-      } else {
-        mems = membersRpc.data ?? [];
+        setErr(membersRpc.error.message);
+        setMembers([]);
+        setMembersLoading(false);
+        setCatalogLoading(false);
+        return;
       }
 
-      const membersList = (mems ?? []) as Member[];
+      const membersList = (membersRpc.data ?? []) as Member[];
       setMembers(membersList);
       setSelectedUsers(new Set(membersList.map((m) => m.user_id)));
       setMembersLoading(false);
@@ -209,24 +192,18 @@ export default function NuovaCompetizione() {
     async function loadSeasons() {
       if (!competitionId) return;
 
-      let seasonsData: any[] | null = null;
       const rpcResult = await supabase.rpc("get_competition_seasons", {
         p_competition_id: competitionId,
       });
 
       if (rpcResult.error) {
-        const fallback = await supabase
-          .from("seasons")
-          .select("id,name,competition_id,total_matchdays")
-          .eq("competition_id", competitionId)
-          .eq("active", true)
-          .order("created_at", { ascending: false });
-        seasonsData = fallback.data ?? null;
-      } else {
-        seasonsData = rpcResult.data ?? [];
+        setErr(rpcResult.error.message);
+        setSeasons([]);
+        setSeasonId("");
+        return;
       }
 
-      const list = (seasonsData ?? []) as Season[];
+      const list = (rpcResult.data ?? []) as Season[];
       setSeasons(list);
       setSeasonId(list[0]?.id ?? "");
 

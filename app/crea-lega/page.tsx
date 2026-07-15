@@ -19,7 +19,6 @@ export default function CreaLega() {
 
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
-  const [createdLeagueCompetitionId, setCreatedLeagueCompetitionId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -33,7 +32,6 @@ export default function CreaLega() {
     setMsg(null);
     setInviteCode(null);
     setCreatedLeagueId(null);
-    setCreatedLeagueCompetitionId(null);
 
     if (!userId) return setErr("Utente non autenticato.");
     if (!name.trim() || !team.trim()) return setErr("Inserisci nome lega e squadra.");
@@ -56,7 +54,6 @@ export default function CreaLega() {
     const code = result?.invite_code ?? null;
 
     setCreatedLeagueId(leagueId);
-    setCreatedLeagueCompetitionId(leagueCompetitionId);
     setInviteCode(code);
 
     setMsg("Lega creata ✅ Condividi il codice invito con i tuoi amici.");
