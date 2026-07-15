@@ -103,6 +103,7 @@ export default function NuovaCompetizione() {
 
   const [busy, setBusy] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
   const accent = app.competitionTheme.primary;
@@ -168,15 +169,30 @@ export default function NuovaCompetizione() {
       const firstAvailable = list.find((c) => c.visibility_status !== "wip");
       setCompetitionId(firstAvailable?.id ?? "");
 
-      const { data: mems } = await supabase
-        .from("league_members")
-        .select("user_id,team_name")
-        .eq("league_id", app.activeLeagueId)
-        .order("team_name", { ascending: true });
+      setMembersLoading(true);
+
+      let mems: any[] | null = null;
+      const membersRpc = await supabase.rpc("get_league_members", {
+        p_league_id: app.activeLeagueId,
+      });
+
+      if (membersRpc.error) {
+        const fallback = await supabase
+          .from("league_members")
+          .select("user_id,team_name")
+          .eq("league_id", app.activeLeagueId)
+          .order("team_name", { ascending: true });
+
+        mems = fallback.data ?? null;
+        if (fallback.error) setErr(fallback.error.message);
+      } else {
+        mems = membersRpc.data ?? [];
+      }
 
       const membersList = (mems ?? []) as Member[];
       setMembers(membersList);
       setSelectedUsers(new Set(membersList.map((m) => m.user_id)));
+      setMembersLoading(false);
       setCatalogLoading(false);
     }
 
@@ -446,7 +462,14 @@ export default function NuovaCompetizione() {
             </p>
 
             <div style={s.memberList}>
-              {members.map((m) => {
+              {membersLoading ? (
+                <div style={s.emptySection}>Caricamento squadre della lega...</div>
+              ) : members.length === 0 ? (
+                <div style={s.emptySection}>
+                  Nessuna squadra trovata in questa lega. Controlla che i membri
+                  siano stati aggiunti correttamente.
+                </div>
+              ) : members.map((m) => {
                 const checked = selectedUsers.has(m.user_id);
 
                 return (
