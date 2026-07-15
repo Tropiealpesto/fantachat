@@ -84,6 +84,12 @@ const GAME_MODES: GameMode[] = [
   },
 ];
 
+function isMissingRpc(message?: string | null) {
+  return /function .* does not exist|could not find the function|schema cache/i.test(
+    message ?? ""
+  );
+}
+
 export default function NuovaCompetizione() {
   const app = useRequireLeagueAdmin();
   const router = useRouter();
@@ -309,18 +315,23 @@ export default function NuovaCompetizione() {
     const id = (data as any)?.league_competition_id ?? data;
 
     if (id) {
-      // Imposta tipo di punteggio e presenza dell'allenatore.
-      const { error: rulesError } = await supabase.rpc("set_scoring_ruleset", {
+      const rulesResult = await supabase.rpc("set_scoring_ruleset", {
         p_league_competition_id: String(id),
         p_ruleset: ruleset,
       });
-      if (rulesError) { setBusy(false); return setErr(rulesError.message); }
+      if (rulesResult.error && !(ruleset === "classico" && isMissingRpc(rulesResult.error.message))) {
+        setBusy(false);
+        return setErr(rulesResult.error.message);
+      }
 
-      const { error: coachError } = await supabase.rpc("set_coach_mode", {
+      const coachResult = await supabase.rpc("set_coach_mode", {
         p_league_competition_id: String(id),
         p_enabled: coachEnabled,
       });
-      if (coachError) { setBusy(false); return setErr(coachError.message); }
+      if (coachResult.error && !(coachEnabled === false && isMissingRpc(coachResult.error.message))) {
+        setBusy(false);
+        return setErr(coachResult.error.message);
+      }
 
       await app.setActiveCompetition(String(id));
     }

@@ -236,7 +236,7 @@ begin
               'role', lp.role,
               'real_player_id', lp.real_player_id
             )
-            order by lp.role, lp.created_at
+            order by lp.role, lp.id
           )
           from public.lineup_players lp
           where lp.lineup_id = v_lineup.id
