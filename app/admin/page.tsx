@@ -10,19 +10,13 @@ const ADMIN_LINKS = [
     href: "/admin/giornata",
     title: "Giornata",
     desc: "Apri, chiudi e finalizza il turno corrente.",
-    icon: "▦",
+    icon: "G",
   },
   {
     href: "/admin/voti",
     title: "Voti",
     desc: "Correzioni manuali sui giocatori schierati.",
-    icon: "±",
-  },
-  {
-    href: "/admin/podcast",
-    title: "Nyx / Podcast",
-    desc: "Prepara e salva il racconto della giornata.",
-    icon: "◌",
+    icon: "V",
   },
   {
     href: "/admin/competizione/nuova",
@@ -124,7 +118,7 @@ const s: Record<string, React.CSSProperties> = {
     placeItems: "center",
     background: "#eef7f0",
     color: "#15803d",
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 900,
   },
   linkText: {

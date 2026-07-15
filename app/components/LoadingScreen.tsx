@@ -13,9 +13,8 @@ export default function LoadingScreen() {
         <div style={s.ring} />
         {/* arco verde che gira */}
         <div style={s.arc} />
-        {/* immagine Nyx al centro */}
         <div style={s.imgWrap}>
-          <img src="/nyx-v2.png" alt="Nyx" style={s.img} />
+          <span style={s.mark}>FC</span>
         </div>
       </div>
 
@@ -40,7 +39,6 @@ export default function LoadingScreen() {
         }
         .fc-logo  { animation: fc-fadein 0.5s ease both; }
         .fc-spin  { animation: fc-spin 1s cubic-bezier(0.4,0,0.2,1) infinite; }
-        .fc-nyx   { animation: fc-fadein 0.5s ease 0.15s both; }
         .fc-label { animation: fc-fadein 0.5s ease 0.3s both; }
         .fc-d1 { animation: fc-blink 1.2s 0.0s infinite; }
         .fc-d2 { animation: fc-blink 1.2s 0.2s infinite; }
@@ -93,15 +91,16 @@ const s: Record<string, React.CSSProperties> = {
     inset: 8,
     borderRadius: "50%",
     overflow: "hidden",
-    background: "linear-gradient(135deg, #102018, #244332)",
-    boxShadow: "inset 0 0 0 1px rgba(255,255,255,.14)",
+    background: "linear-gradient(135deg, #ffffff, #f7fbf8)",
+    boxShadow: "inset 0 0 0 1px rgba(22,163,74,.18)",
+    display: "grid",
+    placeItems: "center",
   },
-  img: {
-    width: "100%",
-    height: "100%",
-    borderRadius: "50%",
-    objectFit: "cover",
-    objectPosition: "top center",
+  mark: {
+    color: "#15803d",
+    fontSize: 22,
+    fontWeight: 1000,
+    letterSpacing: "-0.04em",
   },
   label: {
     fontSize: 13,

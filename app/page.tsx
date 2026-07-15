@@ -897,14 +897,27 @@ export default function Home() {
         {recap?.has_data && (
           <div style={s.recapCard}>
             <div style={s.recapRow}>
-              <img src="/nyx-v2.png" alt="Nyx" style={s.recapMascot} />
+              <div style={s.recapIcon}>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M4 19V5" />
+                  <path d="M4 19h16" />
+                  <path d="m7 15 3-4 3 2 4-7" />
+                  <path d="M17 6h3v3" />
+                </svg>
+              </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={s.recapLabel}>
+                <div style={s.recapLabel}>Recap giornata {recap.matchday_number}</div>
+                <p style={s.recapText}>
+                  <b>{recap.leader_team}</b> guida il turno con{" "}
+                  {fmt(recap.leader_points)} punti. MVP: <b>{mvpLabel}</b>{" "}
+                  ({signedFmt(recap.mvp_points)}).
+                </p>
+                <div style={{ display: "none" }}>
                   Nyx · Giornata {recap.matchday_number}
                 </div>
 
-                <p style={s.recapText}>
+                <p style={{ display: "none" }}>
                   La giornata va a <b>{recap.leader_team}</b> con{" "}
                   {fmt(recap.leader_points)} punti. Migliore in campo{" "}
                   <b>{mvpLabel}</b> ({signedFmt(recap.mvp_points)}).
@@ -912,7 +925,10 @@ export default function Home() {
               </div>
             </div>
 
-            <button style={s.recapBtn} onClick={() => router.push("/podcast")}>
+            <button style={s.recapBtn} onClick={() => router.push("/storico")}>
+              Vedi storico giornata
+            </button>
+            <button style={{ display: "none" }} onClick={() => router.push("/storico")}>
               Leggi la puntata intera →
             </button>
           </div>
@@ -1678,14 +1694,16 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "center",
   },
 
-  recapMascot: {
-    width: 66,
-    height: 66,
-    borderRadius: 14,
-    objectFit: "cover",
+  recapIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    display: "grid",
+    placeItems: "center",
+    background: "#fff3e4",
+    color: "#e07b1a",
     flexShrink: 0,
-    border: "2px solid #fff",
-    boxShadow: "0 4px 12px rgba(0,0,0,.12)",
+    border: "1px solid #f4c99d",
   },
 
   recapLabel: {

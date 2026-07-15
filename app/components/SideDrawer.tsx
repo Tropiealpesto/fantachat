@@ -71,7 +71,6 @@ export default function SideDrawer(props: Props) {
           <Section style={{ marginTop: 18 }}>Esplora</Section>
           <Item href="/storico" title="Storico" sub="Giornate passate" pathname={pathname} onClose={props.onClose} icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
           <Item href="/statistiche" title="Statistiche" sub="Giocatori" pathname={pathname} onClose={props.onClose} icon={<><path d="M4 20V11M9.5 20V5M15 20v-8M20.5 20V8" /><path d="M3 20h18" /></>} />
-          <Item href="/podcast" title="Nyx / Podcast" sub="Contenuti narrativi" pathname={pathname} onClose={props.onClose} icon={<><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" /></>} />
           <Item href="/regole" title="Regole" sub="Punteggi e bonus" pathname={pathname} onClose={props.onClose} icon={<><path d="M5 4a1 1 0 0 1 1-1h12v18H6a1 1 0 0 0-1 1z" /><path d="M18 3v18M9 8h6M9 12h5" /></>} />
 
           {props.isAdmin && (
@@ -81,7 +80,6 @@ export default function SideDrawer(props: Props) {
                 <AdminLink href="/admin" label="Dashboard admin" onClose={props.onClose} icon={<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>} />
                 <AdminLink href="/admin/giornata" label="Giornata" onClose={props.onClose} icon={<><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></>} />
                 <AdminLink href="/admin/voti" label="Voti" onClose={props.onClose} icon={<><path d="M5 12l4 4L19 6" /></>} />
-                <AdminLink href="/admin/podcast" label="Nyx / Podcast" onClose={props.onClose} icon={<><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></>} />
               </div>
             </>
           )}
