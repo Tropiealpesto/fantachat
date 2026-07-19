@@ -359,14 +359,14 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
 }
 
 const s: Record<string, React.CSSProperties> = {
-  wrap: { display: "flex", flexDirection: "column", height: "100%", background: "#f4f7f4" },
+  wrap: { display: "flex", flexDirection: "column", height: "100%", minHeight: 0, background: "#f4f7f4" },
   stripe: { display: "none" },
   header: { background: "rgba(255,255,255,.96)", borderBottom: "1px solid #e5e7eb", padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 10px rgba(15,23,42,.035)", backdropFilter: "blur(14px)" },
   hTitle: { fontWeight: 950, color: "#0f172a", fontSize: 15.5 },
   hSub: { fontSize: 11, color: "#64748b", fontWeight: 700 },
   livePill: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 9px", fontSize: 10.5, fontWeight: 850 },
   liveDot: { width: 6, height: 6, borderRadius: "50%" },
-  messages: { flex: 1, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
+  messages: { flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
   center: { margin: "auto", color: "#9ca3af", fontWeight: 800, textAlign: "center" },
   event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #f4c99d", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
   eventIco: { width: 24, height: 24, borderRadius: 7, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
@@ -397,7 +397,7 @@ const s: Record<string, React.CSSProperties> = {
   citedBar: { display: "flex", gap: 6, flexWrap: "wrap", padding: "8px 12px 0" },
   citedChip: { display: "inline-flex", alignItems: "center", gap: 6, background: "white", border: "1px solid #e5e7eb", borderRadius: 9, padding: "4px 8px", fontSize: 12, fontWeight: 800, color: "#0f172a" },
   citedX: { border: "none", background: "#e5e7eb", color: "#374151", width: 18, height: 18, borderRadius: 6, fontWeight: 900, cursor: "pointer", fontSize: 10, lineHeight: 1 },
-  composer: { background: "rgba(248,251,248,.96)", borderTop: "1px solid #e5e7eb", padding: "8px 10px", display: "flex", alignItems: "center", gap: 7, boxShadow: "0 -4px 14px rgba(15,23,42,.045)" },
+  composer: { flexShrink: 0, background: "rgba(248,251,248,.96)", borderTop: "1px solid #e5e7eb", padding: "8px 10px", display: "flex", alignItems: "center", gap: 7, boxShadow: "0 -4px 14px rgba(15,23,42,.045)" },
   tool: { width: 34, height: 34, borderRadius: 10, background: "#fff", border: "1px solid #e5e7eb", color: "#64748b", fontWeight: 850, fontSize: 14, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },
   textarea: { flex: 1, border: "1px solid #e5e7eb", borderRadius: 12, padding: "8px 11px", resize: "none", fontFamily: "inherit", fontSize: 13.5, fontWeight: 600, maxHeight: 96, background: "#fff" },
   send: { width: 38, height: 38, borderRadius: 12, border: 0, color: "white", fontWeight: 900, cursor: "pointer", flexShrink: 0, display: "grid", placeItems: "center" },

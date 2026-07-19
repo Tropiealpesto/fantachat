@@ -68,17 +68,26 @@ export default function Chat() {
           competitions={competitions}
         />
       </div>
-
-      <BottomNav />
+      <div style={s.navWrap}>
+        <BottomNav />
+      </div>
     </>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    height:
-      "calc(100dvh - var(--appbar-h) - var(--appbar-safe-top) - var(--nav-h) - var(--safe-bottom))",
+    position: "fixed",
+    left: 0,
+    right: 0,
+    top: "calc(var(--appbar-h) + var(--appbar-safe-top))",
+    bottom: "var(--nav-h)",
     background: "#f4f7f4",
+    overflow: "hidden",
+  },
+  navWrap: {
+    position: "relative",
+    zIndex: 100,
   },
   loading: {
     display: "grid",
