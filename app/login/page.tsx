@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
+import LogoMark from "../components/LogoMark";
 
 type Mode = "login" | "signup";
 
@@ -106,6 +107,9 @@ export default function LoginPage() {
     <main style={s.page}>
       <div style={s.card}>
         {/* Logo */}
+        <div style={s.logoMark}>
+          <LogoMark size={62} />
+        </div>
         <div style={s.logo}>
           <span style={{ color: "#1a7a3e" }}>Fanta</span>
           <span style={{ color: "#e07b1a" }}>Chat</span>
@@ -172,6 +176,7 @@ const s: Record<string, React.CSSProperties> = {
     background: "white", borderRadius: 24, border: "1.5px solid #c8e6d4",
     padding: "28px 24px", maxWidth: 420, width: "100%", margin: "0 auto",
   },
+  logoMark: { width: 74, height: 74, margin: "0 auto 12px", borderRadius: 18, background: "#fff", display: "grid", placeItems: "center", boxShadow: "0 10px 26px rgba(15,23,42,.08)" },
   logo: { fontSize: 28, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1, marginBottom: 6 },
   tagline: { fontSize: 13, color: "#5a8a6e", fontWeight: 700, marginBottom: 24 },
   tabBar: {

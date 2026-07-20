@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useApp } from "./AppContext";
+import LogoMark from "./LogoMark";
 
 export default function AppBar(props: {
   league: string;
@@ -27,6 +28,7 @@ export default function AppBar(props: {
         </button>
 
         <div className="appbar-brand" style={{ flex: 1 }}>
+          <LogoMark size={34} />
           <div style={{ minWidth: 0 }}>
             <div className="appbar-logo">
               <span className="logo-fanta">Fanta</span>

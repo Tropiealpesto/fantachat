@@ -1,5 +1,7 @@
 "use client";
 
+import LogoMark from "./LogoMark";
+
 const TIPS = [
   "Anche l'allenatore può fare la differenza.",
   "La chat è parte del gioco.",
@@ -19,7 +21,7 @@ export default function LoadingScreen() {
           <div style={s.ring} />
           <div style={s.arc} />
           <div style={s.mark}>
-            <span style={s.letters}>FC</span>
+            <LogoMark size={86} />
           </div>
         </div>
 
@@ -93,17 +95,9 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: "50%",
     display: "grid",
     placeItems: "center",
-    background: "linear-gradient(135deg,#22C55E 0%,#8FA334 50%,#E07B1A 100%)",
+    background: "#ffffff",
     position: "relative",
     overflow: "hidden",
-  },
-  letters: {
-    color: "white",
-    fontSize: 43,
-    fontWeight: 1000,
-    letterSpacing: "-0.06em",
-    lineHeight: 1,
-    transform: "translateX(-1px)",
   },
   logo: {
     fontFamily: "'Nunito', Arial, Helvetica, sans-serif",

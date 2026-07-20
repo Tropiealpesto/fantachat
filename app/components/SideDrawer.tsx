@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { themeFromType } from "../../lib/competitionThemes";
+import LogoMark from "./LogoMark";
 import TeamBadge from "./TeamBadge";
 
 type DrawerCompetition = {
@@ -30,7 +31,7 @@ export default function SideDrawer(props: Props) {
       <aside style={{ ...s.drawer, transform: props.isOpen ? "translateX(0)" : "translateX(-100%)" }}>
         <header style={s.header}>
           <div style={s.logoWrap}>
-            <span style={s.mark}>FC</span>
+            <span style={s.mark}><LogoMark size={30} /></span>
             <div style={s.logo}><span style={{ color: "#bbf7d0" }}>Fanta</span><span style={{ color: "#f4c99d" }}>Chat</span></div>
           </div>
           <button onClick={props.onClose} style={s.close} aria-label="Chiudi menu">×</button>
@@ -153,7 +154,7 @@ const s: Record<string, React.CSSProperties> = {
   drawer: { position: "fixed", top: 0, left: 0, bottom: 0, width: 326, maxWidth: "90vw", background: "var(--drawer-bg)", zIndex: 201, display: "flex", flexDirection: "column", transition: "transform .25s ease", boxShadow: "18px 0 46px rgba(13,24,18,.22)" },
   header: { position: "relative", padding: "calc(var(--appbar-safe-top) + 20px) 20px 18px", background: "var(--drawer-header)", color: "white", boxShadow: "inset 0 -1px 0 rgba(255,255,255,.16)" },
   logoWrap: { display: "flex", alignItems: "center", gap: 10 },
-  mark: { width: 34, height: 34, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.15)", border: "1px solid rgba(255,255,255,.22)", color: "white", fontWeight: 900, fontSize: 13 },
+  mark: { width: 36, height: 36, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.94)", border: "1px solid rgba(255,255,255,.44)", boxShadow: "0 8px 18px rgba(0,0,0,.12)" },
   logo: { fontSize: 23, fontWeight: 1000, letterSpacing: 0 },
   close: { position: "absolute", top: "calc(var(--appbar-safe-top) + 10px)", right: 14, width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.13)", color: "white", fontSize: 21, cursor: "pointer", lineHeight: 1 },
   teamrow: { display: "flex", alignItems: "center", gap: 10, marginTop: 14 },

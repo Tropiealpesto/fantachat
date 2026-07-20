@@ -10,54 +10,28 @@ export const contentType = "image/png";
 export default function Icon() {
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          background: "linear-gradient(135deg,#25c961 0%,#94a22e 48%,#ee8516 100%)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,.06)",
-            clipPath: "polygon(0 100%, 24.4% 64.4%, 49.4% 43.3%, 100% 23.3%, 100% 100%)",
-          }}
+      <svg width="512" height="512" viewBox="0 0 512 512" fill="none">
+        <rect width="512" height="512" fill="#ffffff" />
+        <path
+          d="M342 114a168 168 0 1 0-142 284"
+          stroke="#E07B1A"
+          strokeWidth="62"
+          strokeLinecap="round"
         />
-
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(circle at 18% 0%, rgba(255,255,255,.18), transparent 46%)",
-          }}
+        <path
+          d="M252 404V196a28 28 0 0 1 28-28h116"
+          stroke="#137A3D"
+          strokeWidth="62"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
-
-        <div
-          style={{
-            color: "#ffffff",
-            fontWeight: 1000,
-            lineHeight: 1,
-            textShadow: "2px 3px 0 rgba(0,0,0,.10)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            width: 340,
-            transform: "translateX(3px)",
-          }}
-        >
-          <span style={{ fontSize: 214, lineHeight: 1 }}>F</span>
-          <span style={{ fontSize: 214, lineHeight: 1 }}>C</span>
-        </div>
-      </div>
+        <path
+          d="M254 278h116"
+          stroke="#137A3D"
+          strokeWidth="62"
+          strokeLinecap="round"
+        />
+      </svg>
     ),
     {
       ...size,
