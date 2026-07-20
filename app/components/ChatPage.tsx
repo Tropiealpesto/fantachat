@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { themeFromType } from "@/lib/competitionThemes";
 import TeamBadge from "./TeamBadge";
@@ -65,6 +66,7 @@ function RoleBadge({ role, size = 30 }: { role: string; size?: number }) {
 }
 
 export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetitionId, competitions = [] }: Props) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [pts, setPts] = useState<Record<string, number>>({});
@@ -253,11 +255,34 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             if (m.kind && m.kind !== "text") {
               const comp = m.league_competition_id ? compMap.get(m.league_competition_id) : null;
               const isLineup = m.kind === "lineup";
+              if (isLineup) {
+                return (
+                  <div key={m.id} className="fc-chat-lineup-event" style={s.lineupEvent}>
+                    <div className="fc-chat-lineup-icon" style={s.lineupIcon} aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                        <path d="M8 4l-4 2 2 4 2-1v11h8V9l2 1 2-4-4-2-2 2h-4L8 4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div className="fc-chat-lineup-copy" style={s.lineupCopy}>
+                      <span className="fc-chat-lineup-team" style={s.lineupTeam}>{m.team_name ?? "Una squadra"}</span>
+                      <span> ha schierato la formazione</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="fc-chat-live-button"
+                      style={{ ...s.liveButton, color: accent }}
+                      onClick={() => router.push("/live")}
+                    >
+                      Vedi live
+                    </button>
+                  </div>
+                );
+              }
               return (
                 <div key={m.id} className="fc-chat-event" style={s.event}>
-                  <div style={s.eventIco}>{isLineup ? <span style={{ fontWeight: 1000, color: "#15803d" }}>R</span> : <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#15803d" }} />}</div>
+                  <div style={s.eventIco}><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#15803d" }} /></div>
                   <div>
-                    <div className="fc-chat-event-text" style={s.eventTxt}>{isLineup ? `${m.team_name ?? "Un utente"} ha caricato la formazione` : (m.content ?? "Aggiornamento")}</div>
+                    <div className="fc-chat-event-text" style={s.eventTxt}>{m.content ?? "Aggiornamento"}</div>
                     <div style={s.eventMeta}>
                       {comp && <span style={{ ...s.tag, ...s.tagComp }}>{comp.name}</span>}
                       {m.matchday_number != null && <span style={s.tag}>Giornata {m.matchday_number}</span>}
@@ -368,18 +393,23 @@ const s: Record<string, React.CSSProperties> = {
   liveDot: { width: 6, height: 6, borderRadius: "50%" },
   messages: { flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
   center: { margin: "auto", color: "#9ca3af", fontWeight: 800, textAlign: "center" },
-  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #f4c99d", borderRadius: 10, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
+  event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #f4c99d", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
   eventIco: { width: 24, height: 24, borderRadius: 7, background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
   eventTxt: { fontSize: 12, color: "#0f172a", fontWeight: 800, lineHeight: 1.25 },
   eventMeta: { fontSize: 10.5, color: "#64748b", fontWeight: 800, marginTop: 3, display: "flex", gap: 5, flexWrap: "wrap" },
   tag: { background: "#f1f5f9", borderRadius: 5, padding: "1px 6px", fontWeight: 850, color: "#475569" },
   tagComp: { background: "#dcfce7", color: "#15803d" },
+  lineupEvent: { alignSelf: "center", width: "100%", maxWidth: 348, background: "rgba(255,255,255,.92)", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRadius: 14, padding: "9px 10px", display: "grid", gridTemplateColumns: "30px minmax(0, 1fr) auto", alignItems: "center", gap: 9, boxShadow: "0 6px 18px rgba(15,23,42,.055)" },
+  lineupIcon: { width: 30, height: 30, borderRadius: 10, background: "#e9f7ef", color: "#15803d", display: "grid", placeItems: "center", flexShrink: 0 },
+  lineupCopy: { minWidth: 0, color: "#0f172a", fontSize: 12.5, fontWeight: 850, lineHeight: 1.18 },
+  lineupTeam: { color: "#15803d", fontWeight: 1000 },
+  liveButton: { border: "1px solid rgba(21,128,61,.18)", background: "#e9f7ef", borderRadius: 11, padding: "7px 9px", fontSize: 11, fontWeight: 950, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" },
   row: { width: "100%", display: "flex", justifyContent: "flex-start", gap: 8, alignItems: "flex-end", maxWidth: "100%" },
   col: { display: "flex", flexDirection: "column", gap: 2, minWidth: 0, maxWidth: "76%" },
   who: { display: "flex", alignItems: "center", gap: 7, padding: "0 2px" },
   whoName: { fontSize: 11.5, fontWeight: 950, color: "#0f172a" },
   whoTime: { fontSize: 10, color: "#94a3b8", fontWeight: 700 },
-  bubble: { padding: "8px 10px", borderRadius: 12, fontSize: 13.5, fontWeight: 600, lineHeight: 1.38, display: "flex", flexDirection: "column", gap: 5, boxShadow: "0 2px 8px rgba(15,23,42,.04)" },
+  bubble: { padding: "9px 11px", borderRadius: 14, fontSize: 13.5, fontWeight: 650, lineHeight: 1.35, display: "flex", flexDirection: "column", gap: 5, boxShadow: "0 6px 18px rgba(15,23,42,.055)" },
   mention: { fontWeight: 1000, borderRadius: 5, padding: "0 3px" },
   pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #f4c99d", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
   pinfo: { display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 },
