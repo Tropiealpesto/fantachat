@@ -75,11 +75,7 @@ export default function Chat() {
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    position: "fixed",
-    left: 0,
-    right: 0,
-    top: "calc(var(--appbar-h) + var(--appbar-safe-top))",
-    bottom: "var(--nav-h)",
+    height: "calc(100dvh - var(--appbar-h) - var(--appbar-safe-top) - var(--nav-h))",
     background: "#f4f7f4",
     overflow: "hidden",
   },
