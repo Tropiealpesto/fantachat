@@ -1080,3 +1080,69 @@ html[data-ui-theme="dark"] .fc-history-pill.is-open {
   color: #58ff94 !important;
   border-color: rgba(34,226,111,.34) !important;
 }
+
+html[data-ui-theme="dark"] .fc-stats-hero,
+html[data-ui-theme="dark"] .fc-stats-card,
+html[data-ui-theme="dark"] .fc-stats-tabs,
+html[data-ui-theme="dark"] .fc-stats-action {
+  background: rgba(4,8,22,.78) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  color: #f8fafc !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.018), 0 18px 42px rgba(0,0,0,.34) !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-hero {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(34,226,111,.14), transparent 30%),
+    radial-gradient(circle at 92% 12%, rgba(255,138,38,.12), transparent 26%),
+    rgba(4,8,22,.86) !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-status,
+html[data-ui-theme="dark"] .fc-stats-kpi,
+html[data-ui-theme="dark"] .fc-stats-podium-card,
+html[data-ui-theme="dark"] .fc-stats-compact-row,
+html[data-ui-theme="dark"] .fc-stats-player-row,
+html[data-ui-theme="dark"] .fc-stats-mini,
+html[data-ui-theme="dark"] .fc-stats-compare-metric,
+html[data-ui-theme="dark"] .fc-stats-count,
+html[data-ui-theme="dark"] .fc-stats-empty {
+  background: rgba(9,14,31,.92) !important;
+  border-color: rgba(91,110,151,.34) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-podium-card.is-first {
+  background:
+    radial-gradient(circle at 22% 8%, rgba(255,138,38,.16), transparent 34%),
+    linear-gradient(160deg, rgba(34,226,111,.17), rgba(9,14,31,.94)) !important;
+  border-color: rgba(34,226,111,.52) !important;
+  box-shadow: inset 0 0 24px rgba(34,226,111,.08), 0 0 24px rgba(34,226,111,.14) !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-eyebrow,
+html[data-ui-theme="dark"] .fc-stats-tab.is-active,
+html[data-ui-theme="dark"] .fc-stats-filter.is-active {
+  color: #58ff94 !important;
+  text-shadow: 0 0 14px rgba(34,226,111,.22);
+}
+
+html[data-ui-theme="dark"] .fc-stats-tab.is-active,
+html[data-ui-theme="dark"] .fc-stats-filter.is-active {
+  background: rgba(34,226,111,.12) !important;
+  border-color: rgba(34,226,111,.42) !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-input,
+html[data-ui-theme="dark"] .fc-stats-select,
+html[data-ui-theme="dark"] .fc-stats-metric {
+  background: rgba(2,6,23,.78) !important;
+  border-color: rgba(91,110,151,.34) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-metric.is-active {
+  background: rgba(255,138,38,.12) !important;
+  border-color: rgba(255,138,38,.42) !important;
+  color: #ff9d44 !important;
+}

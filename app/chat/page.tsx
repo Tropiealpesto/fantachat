@@ -68,9 +68,7 @@ export default function Chat() {
           competitions={competitions}
         />
       </div>
-      <div style={s.navWrap}>
-        <BottomNav />
-      </div>
+      <BottomNav withSpacer={false} />
     </>
   );
 }
@@ -84,10 +82,6 @@ const s: Record<string, React.CSSProperties> = {
     bottom: "var(--nav-h)",
     background: "#f4f7f4",
     overflow: "hidden",
-  },
-  navWrap: {
-    position: "relative",
-    zIndex: 100,
   },
   loading: {
     display: "grid",

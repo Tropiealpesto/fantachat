@@ -10,7 +10,7 @@ const TABS = [
   { path: "/classifica", label: "Classifica" },
 ];
 
-interface BottomNavProps { onMenuOpen?: () => void; unreadCount?: number; }
+interface BottomNavProps { onMenuOpen?: () => void; unreadCount?: number; withSpacer?: boolean; activePath?: string; }
 
 function Icon({ path, active }: { path: string; active: boolean }) {
   const p = { width: 23, height: 23, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: active ? 2.35 : 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -24,14 +24,15 @@ function Icon({ path, active }: { path: string; active: boolean }) {
   }
 }
 
-export default function BottomNav({ unreadCount = 0 }: BottomNavProps) {
+export default function BottomNav({ unreadCount = 0, withSpacer = true, activePath }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
+  const currentPath = activePath ?? pathname;
+  const isActive = (path: string) => (path === "/" ? currentPath === "/" : currentPath.startsWith(path));
 
   return (
     <>
-      <div className="fc-bottom-spacer" />
+      {withSpacer && <div className="fc-bottom-spacer" />}
       <nav className="fc-bottom-nav" aria-label="Navigazione principale">
         {TABS.map((tab) => {
           const active = isActive(tab.path);

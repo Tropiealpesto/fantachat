@@ -135,7 +135,7 @@ export default function Giocatore() {
         )}
       </main>
 
-      <BottomNav />
+      <BottomNav activePath="/rosa" />
     </>
   );
 }

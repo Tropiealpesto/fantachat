@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
@@ -215,6 +216,7 @@ function TeamShirt({
 
 export default function RosaPage() {
   const app = useRequireApp(false);
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -637,6 +639,15 @@ export default function RosaPage() {
             <span style={s.chev}>›</span>
           </button>
         </div>
+
+        <button type="button" className="fc-dark-neon-info-card" style={s.statsEntry} onClick={() => router.push("/statistiche")}>
+          <span className="fc-dark-neon-info-icon" style={s.infoIcon}>#</span>
+          <span>
+            <b>Statistiche giocatori</b>
+            <small>Top, flop, confronto e ricerca completa</small>
+          </span>
+          <span style={s.chev}>›</span>
+        </button>
       </main>
 
       {activeSlot && (
@@ -1441,6 +1452,22 @@ const s: Record<string, React.CSSProperties> = {
     background: "white",
     borderRadius: 10,
     padding: 9,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+
+  statsEntry: {
+    display: "grid",
+    gridTemplateColumns: "28px 1fr auto",
+    gap: 9,
+    alignItems: "center",
+    minHeight: 58,
+    border: "1px solid #e5e7eb",
+    background: "white",
+    borderRadius: 10,
+    padding: "10px 11px",
     boxShadow: "0 3px 12px rgba(15,23,42,.04)",
     textAlign: "left",
     fontFamily: "inherit",
