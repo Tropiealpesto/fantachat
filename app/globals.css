@@ -207,7 +207,7 @@ textarea:focus-visible {
 }
 
 .fc-bottom-spacer {
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + var(--safe-bottom));
 }
 
 .fc-bottom-nav {
@@ -215,14 +215,14 @@ textarea:focus-visible {
   left: 0;
   right: 0;
   bottom: 0;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + var(--safe-bottom));
   z-index: 100;
   max-width: none;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   align-items: stretch;
-  padding: 6px 10px;
+  padding: 6px 10px calc(6px + var(--safe-bottom));
   border-top: 1px solid rgba(219,228,221,0.92);
   border-radius: 0;
   background: rgba(255,255,255,0.96);
@@ -1103,6 +1103,7 @@ html[data-ui-theme="dark"] .fc-stats-kpi,
 html[data-ui-theme="dark"] .fc-stats-podium-card,
 html[data-ui-theme="dark"] .fc-stats-compact-row,
 html[data-ui-theme="dark"] .fc-stats-player-row,
+html[data-ui-theme="dark"] .fc-stats-picker,
 html[data-ui-theme="dark"] .fc-stats-mini,
 html[data-ui-theme="dark"] .fc-stats-compare-metric,
 html[data-ui-theme="dark"] .fc-stats-count,
@@ -1139,6 +1140,23 @@ html[data-ui-theme="dark"] .fc-stats-metric {
   background: rgba(2,6,23,.78) !important;
   border-color: rgba(91,110,151,.34) !important;
   color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-sheet {
+  background: #00030a !important;
+  border: 1px solid rgba(91,110,151,.32) !important;
+  box-shadow: 0 -18px 46px rgba(0,0,0,.56) !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-sheet-row {
+  background: rgba(9,14,31,.92) !important;
+  border-bottom-color: rgba(91,110,151,.22) !important;
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-stats-sheet-row:hover,
+html[data-ui-theme="dark"] .fc-stats-sheet-row[style*="background: #f0fdf4"] {
+  background: rgba(34,226,111,.10) !important;
 }
 
 html[data-ui-theme="dark"] .fc-stats-metric.is-active {

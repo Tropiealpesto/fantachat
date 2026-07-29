@@ -91,6 +91,7 @@ export default function Statistiche() {
   const [showAll, setShowAll] = useState(false);
   const [compareA, setCompareA] = useState("");
   const [compareB, setCompareB] = useState("");
+  const [activeCompare, setActiveCompare] = useState<"A" | "B" | null>(null);
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
@@ -352,8 +353,8 @@ export default function Statistiche() {
             </div>
 
             <div style={s.comparePickers}>
-              <PlayerSelect label="Giocatore A" value={playerA?.player_id ?? ""} rows={rows} onChange={setCompareA} />
-              <PlayerSelect label="Giocatore B" value={playerB?.player_id ?? ""} rows={rows} onChange={setCompareB} />
+              <ComparePickButton label="Giocatore A" row={playerA} onClick={() => setActiveCompare("A")} />
+              <ComparePickButton label="Giocatore B" row={playerB} onClick={() => setActiveCompare("B")} />
             </div>
 
             {playerA && playerB ? (
@@ -378,6 +379,20 @@ export default function Statistiche() {
         )}
       </main>
 
+      {activeCompare && (
+        <ComparePlayerSheet
+          title={activeCompare === "A" ? "Scegli giocatore A" : "Scegli giocatore B"}
+          rows={rows}
+          currentId={activeCompare === "A" ? playerA?.player_id ?? "" : playerB?.player_id ?? ""}
+          onClose={() => setActiveCompare(null)}
+          onSelect={(id) => {
+            if (activeCompare === "A") setCompareA(id);
+            else setCompareB(id);
+            setActiveCompare(null);
+          }}
+        />
+      )}
+
       <BottomNav activePath="/rosa" />
     </>
   );
@@ -400,18 +415,94 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: "goo
   );
 }
 
-function PlayerSelect({ label, value, rows, onChange }: { label: string; value: string; rows: Row[]; onChange: (id: string) => void }) {
+function ComparePickButton({ label, row, onClick }: { label: string; row?: Row; onClick: () => void }) {
   return (
-    <label style={s.selectLabel}>
-      <span>{label}</span>
-      <select className="fc-stats-select" value={value} onChange={(e) => onChange(e.target.value)} style={s.select}>
-        {rows.map((r) => (
-          <option key={r.player_id} value={r.player_id}>
-            {playerLabel(r)} - {r.team_name ?? ROLE_META[r.role]?.label ?? r.role}
-          </option>
-        ))}
-      </select>
-    </label>
+    <button type="button" className="fc-stats-picker" style={s.pickerButton} onClick={onClick}>
+      <span style={s.pickerLabel}>{label}</span>
+      {row ? (
+        <span style={s.pickerValue}>
+          <RoleBadge role={row.role} />
+          <span style={s.playerText}>
+            <b style={s.playerName}>{playerLabel(row)}</b>
+            <small style={s.playerSub}>{playerSub(row)}</small>
+          </span>
+        </span>
+      ) : (
+        <span style={s.pickerHint}>Scegli giocatore</span>
+      )}
+      <span style={s.pickerChevron}>›</span>
+    </button>
+  );
+}
+
+function ComparePlayerSheet(props: {
+  title: string;
+  rows: Row[];
+  currentId: string;
+  onClose: () => void;
+  onSelect: (id: string) => void;
+}) {
+  const [q, setQ] = useState("");
+
+  const matches = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const base = props.rows.filter((r) => {
+      if (!needle) return true;
+      return `${r.player_name} ${r.team_name ?? ""} ${r.role}`.toLowerCase().includes(needle);
+    });
+    return [...base]
+      .sort((a, b) => Number(b.avg_points) - Number(a.avg_points) || playerLabel(a).localeCompare(playerLabel(b)))
+      .slice(0, needle ? 24 : 16);
+  }, [q, props.rows]);
+
+  return (
+    <div className="fc-stats-sheet-layer" style={s.sheetLayer}>
+      <button type="button" aria-label="Chiudi selezione" style={s.sheetBackdrop} onClick={props.onClose} />
+
+      <div className="fc-stats-sheet" style={s.sheet}>
+        <div style={s.sheetHandle} />
+
+        <div style={s.sheetHead}>
+          <div>
+            <h2 style={s.sheetTitle}>{props.title}</h2>
+            <p style={s.sectionSub}>Cerca per nome, squadra o ruolo.</p>
+          </div>
+          <button type="button" onClick={props.onClose} style={s.closeBtn}>×</button>
+        </div>
+
+        <div style={s.searchWrap}>
+          <span style={s.searchIcon}>⌕</span>
+          <input
+            className="fc-stats-input"
+            value={q}
+            autoFocus
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Scrivi il nome del giocatore"
+            style={s.sheetSearch}
+          />
+        </div>
+
+        <div className="fc-stats-sheet-list" style={s.resultList}>
+          {matches.map((r) => (
+            <button
+              key={r.player_id}
+              type="button"
+              className="fc-stats-sheet-row"
+              style={{ ...s.resultRow, ...(r.player_id === props.currentId ? s.resultRowActive : {}) }}
+              onClick={() => props.onSelect(r.player_id)}
+            >
+              <RoleBadge role={r.role} />
+              <span style={s.resultText}>
+                <b>{playerLabel(r)}</b>
+                <small>{playerSub(r)}</small>
+              </span>
+              <span style={s.resultMetric}>{fmt(r.avg_points)}</span>
+            </button>
+          ))}
+          {matches.length === 0 && <div className="fc-stats-empty" style={s.empty}>Nessun giocatore trovato.</div>}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -506,8 +597,11 @@ const s: Record<string, React.CSSProperties> = {
   barFill: { display: "block", height: "100%", borderRadius: 3 },
   showAll: { width: "100%", border: "1px solid #e5e7eb", background: "white", color: "#15803d", borderRadius: 12, padding: 10, marginTop: 8, fontSize: 12.5, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   comparePickers: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 },
-  selectLabel: { display: "grid", gap: 5, color: "#64748b", fontSize: 11, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
-  select: { width: "100%", minWidth: 0, height: 42, border: "1px solid #e5e7eb", borderRadius: 12, padding: "0 9px", background: "#fff", color: "#0f172a", fontSize: 12, fontWeight: 850, fontFamily: "inherit" },
+  pickerButton: { position: "relative", display: "grid", gap: 8, minWidth: 0, border: "1px solid #e5e7eb", background: "#fbfdfb", borderRadius: 14, padding: 10, textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
+  pickerLabel: { color: "#94a3b8", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
+  pickerValue: { minWidth: 0, display: "grid", gridTemplateColumns: "30px 1fr", alignItems: "center", gap: 8 },
+  pickerHint: { color: "#64748b", fontSize: 12.5, fontWeight: 850 },
+  pickerChevron: { position: "absolute", right: 10, top: 9, color: "#94a3b8", fontSize: 22, lineHeight: 1 },
   compareHeads: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 },
   playerMini: { minWidth: 0, display: "grid", gridTemplateColumns: "30px 1fr", alignItems: "center", gap: 8, border: "1px solid #e5e7eb", background: "#fbfdfb", borderRadius: 13, padding: 9 },
   miniName: { display: "block", color: "#0f172a", fontSize: 12.5, fontWeight: 1000, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -520,4 +614,19 @@ const s: Record<string, React.CSSProperties> = {
   duelFillA: { display: "block", height: "100%", borderRadius: 999, background: "#15803d" },
   duelFillB: { display: "block", height: "100%", borderRadius: 999, background: "#e07b1a" },
   empty: { border: "1px dashed #cbd5e1", borderRadius: 13, padding: 14, color: "#64748b", fontSize: 13, fontWeight: 850, textAlign: "center" },
+  sheetLayer: { position: "fixed", inset: 0, zIndex: 160, display: "grid", alignItems: "end", justifyItems: "center", pointerEvents: "none" },
+  sheetBackdrop: { position: "absolute", inset: 0, border: 0, background: "rgba(13,24,18,.28)", pointerEvents: "auto" },
+  sheet: { position: "relative", zIndex: 2, width: "100%", maxWidth: 520, height: "64vh", background: "white", borderRadius: "18px 18px 0 0", padding: "10px 12px calc(14px + env(safe-area-inset-bottom, 0px))", boxShadow: "0 -16px 34px rgba(15,23,42,.18)", display: "grid", gridTemplateRows: "auto auto auto 1fr", gap: 10, pointerEvents: "auto" },
+  sheetHandle: { width: 40, height: 4, borderRadius: 999, background: "#cbd5e1", justifySelf: "center" },
+  sheetHead: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  sheetTitle: { margin: 0, color: "#0f172a", fontSize: 18, fontWeight: 1000, letterSpacing: "-0.02em" },
+  closeBtn: { width: 32, height: 32, border: "1px solid #e5e7eb", borderRadius: 10, background: "white", color: "#64748b", fontSize: 22, lineHeight: 1, fontFamily: "inherit", cursor: "pointer" },
+  searchWrap: { position: "relative" },
+  searchIcon: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 18, pointerEvents: "none" },
+  sheetSearch: { width: "100%", height: 42, borderRadius: 10, border: "1px solid #cbd5e1", padding: "0 12px 0 36px", fontFamily: "inherit", fontSize: 13, fontWeight: 800, outline: "none" },
+  resultList: { overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 12 },
+  resultRow: { width: "100%", display: "grid", gridTemplateColumns: "34px minmax(0, 1fr) auto", alignItems: "center", gap: 10, minHeight: 58, padding: "8px 10px", border: 0, borderBottom: "1px solid #f1f5f9", background: "white", textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
+  resultRowActive: { background: "#f0fdf4" },
+  resultText: { minWidth: 0, display: "grid", gap: 2, color: "#0f172a", fontSize: 13 },
+  resultMetric: { color: "#15803d", fontSize: 13, fontWeight: 1000, fontVariantNumeric: "tabular-nums" },
 };
