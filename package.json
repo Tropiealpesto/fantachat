@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sportmonks:inspect": "node scripts/sportmonks-inspect.mjs"
+    "sportmonks:inspect": "node scripts/sportmonks-inspect.mjs",
+    "sportmonks:sync": "node scripts/sportmonks-sync.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
