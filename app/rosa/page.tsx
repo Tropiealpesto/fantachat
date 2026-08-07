@@ -77,6 +77,16 @@ type FixtureRow = {
   status: string;
 };
 
+type ExpectedLineupRow = {
+  fixture_id?: string | null;
+  fixture_name?: string | null;
+  starts_at?: string | null;
+  team_name: string;
+  player_name: string;
+  role?: string | null;
+  status?: string | null;
+};
+
 type Kit = {
   primary: string;
   secondary: string;
@@ -248,6 +258,7 @@ export default function RosaPage() {
 
   const [top, setTop] = useState<TopRow[]>([]);
   const [fixtures, setFixtures] = useState<FixtureRow[]>([]);
+  const [expectedLineups, setExpectedLineups] = useState<ExpectedLineupRow[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
   const [coachSheetOpen, setCoachSheetOpen] = useState(false);
   const [selectedCoachId, setSelectedCoachId] = useState("");
@@ -331,6 +342,7 @@ export default function RosaPage() {
     if (!competitionId || !matchdayNumber) {
       setTop([]);
       setFixtures([]);
+      setExpectedLineups([]);
       return;
     }
 
@@ -347,11 +359,13 @@ export default function RosaPage() {
       if (error) {
         setTop([]);
         setFixtures([]);
+        setExpectedLineups([]);
         return;
       }
 
       setTop(((data as any)?.top_teams ?? []) as TopRow[]);
       setFixtures(((data as any)?.fixtures ?? []) as FixtureRow[]);
+      setExpectedLineups(((data as any)?.expected_lineups ?? []) as ExpectedLineupRow[]);
     }
 
     loadContext();
@@ -659,6 +673,8 @@ export default function RosaPage() {
             <span style={s.chev}>›</span>
           </button>
         </div>
+
+        <ExpectedLineupsCard rows={expectedLineups} />
 
         <button type="button" className="fc-dark-neon-info-card" style={s.statsEntry} onClick={() => router.push("/statistiche")}>
           <span className="fc-dark-neon-info-icon" style={s.infoIcon}>#</span>
@@ -1106,6 +1122,57 @@ function RoleBadge({
   );
 }
 
+function ExpectedLineupsCard({ rows }: { rows: ExpectedLineupRow[] }) {
+  const visible = rows.slice(0, 10);
+  const teams = new Set(rows.map((row) => row.team_name).filter(Boolean)).size;
+
+  return (
+    <section className="fc-dark-neon-info-card" style={s.expectedCard}>
+      <div style={s.sectionHeader}>
+        <div>
+          <h2 style={s.sectionTitle}>Probabili formazioni</h2>
+          <p style={s.expectedSub}>
+            {rows.length > 0
+              ? `${rows.length} giocatori segnalati${teams ? `, ${teams} squadre` : ""}`
+              : "Non ancora pubblicate per questa giornata."}
+          </p>
+        </div>
+
+        {rows.length > 0 && <span style={s.expectedBadge}>Live</span>}
+      </div>
+
+      {visible.length > 0 ? (
+        <div style={s.expectedList}>
+          {visible.map((row, index) => (
+            <div key={`${row.fixture_id ?? row.fixture_name}-${row.team_name}-${row.player_name}-${index}`} style={s.expectedRow}>
+              <RoleBadge role={row.role ?? "?"} small />
+
+              <span style={s.expectedText}>
+                <b>{row.player_name}</b>
+                <small>{row.team_name}</small>
+              </span>
+
+              <span style={s.expectedStatus}>
+                {row.status === "starter" ? "Titolare" : row.status === "candidate" ? "Possibile" : "Info"}
+              </span>
+            </div>
+          ))}
+
+          {rows.length > visible.length && (
+            <button type="button" style={s.expectedMore}>
+              +{rows.length - visible.length} altri giocatori
+            </button>
+          )}
+        </div>
+      ) : (
+        <div style={s.expectedEmpty}>
+          Le probabili compariranno qui quando Sportmonks le renderà disponibili.
+        </div>
+      )}
+    </section>
+  );
+}
+
 function normalizeFormData(value: any): FormData {
   const ppr =
     value?.players_per_role && typeof value.players_per_role === "object"
@@ -1120,6 +1187,7 @@ function normalizeFormData(value: any): FormData {
     players: Array.isArray(value?.players) ? value.players : [],
     coach_enabled: Boolean(value?.coach_enabled),
     coaches: Array.isArray(value?.coaches) ? value.coaches : [],
+    slot: value?.slot ?? null,
     lineup: value?.lineup ?? null,
   };
 }
@@ -1492,6 +1560,92 @@ const s: Record<string, React.CSSProperties> = {
     textAlign: "left",
     fontFamily: "inherit",
     cursor: "pointer",
+  },
+
+  expectedCard: {
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: 10,
+    padding: 11,
+    boxShadow: "0 3px 12px rgba(15,23,42,.04)",
+    display: "grid",
+    gap: 9,
+  },
+
+  expectedSub: {
+    margin: "3px 0 0",
+    color: "#64748b",
+    fontSize: 11.5,
+    fontWeight: 800,
+    lineHeight: 1.3,
+  },
+
+  expectedBadge: {
+    borderRadius: 999,
+    padding: "5px 8px",
+    background: "#fff7ed",
+    color: "#c56b14",
+    border: "1px solid #fed7aa",
+    fontSize: 10.5,
+    fontWeight: 1000,
+    textTransform: "uppercase",
+  },
+
+  expectedList: {
+    display: "grid",
+    gap: 6,
+  },
+
+  expectedRow: {
+    display: "grid",
+    gridTemplateColumns: "24px 1fr auto",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 40,
+    border: "1px solid #eef2f7",
+    borderRadius: 9,
+    padding: "7px 8px",
+    background: "#fbfdfb",
+  },
+
+  expectedText: {
+    minWidth: 0,
+    display: "grid",
+    gap: 1,
+    color: "#0f172a",
+    fontSize: 12.5,
+    fontWeight: 950,
+  },
+
+  expectedStatus: {
+    color: "#15803d",
+    background: "#f0fdf4",
+    borderRadius: 999,
+    padding: "4px 7px",
+    fontSize: 10.5,
+    fontWeight: 1000,
+  },
+
+  expectedMore: {
+    border: "1px solid #e5e7eb",
+    background: "white",
+    color: "#15803d",
+    borderRadius: 9,
+    padding: 8,
+    fontFamily: "inherit",
+    fontSize: 11.5,
+    fontWeight: 1000,
+    cursor: "pointer",
+  },
+
+  expectedEmpty: {
+    border: "1px dashed #d1d5db",
+    borderRadius: 9,
+    padding: 10,
+    color: "#64748b",
+    fontSize: 12,
+    lineHeight: 1.35,
+    fontWeight: 800,
   },
 
   infoIcon: {

@@ -100,16 +100,20 @@ export default function Statistiche() {
       .finally(() => setLoading(false));
   }, [app.ready, app.activeLeagueCompetitionId]);
 
-  const activeRows = useMemo(() => rows.filter((r) => Number(r.played_count) > 0), [rows]);
-
   const topThree = useMemo(
-    () => [...activeRows].sort((a, b) => Number(b.avg_points) - Number(a.avg_points)).slice(0, 3),
-    [activeRows]
+    () =>
+      [...rows]
+        .sort((a, b) => Number(b.avg_points) - Number(a.avg_points) || playerLabel(a).localeCompare(playerLabel(b)))
+        .slice(0, 3),
+    [rows]
   );
 
   const flopThree = useMemo(
-    () => [...activeRows].sort((a, b) => Number(a.avg_points) - Number(b.avg_points)).slice(0, 3),
-    [activeRows]
+    () =>
+      [...rows]
+        .sort((a, b) => Number(a.avg_points) - Number(b.avg_points) || playerLabel(a).localeCompare(playerLabel(b)))
+        .slice(0, 3),
+    [rows]
   );
 
   const roleCounts = useMemo(() => {
@@ -206,7 +210,7 @@ export default function Statistiche() {
                     <small style={s.podiumSmall}>media</small>
                   </button>
                 ))}
-                {topThree.length === 0 && <div className="fc-stats-empty" style={s.empty}>Statistiche non ancora disponibili.</div>}
+                {topThree.length === 0 && <div className="fc-stats-empty" style={s.empty}>Nessun giocatore disponibile.</div>}
               </div>
             </section>
 
@@ -373,7 +377,7 @@ export default function Statistiche() {
                 </div>
               </>
             ) : (
-              <div className="fc-stats-empty" style={s.empty}>Servono almeno due giocatori con statistiche disponibili.</div>
+              <div className="fc-stats-empty" style={s.empty}>Servono almeno due giocatori disponibili.</div>
             )}
           </section>
         )}
