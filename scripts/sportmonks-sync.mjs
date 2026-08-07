@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
@@ -66,16 +67,10 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE
   auth: { persistSession: false },
 });
 
-const args = new Set(process.argv.slice(2));
-const onlyCatalog = args.has("--catalog");
-const onlyFixtures = args.has("--fixtures");
-const onlyStats = args.has("--stats");
-const onlyExpectedLineups = args.has("--expected-lineups");
-const selectedMatchday = Number(
-  process.argv.find((arg) => arg.startsWith("--matchday="))?.split("=")[1] ?? 0
-);
-
-const shouldRunAll = !onlyCatalog && !onlyFixtures && !onlyStats && !onlyExpectedLineups;
+let selectedMatchday = 0;
+let statsWindowHoursBefore = 8;
+let statsWindowHoursAfter = 3;
+let expectedLineupsWindowHours = 72;
 
 async function sportmonks(path, params = {}) {
   const url = new URL(SPORTMONKS_BASE_URL + path);
@@ -611,14 +606,18 @@ async function importStats(competition, season) {
     .eq("season_id", season.id)
     .not("sportmonks_id", "is", null);
 
-  if (selectedMatchday > 0) query = query.eq("matchday_number", selectedMatchday);
+  if (selectedMatchday > 0) {
+    query = query.eq("matchday_number", selectedMatchday);
+  } else {
+    const from = new Date(Date.now() - statsWindowHoursBefore * 60 * 60 * 1000).toISOString();
+    const to = new Date(Date.now() + statsWindowHoursAfter * 60 * 60 * 1000).toISOString();
+    query = query.gte("starts_at", from).lte("starts_at", to);
+  }
 
   const { data: fixtures, error } = await query.order("matchday_number", { ascending: true });
   if (error) throw new Error(`fixtures stats select: ${error.message}`);
 
-  const playableFixtures = (fixtures ?? []).filter(
-    (fixture) => fixture.status !== "scheduled" || selectedMatchday > 0
-  );
+  const playableFixtures = fixtures ?? [];
 
   const totals = { fixtures: 0, playerStats: 0, keeperStats: 0, coachStats: 0, recalcs: 0 };
 
@@ -678,7 +677,7 @@ async function fixturesForExpectedLineups(competition, season) {
     query = query.eq("matchday_number", selectedMatchday);
   } else {
     const from = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-    const to = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const to = new Date(Date.now() + expectedLineupsWindowHours * 60 * 60 * 1000).toISOString();
     query = query.gte("starts_at", from).lte("starts_at", to);
   }
 
@@ -748,7 +747,18 @@ async function importExpectedLineups(competition, season) {
   return totals;
 }
 
-async function main() {
+export async function runSportmonksSync(options = {}) {
+  const onlyCatalog = Boolean(options.catalog);
+  const onlyFixtures = Boolean(options.fixtures);
+  const onlyStats = Boolean(options.stats);
+  const onlyExpectedLineups = Boolean(options.expectedLineups);
+  const shouldRunAll = !onlyCatalog && !onlyFixtures && !onlyStats && !onlyExpectedLineups;
+
+  selectedMatchday = Number(options.matchday ?? 0);
+  statsWindowHoursBefore = Number(options.statsWindowHoursBefore ?? 8);
+  statsWindowHoursAfter = Number(options.statsWindowHoursAfter ?? 3);
+  expectedLineupsWindowHours = Number(options.expectedLineupsWindowHours ?? 72);
+
   const { competition, season } = await ensureSerieA();
   const summary = {
     competition: competition.name,
@@ -775,10 +785,30 @@ async function main() {
     summary.expectedLineups = await importExpectedLineups(competition, season);
   }
 
+  return summary;
+}
+
+function parseCliOptions(argv) {
+  const args = new Set(argv);
+  return {
+    catalog: args.has("--catalog"),
+    fixtures: args.has("--fixtures"),
+    stats: args.has("--stats"),
+    expectedLineups: args.has("--expected-lineups"),
+    matchday: Number(argv.find((arg) => arg.startsWith("--matchday="))?.split("=")[1] ?? 0),
+  };
+}
+
+async function main() {
+  const summary = await runSportmonksSync(parseCliOptions(process.argv.slice(2)));
   console.log(JSON.stringify(summary, null, 2));
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+const entrypoint = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+
+if (import.meta.url === entrypoint) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
+}

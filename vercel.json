@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/sportmonks-expected-lineups",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/sportmonks-live",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/sportmonks-post-match",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
