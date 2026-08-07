@@ -13,6 +13,7 @@ type PlayerDetail = {
   player_name: string;
   role: string;
   team_name: string | null;
+  image_url?: string | null;
   avg_points: number;
   best_points: number;
   worst_points: number;
@@ -44,6 +45,19 @@ function RoleBadge({ role }: { role: string }) {
       {role}
     </span>
   );
+}
+
+function PlayerAvatar({ data }: { data: NonNullable<PlayerDetail> }) {
+  if (data.image_url) {
+    return (
+      <span style={s.avatarWrap}>
+        <img src={data.image_url} alt="" style={s.avatarImg} loading="lazy" />
+        <span style={s.avatarRole}>{data.role}</span>
+      </span>
+    );
+  }
+
+  return <RoleBadge role={data.role} />;
 }
 
 export default function Giocatore() {
@@ -87,7 +101,7 @@ export default function Giocatore() {
               <CompetitionBadge name={app.competitionName} type={app.competitionType} />
 
               <div style={s.identity}>
-                <RoleBadge role={data.role} />
+                <PlayerAvatar data={data} />
                 <div style={{ minWidth: 0 }}>
                   <h1 style={s.title}>{playerLabel(data)}</h1>
                   <p style={s.subtitle}>
@@ -154,6 +168,9 @@ const s: Record<string, React.CSSProperties> = {
   hero: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.06)" },
   identity: { display: "grid", gridTemplateColumns: "42px 1fr", alignItems: "center", gap: 11, marginTop: 14 },
   roleBadge: { width: 42, height: 42, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 15, fontWeight: 1000, border: "1px solid rgba(255,255,255,.9)", boxShadow: "0 2px 8px rgba(15,23,42,.08)" },
+  avatarWrap: { position: "relative", width: 42, height: 42, borderRadius: "50%", display: "inline-grid", placeItems: "center", background: "#f1f5f9", border: "1px solid #e5e7eb", boxShadow: "0 2px 8px rgba(15,23,42,.08)" },
+  avatarImg: { width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" },
+  avatarRole: { position: "absolute", right: -3, bottom: -3, width: 17, height: 17, borderRadius: "50%", display: "grid", placeItems: "center", background: "#0f172a", color: "white", border: "1.5px solid white", fontSize: 9, fontWeight: 1000, lineHeight: 1 },
   title: { margin: 0, color: "#0f172a", fontSize: 23, lineHeight: 1.05, fontWeight: 1000, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis" },
   subtitle: { margin: "4px 0 0", color: "#64748b", fontSize: 12.5, fontWeight: 800 },
   kpis: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 7, marginTop: 14 },

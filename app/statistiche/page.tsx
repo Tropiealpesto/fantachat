@@ -13,6 +13,7 @@ type Row = {
   player_id: string;
   player_name: string;
   team_name: string | null;
+  image_url: string | null;
   role: string;
   played_count: number;
   avg_points: number;
@@ -77,6 +78,19 @@ function RoleBadge({ role }: { role: string }) {
       {role}
     </span>
   );
+}
+
+function PlayerAvatar({ row, size = 30 }: { row: Row; size?: number }) {
+  if (row.image_url) {
+    return (
+      <span style={{ ...s.avatarWrap, width: size, height: size }}>
+        <img src={row.image_url} alt="" style={s.avatarImg} loading="lazy" />
+        <span style={s.avatarRole}>{row.role}</span>
+      </span>
+    );
+  }
+
+  return <RoleBadge role={row.role} />;
 }
 
 export default function Statistiche() {
@@ -203,7 +217,7 @@ export default function Statistiche() {
                     <span style={{ ...s.podiumRank, ...(index === 0 ? { background: "#e07b1a", color: "white" } : {}) }}>
                       #{index + 1}
                     </span>
-                    <RoleBadge role={r.role} />
+                    <PlayerAvatar row={r} />
                     <span style={s.podiumName}>{playerLabel(r)}</span>
                     <span style={s.podiumMeta}>{playerSub(r)}</span>
                     <strong style={s.podiumScore}>{fmt(r.avg_points)}</strong>
@@ -226,7 +240,7 @@ export default function Statistiche() {
                 {flopThree.map((r, index) => (
                   <button key={r.player_id} type="button" className="fc-stats-compact-row" style={s.compactRow} onClick={() => openPlayer(r.player_id)}>
                     <span style={s.flopRank}>{index + 1}</span>
-                    <RoleBadge role={r.role} />
+                    <PlayerAvatar row={r} />
                     <span style={s.compactNameWrap}>
                       <b style={s.compactName}>{playerLabel(r)}</b>
                       <small style={s.compactSub}>{playerSub(r)}</small>
@@ -323,7 +337,7 @@ export default function Statistiche() {
                   <button key={r.player_id} type="button" className="fc-stats-player-row" style={s.playerRow} onClick={() => openPlayer(r.player_id)}>
                     <div style={s.playerMain}>
                       <span style={s.listRank}>{r.rank}</span>
-                      <RoleBadge role={r.role} />
+                      <PlayerAvatar row={r} />
                       <span style={s.playerText}>
                         <b style={s.playerName}>{playerLabel(r)}</b>
                         <small style={s.playerSub}>{playerSub(r)}</small>
@@ -425,7 +439,7 @@ function ComparePickButton({ label, row, onClick }: { label: string; row?: Row; 
       <span style={s.pickerLabel}>{label}</span>
       {row ? (
         <span style={s.pickerValue}>
-          <RoleBadge role={row.role} />
+          <PlayerAvatar row={row} />
           <span style={s.playerText}>
             <b style={s.playerName}>{playerLabel(row)}</b>
             <small style={s.playerSub}>{playerSub(row)}</small>
@@ -495,7 +509,7 @@ function ComparePlayerSheet(props: {
               style={{ ...s.resultRow, ...(r.player_id === props.currentId ? s.resultRowActive : {}) }}
               onClick={() => props.onSelect(r.player_id)}
             >
-              <RoleBadge role={r.role} />
+              <PlayerAvatar row={r} />
               <span style={s.resultText}>
                 <b>{playerLabel(r)}</b>
                 <small>{playerSub(r)}</small>
@@ -513,7 +527,7 @@ function ComparePlayerSheet(props: {
 function PlayerMini({ row }: { row: Row }) {
   return (
     <div className="fc-stats-mini" style={s.playerMini}>
-      <RoleBadge role={row.role} />
+      <PlayerAvatar row={row} />
       <span style={{ minWidth: 0 }}>
         <b style={s.miniName}>{playerLabel(row)}</b>
         <small style={s.miniSub}>{playerSub(row)}</small>
@@ -593,6 +607,9 @@ const s: Record<string, React.CSSProperties> = {
   playerMain: { display: "grid", gridTemplateColumns: "24px 30px 1fr auto", gap: 8, alignItems: "center" },
   listRank: { width: 24, color: "#94a3b8", fontSize: 12, fontWeight: 1000, textAlign: "center" },
   roleBadge: { width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 11.5, fontWeight: 1000, border: "1px solid rgba(255,255,255,.9)", boxShadow: "0 1px 4px rgba(15,23,42,.08)" },
+  avatarWrap: { position: "relative", display: "inline-grid", placeItems: "center", borderRadius: "50%", overflow: "visible", flexShrink: 0, background: "#f1f5f9", border: "1px solid rgba(226,232,240,.95)", boxShadow: "0 2px 8px rgba(15,23,42,.10)" },
+  avatarImg: { width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" },
+  avatarRole: { position: "absolute", right: -3, bottom: -3, width: 15, height: 15, borderRadius: "50%", display: "grid", placeItems: "center", background: "#0f172a", color: "white", border: "1.5px solid white", fontSize: 8.5, fontWeight: 1000, lineHeight: 1 },
   playerText: { minWidth: 0, display: "grid", gap: 1 },
   playerName: { color: "#0f172a", fontSize: 13, fontWeight: 1000, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   playerSub: { color: "#64748b", fontSize: 10.5, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
