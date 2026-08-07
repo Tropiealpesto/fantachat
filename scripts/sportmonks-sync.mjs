@@ -215,6 +215,12 @@ function displayName(person) {
   return person?.display_name ?? person?.common_name ?? person?.name ?? [person?.firstname, person?.lastname].filter(Boolean).join(" ");
 }
 
+function imageUrl(...values) {
+  const value = values.find((item) => typeof item === "string" && item.trim());
+  if (!value || /\/placeholder\.png$/i.test(value)) return null;
+  return value;
+}
+
 async function ensureSerieA() {
   const league = await sportmonks(`/leagues/${SPORTMONKS_SERIE_A_ID}`, {
     include: "currentSeason;seasons",
@@ -269,7 +275,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
       {
         name: team.name,
         country: "Italia",
-        logo_url: team.image_path ?? null,
+        logo_url: imageUrl(team.image_path),
         short_code: team.short_code ?? null,
         active: true,
       },
@@ -301,7 +307,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
         sportmonks_team_id: team.id,
         sportmonks_position_id: 24,
         sportmonks_detailed_position_id: null,
-        image_url: team.image_path ?? null,
+        image_url: imageUrl(team.image_path),
       },
       "id"
     );
@@ -326,7 +332,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
           sportmonks_team_id: team.id,
           sportmonks_position_id: squadPlayer.position_id ?? player.position_id ?? null,
           sportmonks_detailed_position_id: squadPlayer.detailed_position_id ?? player.detailed_position_id ?? null,
-          image_url: player.image_path ?? null,
+          image_url: imageUrl(player.image_path, squadPlayer.image_path),
           source: "sportmonks_player",
         },
         "id"
@@ -355,7 +361,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
           active: true,
           sportmonks_id: coach.id,
           sportmonks_team_id: team.id,
-          image_url: coach.image_path ?? null,
+          image_url: imageUrl(coach.image_path, activeCoach.image_path),
         },
         "id"
       );

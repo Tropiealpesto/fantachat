@@ -648,42 +648,34 @@ export default function RosaPage() {
           )}
         </section>
 
-        <div style={s.duo}>
-          <button type="button" className="fc-dark-neon-info-card" style={s.infoCard}>
-            <span className="fc-dark-neon-info-icon" style={s.infoIcon}>▣</span>
-            <span>
-              <b>Partite</b>
-              <small>
-                {fixtures.length === 0
-                  ? "Nessuna partita."
-                  : `${fixtures.length} partite`}
-              </small>
-            </span>
-            <span style={s.chev}>›</span>
-          </button>
+        <ExpectedLineupsCard rows={expectedLineups} fixturesCount={fixtures.length} />
 
-          <button type="button" className="fc-dark-neon-info-card" style={s.infoCard}>
-            <span className="fc-dark-neon-info-icon" style={s.infoIcon}>♛</span>
-            <span>
-              <b>Top squadre</b>
-              <small>
-                {top.length === 0 ? "Nessuna Top." : `${top.length} squadre`}
-              </small>
-            </span>
-            <span style={s.chev}>›</span>
-          </button>
+        <div style={s.quickGrid}>
+          <RosaActionCard
+            tone="green"
+            icon="P"
+            title="Partite"
+            value={fixtures.length === 0 ? "0" : String(fixtures.length)}
+            label={fixtures.length === 1 ? "partita" : "partite"}
+          />
+
+          <RosaActionCard
+            tone="orange"
+            icon="6"
+            title="Top 6"
+            value={top.length === 0 ? "0" : String(top.length)}
+            label={top.length === 1 ? "squadra" : "squadre"}
+          />
+
+          <RosaActionCard
+            tone="dark"
+            icon="#"
+            title="Stats"
+            value="Apri"
+            label="database"
+            onClick={() => router.push("/statistiche")}
+          />
         </div>
-
-        <ExpectedLineupsCard rows={expectedLineups} />
-
-        <button type="button" className="fc-dark-neon-info-card" style={s.statsEntry} onClick={() => router.push("/statistiche")}>
-          <span className="fc-dark-neon-info-icon" style={s.infoIcon}>#</span>
-          <span>
-            <b>Statistiche giocatori</b>
-            <small>Top, flop, confronto e ricerca completa</small>
-          </span>
-          <span style={s.chev}>›</span>
-        </button>
       </main>
 
       {activeSlot && (
@@ -1122,7 +1114,44 @@ function RoleBadge({
   );
 }
 
-function ExpectedLineupsCard({ rows }: { rows: ExpectedLineupRow[] }) {
+function RosaActionCard({
+  tone,
+  icon,
+  title,
+  value,
+  label,
+  onClick,
+}: {
+  tone: "green" | "orange" | "dark";
+  icon: string;
+  title: string;
+  value: string;
+  label: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`fc-rosa-action fc-rosa-action-${tone}`}
+      style={s.actionCard}
+      onClick={onClick}
+      disabled={!onClick}
+    >
+      <span style={s.actionBadge}>{icon}</span>
+      <span style={s.actionTitle}>{title}</span>
+      <span style={s.actionValue}>{value}</span>
+      <span style={s.actionLabel}>{label}</span>
+    </button>
+  );
+}
+
+function ExpectedLineupsCard({
+  rows,
+  fixturesCount,
+}: {
+  rows: ExpectedLineupRow[];
+  fixturesCount: number;
+}) {
   const visible = rows.slice(0, 10);
   const teams = new Set(rows.map((row) => row.team_name).filter(Boolean)).size;
 
@@ -1134,11 +1163,13 @@ function ExpectedLineupsCard({ rows }: { rows: ExpectedLineupRow[] }) {
           <p style={s.expectedSub}>
             {rows.length > 0
               ? `${rows.length} giocatori segnalati${teams ? `, ${teams} squadre` : ""}`
-              : "Non ancora pubblicate per questa giornata."}
+              : fixturesCount > 0
+                ? `${fixturesCount} partite in calendario. Probabili non ancora disponibili.`
+                : "Non ancora pubblicate per questa giornata."}
           </p>
         </div>
 
-        {rows.length > 0 && <span style={s.expectedBadge}>Live</span>}
+        <span style={s.expectedBadge}>{rows.length > 0 ? "Disponibili" : "In attesa"}</span>
       </div>
 
       {visible.length > 0 ? (
@@ -1166,7 +1197,7 @@ function ExpectedLineupsCard({ rows }: { rows: ExpectedLineupRow[] }) {
         </div>
       ) : (
         <div style={s.expectedEmpty}>
-          Le probabili compariranno qui quando Sportmonks le renderà disponibili.
+          Le probabili formazioni compariranno qui appena Sportmonks le renderà disponibili per la giornata.
         </div>
       )}
     </section>
@@ -1528,6 +1559,65 @@ const s: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "1fr 1fr",
     gap: 9,
     alignItems: "stretch",
+  },
+
+  quickGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+    gap: 8,
+  },
+
+  actionCard: {
+    minWidth: 0,
+    minHeight: 88,
+    display: "grid",
+    gridTemplateRows: "24px auto auto auto",
+    alignItems: "start",
+    justifyItems: "start",
+    gap: 3,
+    border: "1px solid #e5e7eb",
+    background: "linear-gradient(180deg,#ffffff 0%,#fbfdfb 100%)",
+    borderRadius: 12,
+    padding: 10,
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+    boxShadow: "0 5px 16px rgba(15,23,42,.045)",
+  },
+
+  actionBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    display: "grid",
+    placeItems: "center",
+    border: "1px solid rgba(21,128,61,.16)",
+    background: "#f0fdf4",
+    color: "#15803d",
+    fontSize: 11,
+    fontWeight: 1000,
+  },
+
+  actionTitle: {
+    color: "#0f172a",
+    fontSize: 12,
+    fontWeight: 1000,
+    lineHeight: 1.05,
+  },
+
+  actionValue: {
+    color: "#0f172a",
+    fontSize: 18,
+    lineHeight: 1,
+    fontWeight: 1000,
+    fontVariantNumeric: "tabular-nums",
+  },
+
+  actionLabel: {
+    color: "#64748b",
+    fontSize: 10.5,
+    fontWeight: 850,
+    lineHeight: 1.1,
   },
 
   infoCard: {

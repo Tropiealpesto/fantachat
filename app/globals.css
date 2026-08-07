@@ -860,6 +860,66 @@ html[data-ui-theme="dark"] .fc-dark-neon-info-icon {
   box-shadow: inset 0 0 14px rgba(34,226,111,.10), 0 0 14px rgba(34,226,111,.16);
 }
 
+.fc-rosa-action {
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.fc-rosa-action:not(:disabled):active {
+  transform: translateY(1px) scale(.99);
+}
+
+.fc-rosa-action:disabled {
+  cursor: default !important;
+}
+
+.fc-rosa-action-orange span:first-child {
+  background: #fff7ed !important;
+  border-color: rgba(224,123,26,.26) !important;
+  color: var(--brand-orange) !important;
+}
+
+.fc-rosa-action-dark span:first-child {
+  background: #f1f5f9 !important;
+  border-color: rgba(15,23,42,.12) !important;
+  color: #0f172a !important;
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action {
+  background: rgba(4,8,22,.72) !important;
+  border-color: rgba(91,110,151,.32) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.018), 0 0 20px rgba(34,226,111,.05) !important;
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action span:nth-child(2),
+html[data-ui-theme="dark"] .fc-rosa-action span:nth-child(3) {
+  color: #f8fafc !important;
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action span:nth-child(4) {
+  color: #9aa8c7 !important;
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action-green span:first-child {
+  background: rgba(34,226,111,.10) !important;
+  border-color: rgba(34,226,111,.38) !important;
+  color: #58ff94 !important;
+  box-shadow: 0 0 14px rgba(34,226,111,.16);
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action-orange span:first-child {
+  background: rgba(255,138,38,.10) !important;
+  border-color: rgba(255,138,38,.40) !important;
+  color: #ff9a3d !important;
+  box-shadow: 0 0 14px rgba(255,138,38,.18);
+}
+
+html[data-ui-theme="dark"] .fc-rosa-action-dark span:first-child {
+  background: rgba(85,166,255,.10) !important;
+  border-color: rgba(85,166,255,.34) !important;
+  color: #55a6ff !important;
+  box-shadow: 0 0 14px rgba(85,166,255,.16);
+}
+
 html[data-ui-theme="dark"] .fc-role-badge {
   background: rgba(9,14,31,.92) !important;
   border: 1px solid currentColor !important;

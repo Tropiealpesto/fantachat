@@ -7,13 +7,14 @@ import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
+import { supabase } from "../../lib/supabaseClient";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
 
 type Row = {
   player_id: string;
   player_name: string;
   team_name: string | null;
-  image_url: string | null;
+  image_url?: string | null;
   role: string;
   played_count: number;
   avg_points: number;
@@ -93,6 +94,38 @@ function PlayerAvatar({ row, size = 30 }: { row: Row; size?: number }) {
   return <RoleBadge role={row.role} />;
 }
 
+async function withCatalogImages(rows: Row[]) {
+  const ids = rows.map((row) => row.player_id).filter(Boolean);
+  if (ids.length === 0) return rows;
+
+  const { data: players } = await supabase
+    .from("real_players")
+    .select("id,image_url,real_team_id")
+    .in("id", ids);
+
+  const playerImages = new Map<string, string | null>();
+  const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
+
+  let teamImages = new Map<string, string | null>();
+  if (teamIds.length > 0) {
+    const { data: teams } = await supabase
+      .from("real_teams")
+      .select("id,logo_url")
+      .in("id", teamIds);
+
+    teamImages = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+  }
+
+  for (const player of players ?? []) {
+    playerImages.set(player.id, player.image_url ?? teamImages.get(player.real_team_id ?? "") ?? null);
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    image_url: row.image_url ?? playerImages.get(row.player_id) ?? null,
+  }));
+}
+
 export default function Statistiche() {
   const app = useRequireApp(true);
   const router = useRouter();
@@ -110,7 +143,8 @@ export default function Statistiche() {
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
     rpcJson<Row[]>("get_player_stats", { p_league_competition_id: app.activeLeagueCompetitionId }, [])
-      .then((r) => setRows(r ?? []))
+      .then((r) => withCatalogImages(r ?? []))
+      .then((r) => setRows(r))
       .finally(() => setLoading(false));
   }, [app.ready, app.activeLeagueCompetitionId]);
 
