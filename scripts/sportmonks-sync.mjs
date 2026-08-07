@@ -48,6 +48,20 @@ for (const key of ["SPORTMONKS_API_TOKEN", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE
   }
 }
 
+function supabaseJwtRole(key) {
+  try {
+    const payload = JSON.parse(Buffer.from(key.split(".")[1] ?? "", "base64url").toString("utf8"));
+    return payload.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
+if (supabaseJwtRole(env.SUPABASE_SERVICE_ROLE_KEY) !== "service_role") {
+  console.error("SUPABASE_SERVICE_ROLE_KEY non sembra una service role key valida.");
+  process.exit(1);
+}
+
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
@@ -56,11 +70,12 @@ const args = new Set(process.argv.slice(2));
 const onlyCatalog = args.has("--catalog");
 const onlyFixtures = args.has("--fixtures");
 const onlyStats = args.has("--stats");
+const onlyExpectedLineups = args.has("--expected-lineups");
 const selectedMatchday = Number(
   process.argv.find((arg) => arg.startsWith("--matchday="))?.split("=")[1] ?? 0
 );
 
-const shouldRunAll = !onlyCatalog && !onlyFixtures && !onlyStats;
+const shouldRunAll = !onlyCatalog && !onlyFixtures && !onlyStats && !onlyExpectedLineups;
 
 async function sportmonks(path, params = {}) {
   const url = new URL(SPORTMONKS_BASE_URL + path);
@@ -134,6 +149,15 @@ function roleFromPosition(position) {
   if (name.includes("defender")) return "D";
   if (name.includes("midfielder")) return "C";
   if (name.includes("attacker") || name.includes("forward")) return "A";
+  return null;
+}
+
+function roleFromPositionId(positionId) {
+  const id = Number(positionId);
+  if (id === 24) return "P";
+  if (id === 25) return "D";
+  if (id === 26) return "C";
+  if (id === 27) return "A";
   return null;
 }
 
@@ -225,8 +249,6 @@ async function ensureSerieA() {
       name: currentSeason.name ?? "Stagione corrente",
       total_matchdays: 38,
       active: true,
-      starts_at: currentSeason.starting_at ?? null,
-      ends_at: currentSeason.ending_at ?? null,
     },
     "id,name,sportmonks_id"
   );
@@ -635,6 +657,97 @@ async function importStats(competition, season) {
   return totals;
 }
 
+function expectedLineupStatus(typeId) {
+  const id = Number(typeId);
+  if (id === 77614) return "starter";
+  if (id === 77615) return "candidate";
+  if (id === 11) return "starter";
+  if (id === 12) return "substitute";
+  return "unknown";
+}
+
+async function fixturesForExpectedLineups(competition, season) {
+  let query = supabase
+    .from("fixtures")
+    .select("id,sportmonks_id,matchday_number,starts_at,name")
+    .eq("competition_id", competition.id)
+    .eq("season_id", season.id)
+    .not("sportmonks_id", "is", null);
+
+  if (selectedMatchday > 0) {
+    query = query.eq("matchday_number", selectedMatchday);
+  } else {
+    const from = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    const to = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    query = query.gte("starts_at", from).lte("starts_at", to);
+  }
+
+  const { data, error } = await query.order("starts_at", { ascending: true });
+  if (error) throw new Error(`fixtures expected lineups select: ${error.message}`);
+  return data ?? [];
+}
+
+async function importExpectedLineupsForFixture(competition, season, fixture) {
+  const detail = await sportmonks(`/fixtures/${fixture.sportmonks_id}`, {
+    include: "expectedLineups",
+  });
+  const rows = detail.expectedlineups ?? detail.expectedLineups ?? [];
+  let count = 0;
+
+  for (const item of rows) {
+    if (!item?.team_id || !item?.player_name) continue;
+
+    const realTeam = await findTeamBySportmonks(competition.id, item.team_id);
+    const realPlayer = item.player_id
+      ? await findPlayerBySportmonks(competition.id, item.player_id)
+      : null;
+
+    await upsertByLookup(
+      "fixture_expected_lineups",
+      {
+        competition_id: competition.id,
+        season_id: season.id,
+        sportmonks_fixture_id: fixture.sportmonks_id,
+        sportmonks_team_id: item.team_id,
+        sportmonks_player_id: item.player_id ?? null,
+        type_id: item.type_id ?? null,
+      },
+      {
+        fixture_id: fixture.id,
+        matchday_number: fixture.matchday_number,
+        real_team_id: realTeam?.id ?? null,
+        real_player_id: realPlayer?.id ?? null,
+        player_name: item.player_name,
+        jersey_number: item.jersey_number ?? null,
+        role: roleFromPositionId(item.position_id),
+        sportmonks_position_id: item.position_id ?? null,
+        sportmonks_detailed_position_id: item.detailed_position_id ?? null,
+        formation_field: item.formation_field ?? null,
+        formation_position: item.formation_position ?? null,
+        lineup_status: expectedLineupStatus(item.type_id),
+        raw: item,
+        updated_at: new Date().toISOString(),
+      },
+      "id"
+    );
+
+    count += 1;
+  }
+
+  return count;
+}
+
+async function importExpectedLineups(competition, season) {
+  const fixtures = await fixturesForExpectedLineups(competition, season);
+  const totals = { fixtures: fixtures.length, expectedLineups: 0 };
+
+  for (const fixture of fixtures) {
+    totals.expectedLineups += await importExpectedLineupsForFixture(competition, season, fixture);
+  }
+
+  return totals;
+}
+
 async function main() {
   const { competition, season } = await ensureSerieA();
   const summary = {
@@ -643,6 +756,7 @@ async function main() {
     catalog: null,
     fixtures: null,
     stats: null,
+    expectedLineups: null,
   };
 
   if (shouldRunAll || onlyCatalog) {
@@ -655,6 +769,10 @@ async function main() {
 
   if (shouldRunAll || onlyStats) {
     summary.stats = await importStats(competition, season);
+  }
+
+  if (onlyExpectedLineups) {
+    summary.expectedLineups = await importExpectedLineups(competition, season);
   }
 
   console.log(JSON.stringify(summary, null, 2));

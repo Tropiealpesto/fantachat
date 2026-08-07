@@ -7,7 +7,7 @@ import CompetitionBadge from "../components/CompetitionBadge";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
 
-type Tab = "competizioni" | "statistiche" | "top" | "partite";
+type Tab = "competizioni" | "giornate" | "statistiche" | "top" | "partite";
 
 type Competition = {
   id: string;
@@ -156,7 +156,7 @@ export default function SuperadminPage() {
     <Shell app={app}>
       <div style={s.hero}>
         <h1 style={s.title}>Superadmin</h1>
-        <p style={s.subtitle}>Gestisci competizioni globali, statistiche, top squadre e partite.</p>
+        <p style={s.subtitle}>Gestisci competizioni globali, giornate, statistiche, top squadre e partite.</p>
       </div>
 
       {err && <div style={s.err}>{err}</div>}
@@ -164,6 +164,7 @@ export default function SuperadminPage() {
 
       <div style={s.tabs}>
         <TabButton active={tab === "competizioni"} onClick={() => setTab("competizioni")}>Competizioni</TabButton>
+        <TabButton active={tab === "giornate"} onClick={() => setTab("giornate")}>Giornate</TabButton>
         <TabButton active={tab === "statistiche"} onClick={() => setTab("statistiche")}>Statistiche</TabButton>
         <TabButton active={tab === "top"} onClick={() => setTab("top")}>Top squadre</TabButton>
         <TabButton active={tab === "partite"} onClick={() => setTab("partite")}>Partite</TabButton>
@@ -188,6 +189,10 @@ export default function SuperadminPage() {
           setErr={setErr}
           setMsg={setMsg}
         />
+      )}
+
+      {tab === "giornate" && selectedCompetition && (
+        <GiornateTab competition={selectedCompetition} matchday={matchday} setErr={setErr} setMsg={setMsg} />
       )}
 
       {tab === "statistiche" && selectedCompetition && (
@@ -462,6 +467,118 @@ function CompetizioniTab(props: {
             </div>
           ))
         )}
+      </div>
+    </section>
+  );
+}
+
+function GiornateTab(props: {
+  competition: Competition;
+  matchday: number;
+  setErr: (x: string | null) => void;
+  setMsg: (x: string | null) => void;
+}) {
+  const [startAt, setStartAt] = useState(() => {
+    const d = new Date(Date.now() + 5 * 60 * 1000);
+    d.setSeconds(0, 0);
+    return d.toISOString().slice(0, 16);
+  });
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const seasonId = props.competition.active_season_id;
+
+  async function openMatchday() {
+    props.setErr(null);
+    props.setMsg(null);
+
+    if (!seasonId) {
+      props.setErr("Competizione senza stagione attiva.");
+      return;
+    }
+
+    setBusy("open");
+
+    const { data, error } = await supabase.rpc("superadmin_open_matchday_for_competition", {
+      p_competition_id: props.competition.id,
+      p_season_id: seasonId,
+      p_number: props.matchday,
+      p_start_at: new Date(startAt).toISOString(),
+    });
+
+    setBusy(null);
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg(String(data ?? "Giornata aperta"));
+  }
+
+  async function closeMatchday() {
+    props.setErr(null);
+    props.setMsg(null);
+
+    if (!seasonId) {
+      props.setErr("Competizione senza stagione attiva.");
+      return;
+    }
+
+    setBusy("close");
+
+    const { data, error } = await supabase.rpc("superadmin_close_matchday_for_competition", {
+      p_competition_id: props.competition.id,
+      p_season_id: seasonId,
+      p_number: props.matchday,
+    });
+
+    setBusy(null);
+
+    if (error) {
+      props.setErr(error.message);
+      return;
+    }
+
+    props.setMsg(String(data ?? "Giornata chiusa"));
+  }
+
+  return (
+    <section style={s.card}>
+      <h2 style={s.cardTitle}>Gestione giornata</h2>
+      <p style={s.muted}>
+        Apertura e chiusura sono globali per la competizione. Gli slot vengono generati per ogni lega attiva, dall’ultimo al primo in classifica.
+      </p>
+
+      <div style={s.infoStrip}>
+        <span>{props.competition.name}</span>
+        <b>Giornata {props.matchday}</b>
+      </div>
+
+      <label style={s.label}>Inizio primo slot</label>
+      <input
+        type="datetime-local"
+        value={startAt}
+        onChange={(e) => setStartAt(e.target.value)}
+        style={s.input}
+      />
+
+      <div style={s.actionsBetween}>
+        <button
+          type="button"
+          onClick={openMatchday}
+          disabled={Boolean(busy)}
+          style={s.saveBtn}
+        >
+          {busy === "open" ? "Apertura..." : "Apri giornata e crea slot"}
+        </button>
+        <button
+          type="button"
+          onClick={closeMatchday}
+          disabled={Boolean(busy)}
+          style={s.dangerBtn}
+        >
+          {busy === "close" ? "Chiusura..." : "Chiudi e ricalcola"}
+        </button>
       </div>
     </section>
   );
@@ -996,6 +1113,7 @@ const s: Record<string, React.CSSProperties> = {
   saveBtn: { border: "none", borderRadius: 13, background: "#16a34a", color: "white", padding: 14, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   topRow: { display: "grid", gridTemplateColumns: "42px 1fr", gap: 10, alignItems: "center", padding: 12, borderRadius: 13, background: "#f9fafb", fontWeight: 900 },
   actionsBetween: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 },
+  infoStrip: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: 12, padding: "10px 12px", fontSize: 13, fontWeight: 900 },
   smallTitle: { margin: 0, fontSize: 16, fontWeight: 1000, color: "#111827" },
   fixturePreview: { display: "grid", gridTemplateColumns: "1fr 34px 1fr", gap: 8, alignItems: "center", textAlign: "center", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 14, padding: 12 },
   fixtureRow: { display: "grid", gridTemplateColumns: "1fr 78px", gap: 8, alignItems: "center", padding: 12, border: "1px solid #e5e7eb", borderRadius: 13 },

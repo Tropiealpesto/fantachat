@@ -28,6 +28,16 @@ type Matchday = {
   id: string;
   number: number;
   status: string;
+  slot_start?: string | null;
+  slot_end?: string | null;
+};
+
+type LineupSlot = {
+  id: string;
+  order: number;
+  starts_at: string;
+  ends_at: string;
+  is_open: boolean;
 };
 
 type LineupData = {
@@ -52,6 +62,7 @@ type FormData = {
   players: Player[];
   coach_enabled: boolean;
   coaches: Coach[];
+  slot?: LineupSlot | null;
   lineup: LineupData | null;
 };
 
@@ -100,6 +111,7 @@ const EMPTY_FORM: FormData = {
   players: [],
   coach_enabled: false,
   coaches: [],
+  slot: null,
   lineup: null,
 };
 
@@ -125,6 +137,14 @@ function shortName(name?: string | null) {
   if (parts.length <= 2) return clean;
 
   return `${parts[0]} ${parts[1]?.[0] ?? ""}.`;
+}
+
+function hour(value?: string | null) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function fallbackColor(seed?: string | null) {
@@ -462,17 +482,6 @@ export default function RosaPage() {
 
       if (error) throw error;
 
-      try {
-        await supabase.rpc("send_chat_message", {
-          p_league_id: app.activeLeagueId,
-          p_league_competition_id: app.activeLeagueCompetitionId,
-          p_matchday_id: form.matchday.id,
-          p_content: "ha caricato la formazione",
-          p_kind: "lineup",
-          p_meta: null,
-        });
-      } catch {}
-
       setSaved(true);
       setMsg("Rosa inviata");
     } catch (e: any) {
@@ -485,7 +494,8 @@ export default function RosaPage() {
   if (!app.ready || loading) return <LoadingScreen />;
 
   const accent = app.competitionTheme.primary;
-  const locked = saved || !form.is_participant || !form.matchday;
+  const slotOpen = Boolean(form.slot?.is_open);
+  const locked = saved || !form.is_participant || !form.matchday || !slotOpen;
 
   const selectedCount = selectedIds.length + (form.coach_enabled && selectedCoachId ? 1 : 0);
   const completionLabel = `${selectedCount}/${totalRequired}`;
@@ -567,6 +577,16 @@ export default function RosaPage() {
             <div style={s.warn}>Nessuna giornata aperta.</div>
           )}
 
+          {form.is_participant && form.matchday && !form.slot && (
+            <div style={s.warn}>Il tuo slot formazione non è ancora disponibile.</div>
+          )}
+
+          {form.slot && !slotOpen && !saved && (
+            <div style={s.warn}>
+              Il tuo slot è {hour(form.slot.starts_at)}-{hour(form.slot.ends_at)}.
+            </div>
+          )}
+
           {saved && (
             <div className="fc-dark-neon-message" style={s.ok}>
               Rosa già inviata. Per modificarla serve il reset admin.
@@ -602,11 +622,11 @@ export default function RosaPage() {
             <button
               type="button"
               onClick={save}
-              disabled={saving || !form.is_participant || !form.matchday}
+              disabled={saving || locked}
               style={{
                 ...s.btn,
                 background:
-                  form.is_participant && form.matchday ? accent : "#d1d5db",
+                  !locked ? accent : "#d1d5db",
               }}
             >
               {saving ? "Salvataggio..." : "Salva formazione"}

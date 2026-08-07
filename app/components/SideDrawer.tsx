@@ -79,8 +79,7 @@ export default function SideDrawer(props: Props) {
               <Section style={{ marginTop: 18 }}>Admin competizione</Section>
               <div style={s.adminbox}>
                 <AdminLink href="/admin" label="Dashboard admin" onClose={props.onClose} icon={<><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>} />
-                <AdminLink href="/admin/giornata" label="Giornata" onClose={props.onClose} icon={<><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></>} />
-                <AdminLink href="/admin/voti" label="Voti" onClose={props.onClose} icon={<><path d="M5 12l4 4L19 6" /></>} />
+                <AdminLink href="/admin/formazioni" label="Formazioni e slot" onClose={props.onClose} icon={<><path d="M5 5h14M5 12h14M5 19h14" /><path d="M8 3v4M16 10v4M12 17v4" /></>} />
               </div>
             </>
           )}

@@ -7,21 +7,15 @@ import { useRequireLeagueAdmin } from "../hooks/useRequireApp";
 
 const ADMIN_LINKS = [
   {
-    href: "/admin/giornata",
-    title: "Giornata",
-    desc: "Apri, chiudi e finalizza il turno corrente.",
-    icon: "G",
-  },
-  {
-    href: "/admin/voti",
-    title: "Voti",
-    desc: "Correzioni manuali sui giocatori schierati.",
-    icon: "V",
+    href: "/admin/formazioni",
+    title: "Formazioni e slot",
+    desc: "Controlla gli invii, resetta formazioni e imposta la durata slot.",
+    icon: "F",
   },
   {
     href: "/admin/competizione/nuova",
     title: "Aggiungi competizione",
-    desc: "Crea una nuova competizione per la lega.",
+    desc: "Scegli una competizione globale per la tua lega.",
     icon: "+",
   },
 ];
@@ -42,7 +36,7 @@ export default function AdminHome() {
           <CompetitionBadge name={app.competitionName} type={app.competitionType} />
           <h1 style={s.title}>Admin competizione</h1>
           <p style={s.subtitle}>
-            Gestisci solo le operazioni della competizione selezionata.
+            Gestisci la tua lega. Giornate, dati e punteggi sono coordinati dal superadmin.
           </p>
         </section>
 

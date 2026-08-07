@@ -20,6 +20,9 @@ Nota importante: in FantaChat il portiere non e il singolo calciatore. L'utente 
 | Statistiche giocatore | Fixture lineups details | `player_stats` | Aggregare per giocatore, competizione, stagione, giornata. |
 | Statistiche portiere squadra | Fixture team/player stats | `player_stats` della riga `P` squadra | Calcolare sul team, non sul singolo portiere. |
 | Statistiche allenatore | Fixture team stats + risultato | `coach_stats` | Calcolare per squadra reale e giornata. |
+| Probabili formazioni | Fixture expectedLineups | `fixture_expected_lineups` | Importare titolari previsti e candidati quando Sportmonks li rende disponibili. |
+| Foto giocatori | Player `image_path` | `real_players.image_url` | Usare nelle schermate statistiche/dettaglio, non obbligatorio in rosa se si preferiscono maglie. |
+| Foto allenatori | Coach `image_path` | `real_coaches.image_url` | Usare in dettaglio allenatore o statistiche, non sul campo principale. |
 
 ## Competizioni e stagioni
 
@@ -135,6 +138,25 @@ Nota importante: in FantaChat il portiere non e il singolo calciatore. L'utente 
 | 5 | Salvare statistiche allenatore per team Sportmonks id. |
 | 6 | Eseguire ricalcolo FantaChat della giornata. |
 
+## Import probabili formazioni
+
+| Sportmonks | FantaChat | Regola |
+| --- | --- | --- |
+| `expectedLineups` | `fixture_expected_lineups` | Include dedicato sulle fixture future/vicine. |
+| `type_id = 77614` | `lineup_status = 'starter'` | Probabile titolare. |
+| `type_id = 77615` | `lineup_status = 'candidate'` | Candidato / alternativa. |
+| `formation_field` | posizione campo | Utile per mostrare la probabile disposizione. |
+| `formation_position` | ordinamento | Utile per ordinare gli undici. |
+| `player_id` | `real_players.sportmonks_id` | Aggancio al giocatore FantaChat se importato. |
+| `team_id` | `real_teams.sportmonks_id` | Aggancio alla squadra reale. |
+
+Uso consigliato in app:
+
+- in Rosa, mostrare un indicatore piccolo "probabile titolare" o "in dubbio";
+- nel dettaglio giocatore, mostrare se e atteso titolare nella prossima partita;
+- evitare che la probabile formazione diventi una regola vincolante: deve aiutare la scelta, non bloccarla;
+- per il portiere FantaChat, continuare a ragionare sulla squadra, anche se Sportmonks mostra il nome del portiere previsto.
+
 ## Campi Sportmonks da confermare
 
 Questi campi restano aperti perche vanno agganciati al nome/type id preciso che confermeremo con altri output Sportmonks o dalla documentazione del piano attivo.
@@ -154,4 +176,5 @@ Questi campi restano aperti perche vanno agganciati al nome/type id preciso che 
 2. Creare script import Serie A: squadre, D/C/A, portieri fantasy di squadra, allenatori.
 3. Creare script import calendario.
 4. Creare script import statistiche giornata.
-5. Fare test su una giornata chiusa della stagione precedente.
+5. Creare sync probabili formazioni per le partite vicine.
+6. Fare test su una giornata chiusa della stagione precedente.

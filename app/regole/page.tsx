@@ -53,133 +53,77 @@ export default function RegolePage() {
           </p>
         </section>
 
-        <RuleCard title="Regole generali">
+        <RuleCard title="Come funziona">
           <p>
-            La formazione deve essere inserita per ogni giornata aperta.
+            Ogni giornata ha una finestra di scelta ordinata. Il primo a scegliere
+            è l’ultimo in classifica, poi si risale fino al primo.
           </p>
 
           <p>
-            L’ordine di scelta segue la classifica della competizione: sceglie
-            per primo l’ultimo in classifica, poi il penultimo, fino ad arrivare
-            al primo.
+            Se chi sceglie prima di te invia la formazione in anticipo, il tuo
+            turno parte subito. Se invece perdi il tuo slot, puoi comunque
+            inviare la formazione più tardi: perdi solo la priorità di scelta.
           </p>
 
           <p>
-            Durante la scelta non è possibile inserire un giocatore già selezionato
-            da un altro partecipante nella stessa giornata.
-          </p>
-
-          <p>
-            Il giocatore appartenente a una Top squadra della giornata è
-            considerato capitano.
-          </p>
-
-          <p>
-            Ogni formazione può avere al massimo un capitano, salvo diversa
-            indicazione della competizione.
-          </p>
-
-          <p>
-            Le giornate vengono aperte e chiuse dall’admin della lega. Il
-            superadmin gestisce invece squadre, giocatori, partite, Top squadre
-            e statistiche reali.
+            Una volta inviata, la formazione resta bloccata. Per modificarla serve
+            il reset dell’admin della lega.
           </p>
         </RuleCard>
 
-        <RuleCard title="Serie A">
+        <RuleCard title="Scelta giocatori">
           <p>
-            La Serie A è la competizione principale.
-          </p>
-
-          <h3 style={s.subTitle}>Formazione</h3>
-
-          <ul style={s.list}>
-            <li>1 Portiere</li>
-            <li>1 Difensore</li>
-            <li>1 Centrocampista</li>
-            <li>1 Attaccante</li>
-          </ul>
-
-          <p>
-            Totale: <strong>4 giocatori</strong>.
-          </p>
-
-          <h3 style={s.subTitle}>Top squadre</h3>
-
-          <p>
-            Le Top squadre sono le prime 6 squadre del campionato alla giornata
-            precedente.
-          </p>
-
-          <p>
-            Alla prima giornata di mercato vengono considerate le Top 6
-            dell’ultima giornata del campionato precedente.
-          </p>
-        </RuleCard>
-
-        <RuleCard title="Mondiale 2026">
-          <p>
-            Il Mondiale 2026 è una competizione basata sulle nazionali
-            partecipanti al torneo.
-          </p>
-
-          <h3 style={s.subTitle}>Formazione</h3>
-
-          <p>
-            Configurazione consigliata:
+            In ogni giornata puoi schierare solo giocatori disponibili nella
+            competizione attiva.
           </p>
 
           <ul style={s.list}>
-            <li>1 Portiere</li>
-            <li>2 Difensori</li>
-            <li>2 Centrocampisti</li>
-            <li>2 Attaccanti</li>
+            <li>Non puoi scegliere un giocatore già preso da un altro partecipante.</li>
+            <li>Puoi schierare al massimo un giocatore per squadra reale.</li>
+            <li>Puoi schierare al massimo un giocatore proveniente dalle Top 6.</li>
+            <li>Il portiere rappresenta la squadra, non il singolo portiere.</li>
           </ul>
 
           <p>
-            Totale: <strong>7 giocatori</strong>.
-          </p>
-
-          <p>
-            L’admin della lega può modificare il numero di giocatori per ruolo
-            quando crea la competizione.
-          </p>
-
-          <h3 style={s.subTitle}>Top squadre</h3>
-
-          <ul style={s.list}>
-            <li>Fase a gironi: le 12 teste di serie dei gironi</li>
-            <li>Sedicesimi: le 12 squadre classificate prime nel proprio girone</li>
-            <li>Ottavi: le 8 squadre con le vittorie più schiaccianti</li>
-            <li>Quarti: le 4 squadre con le vittorie più schiaccianti</li>
-            <li>Semifinali: la squadra con la vittoria più schiacciante</li>
-            <li>Finale e finalina: la squadra con la vittoria più schiacciante</li>
-          </ul>
-        </RuleCard>
-
-        <RuleCard title="Coppe">
-          <p>
-            Le coppe possono avere formati diversi in base alla competizione.
-          </p>
-
-          <p>
-            La formazione, il numero di giornate e il numero di Top squadre
-            possono variare.
-          </p>
-
-          <p>
-            Le regole specifiche vengono definite al momento della creazione
-            della competizione.
+            Nella Serie A base la formazione è composta da 1 portiere, 1 difensore,
+            1 centrocampista e 1 attaccante. Alcune competizioni possono avere una
+            composizione diversa.
           </p>
         </RuleCard>
 
-        <RuleCard title="Champions">
+        <RuleCard title="Top squadre">
           <p>
-            La modalità Champions è in fase di sviluppo.
+            Le Top squadre sono le squadre considerate più forti o meglio piazzate
+            per quella giornata. Servono a rendere la scelta più strategica.
           </p>
 
           <p>
-            Quando sarà attiva, avrà una struttura dedicata.
+            In Serie A coincidono con le prime 6 squadre della classifica alla
+            giornata precedente. Alla prima giornata vengono usati i riferimenti
+            stabiliti dal superadmin.
+          </p>
+
+          <p>
+            Il limite Top 6 riguarda solo i giocatori. L’allenatore, quando
+            previsto, è uno slot separato.
+          </p>
+        </RuleCard>
+
+        <RuleCard title="Campionati e coppe">
+          <p>
+            FantaChat può gestire campionati, coppe e tornei con regole diverse.
+            Le informazioni globali della competizione sono uguali per tutte le
+            leghe che la utilizzano.
+          </p>
+
+          <p>
+            Numero di giornate, calendario e Top squadre sono definiti a livello
+            globale dal superadmin.
+          </p>
+
+          <p>
+            Quando l’admin aggiunge la competizione alla propria lega sceglie
+            partecipanti, composizione della formazione e modalità di punteggio.
           </p>
         </RuleCard>
 
@@ -320,6 +264,41 @@ export default function RegolePage() {
             </ul>
           </RuleCard>
         )}
+
+        <RuleCard title="Ruolo dell'admin">
+          <p>
+            L’admin gestisce la propria lega, non l’intera competizione.
+          </p>
+
+          <ul style={s.list}>
+            <li>Aggiunge una competizione disponibile alla lega.</li>
+            <li>Sceglie quali partecipanti prendono parte alla competizione.</li>
+            <li>Sceglie la modalità: classico, classico con allenatore, statistico o statistico con allenatore.</li>
+            <li>Imposta la durata unica dello slot di scelta per tutti i partecipanti.</li>
+            <li>Controlla le formazioni inviate e può resettarle se serve.</li>
+          </ul>
+
+          <p>
+            L’admin non inserisce statistiche reali, non apre giornate e non
+            chiude i punteggi.
+          </p>
+        </RuleCard>
+
+        <RuleCard title="Ruolo del superadmin">
+          <p>
+            Il superadmin coordina la competizione globale, così tutte le leghe
+            possono andare avanti anche senza interventi continui dei singoli
+            admin.
+          </p>
+
+          <ul style={s.list}>
+            <li>Apre e chiude le giornate della competizione.</li>
+            <li>Genera gli slot di scelta per tutte le leghe attive.</li>
+            <li>Importa o aggiorna squadre, giocatori, allenatori, calendario e statistiche.</li>
+            <li>Definisce le Top squadre della giornata.</li>
+            <li>Ricalcola classifiche, punteggi live e risultati finali.</li>
+          </ul>
+        </RuleCard>
       </main>
 
       <BottomNav />
