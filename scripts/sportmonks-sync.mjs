@@ -375,10 +375,12 @@ async function importTeamsPlayersAndCoaches(competition, season) {
 }
 
 async function getOrCreateMatchday(seasonId, number) {
-  return upsertByLookup(
+  const existing = await selectOne("matchdays", { season_id: seasonId, number }, "id,number,status");
+  if (existing?.id) return existing;
+
+  return insertOne(
     "matchdays",
-    { season_id: seasonId, number },
-    { status: "open" },
+    { season_id: seasonId, number, status: "scheduled" },
     "id,number,status"
   );
 }
