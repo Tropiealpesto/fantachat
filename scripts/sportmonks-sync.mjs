@@ -787,7 +787,7 @@ export async function runSportmonksSync(options = {}) {
     summary.stats = await importStats(competition, season);
   }
 
-  if (onlyExpectedLineups) {
+  if (shouldRunAll || onlyExpectedLineups) {
     summary.expectedLineups = await importExpectedLineups(competition, season);
   }
 

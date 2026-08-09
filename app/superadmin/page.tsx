@@ -73,6 +73,7 @@ export default function SuperadminPage() {
   const [tab, setTab] = useState<Tab>("competizioni");
   const [checking, setChecking] = useState(true);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [syncingSportmonks, setSyncingSportmonks] = useState(false);
 
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [competitionId, setCompetitionId] = useState("");
@@ -137,6 +138,44 @@ export default function SuperadminPage() {
     await loadCompetitions();
   }
 
+  async function syncSportmonks() {
+    setMsg(null);
+    setErr(null);
+    setSyncingSportmonks(true);
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+
+      if (!token) {
+        throw new Error("Sessione scaduta. Accedi di nuovo.");
+      }
+
+      const response = await fetch("/api/superadmin/sportmonks-sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload?.ok !== true) {
+        throw new Error(payload?.error ?? "Aggiornamento Sportmonks non riuscito.");
+      }
+
+      const seconds = Math.max(1, Math.round(Number(payload.duration_ms ?? 0) / 1000));
+      setMsg(`Dati Sportmonks aggiornati ✅ (${seconds}s).`);
+      await loadCompetitions();
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSyncingSportmonks(false);
+    }
+  }
+
   if (!app.ready || checking) {
     return <Shell app={app}><div style={s.card}>Caricamento superadmin...</div></Shell>;
   }
@@ -158,6 +197,26 @@ export default function SuperadminPage() {
         <h1 style={s.title}>Superadmin</h1>
         <p style={s.subtitle}>Gestisci competizioni globali, giornate, statistiche, top squadre e partite.</p>
       </div>
+
+      <section style={s.syncCard}>
+        <div>
+          <h2 style={s.syncTitle}>Dati Sportmonks</h2>
+          <p style={s.syncText}>Aggiorna catalogo, calendario, probabili formazioni e statistiche recenti/live.</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={syncSportmonks}
+          disabled={syncingSportmonks}
+          style={{
+            ...s.syncBtn,
+            opacity: syncingSportmonks ? 0.65 : 1,
+            cursor: syncingSportmonks ? "default" : "pointer",
+          }}
+        >
+          {syncingSportmonks ? "Aggiorno..." : "Aggiorna"}
+        </button>
+      </section>
 
       {err && <div style={s.err}>{err}</div>}
       {msg && <div style={s.ok}>{msg}</div>}
@@ -1078,6 +1137,29 @@ const s: Record<string, React.CSSProperties> = {
   hero: { background: "linear-gradient(160deg,#14532d,#16a34a)", color: "white", borderRadius: 22, padding: 18, boxShadow: "0 8px 24px rgba(22,163,74,0.20)" },
   title: { margin: 0, fontSize: 28, fontWeight: 1000 },
   subtitle: { margin: "8px 0 0", color: "rgba(255,255,255,0.78)", fontWeight: 700, lineHeight: 1.4 },
+  syncCard: {
+    background: "linear-gradient(135deg,#ffffff 0%,#fff8ef 100%)",
+    border: "1px solid #fed7aa",
+    borderRadius: 18,
+    padding: 14,
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    alignItems: "center",
+    gap: 12,
+    boxShadow: "0 4px 16px rgba(15,23,42,0.05)",
+  },
+  syncTitle: { margin: 0, color: "#0f172a", fontSize: 16, fontWeight: 1000 },
+  syncText: { margin: "4px 0 0", color: "#64748b", fontSize: 12.5, fontWeight: 750, lineHeight: 1.35 },
+  syncBtn: {
+    border: "1px solid #d97706",
+    borderRadius: 13,
+    background: "#e07b1a",
+    color: "white",
+    padding: "11px 14px",
+    fontWeight: 1000,
+    fontFamily: "inherit",
+    boxShadow: "0 8px 18px rgba(224,123,26,.18)",
+  },
   tabs: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
   tab: { padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, display: "grid", gap: 12, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
