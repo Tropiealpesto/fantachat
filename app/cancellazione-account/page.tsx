@@ -4,7 +4,7 @@ const sections: LegalSection[] = [
   {
     title: "Come richiederla",
     body: [
-      "Per chiedere la cancellazione dell'account usa il canale di contatto ufficiale indicato dal gestore dell'app o invia una richiesta dall'indirizzo email associato al tuo account FantaChat.",
+      "Per chiedere la cancellazione dell'account usa il canale di contatto ufficiale indicato dal gestore dell'app (fantachat.app.2026@gmail.com) o invia una richiesta dall'indirizzo email associato al tuo account FantaChat.",
       "Nella richiesta indica che vuoi cancellare l'account e, se possibile, il nome della lega o della squadra collegata. Non inviare password o dati sensibili non necessari.",
     ],
   },

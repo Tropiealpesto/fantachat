@@ -59,7 +59,7 @@ export default function Chat() {
         }
       />
 
-      <div style={s.page}>
+      <div className="fc-chat-page-frame" style={s.page}>
         <ChatPage
           leagueId={app.activeLeagueId}
           currentUserId={app.userId}
@@ -75,7 +75,11 @@ export default function Chat() {
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    height: "calc(100dvh - var(--appbar-h) - var(--appbar-safe-top) - var(--nav-h))",
+    position: "fixed",
+    top: "calc(var(--appbar-h) + var(--appbar-safe-top))",
+    left: 0,
+    right: 0,
+    bottom: "calc(var(--nav-h) + var(--safe-bottom))",
     background: "#f4f7f4",
     overflow: "hidden",
   },

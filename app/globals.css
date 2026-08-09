@@ -406,6 +406,11 @@ textarea:focus-visible {
   background: color-mix(in srgb, var(--brand-orange) 12%, white);
 }
 
+.fc-chat-page-frame + .fc-bottom-nav {
+  height: calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom: calc(6px + var(--safe-bottom));
+}
+
 .fc-bottom-icon {
   position: relative;
   display: grid;
@@ -852,6 +857,18 @@ html[data-ui-theme="dark"] .fc-dark-neon-info-card {
   background: rgba(4,8,22,.72) !important;
   border-color: rgba(91,110,151,.32) !important;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.018), 0 0 24px rgba(34,226,111,.05) !important;
+}
+
+html[data-ui-theme="dark"] .fc-rosa-orange-panel {
+  border-color: rgba(255,138,38,.48) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,138,38,.08),
+    0 0 20px rgba(255,138,38,.08) !important;
+}
+
+html[data-ui-theme="dark"] .fc-player-avatar {
+  border-color: rgba(248,250,252,.16) !important;
+  box-shadow: 0 0 14px rgba(34,226,111,.12) !important;
 }
 
 html[data-ui-theme="dark"] .fc-dark-neon-info-icon {

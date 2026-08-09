@@ -16,6 +16,7 @@ type LineupPlayer = {
   name: string;
   team?: string | null;
   points: number | null;
+  image_url?: string | null;
 };
 
 type HomeData = {
@@ -67,6 +68,7 @@ type TopPlayer = {
   role: string;
   team: string;
   points: number;
+  image_url?: string | null;
 };
 
 type Recap = {
@@ -130,6 +132,82 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
       {meta.label}
     </span>
   );
+}
+
+function LineupAvatar({ player, size = 24 }: { player: LineupPlayer; size?: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (player.image_url && !failed) {
+    return (
+      <span style={{ ...s.lineupAvatar, width: size, height: size }}>
+        <img
+          src={player.image_url}
+          alt=""
+          style={s.lineupAvatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+        <span style={s.lineupAvatarRole}>{player.role}</span>
+      </span>
+    );
+  }
+
+  return <RoleDot role={player.role} size={size} />;
+}
+
+function playerKey(role: string, name?: string | null, team?: string | null) {
+  return `${role}|${(name ?? "").trim().toLowerCase()}|${(team ?? "").trim().toLowerCase()}`;
+}
+
+async function withHomeImages(competitionId: string | null, data: HomeData): Promise<HomeData> {
+  if (!competitionId) return data;
+
+  const lineupPlayers = data.lineup?.players ?? [];
+  if (lineupPlayers.length === 0) return data;
+
+  const { data: players } = await supabase
+    .from("real_players")
+    .select("name,role,team,image_url,real_team_id")
+    .eq("competition_id", competitionId)
+    .eq("active", true);
+
+  const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
+  let logos = new Map<string, string | null>();
+
+  if (teamIds.length > 0) {
+    const { data: teams } = await supabase
+      .from("real_teams")
+      .select("id,logo_url")
+      .in("id", teamIds);
+
+    logos = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+  }
+
+  const images = new Map<string, string | null>();
+
+  for (const player of players ?? []) {
+    const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+    images.set(playerKey(player.role, player.name, player.team), image);
+    if (player.role === "P") images.set(playerKey(player.role, player.team, player.team), image);
+  }
+
+  return {
+    ...data,
+    lineup: data.lineup
+      ? {
+          ...data.lineup,
+          players: lineupPlayers.map((player) => ({
+            ...player,
+            image_url:
+              player.image_url ??
+              images.get(playerKey(player.role, player.name, player.team)) ??
+              images.get(playerKey(player.role, player.team, player.team)) ??
+              null,
+          })),
+        }
+      : data.lineup,
+  };
 }
 
 function ptsStyle(v: number | null | undefined): React.CSSProperties {
@@ -265,8 +343,10 @@ export default function Home() {
           emptyHome
         );
 
+        const enriched = await withHomeImages(app.competitionId, result ?? emptyHome);
+
         if (!cancelled) {
-          setData(result ?? emptyHome);
+          setData(enriched);
         }
       } catch (e: any) {
         if (!cancelled) {
@@ -290,6 +370,7 @@ export default function Home() {
     app.userId,
     app.activeLeagueId,
     app.activeLeagueCompetitionId,
+    app.competitionId,
   ]);
 
   useEffect(() => {
@@ -778,7 +859,7 @@ export default function Home() {
                       <div key={g.role} style={s.compactPitchRow}>
                         {g.items.map((p, i) => (
                           <div key={`${p.name}-${i}`} style={s.compactPlayer}>
-                            <RoleDot role={p.role} size={16} />
+                            <LineupAvatar player={p} size={18} />
 
                             <span style={s.compactPlayerName}>
                               {p.role === "P"
@@ -944,16 +1025,21 @@ export default function Home() {
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <h3 style={s.adminTitle}>Admin competizione</h3>
+              <h3 style={s.adminTitle}>Guida all'admin</h3>
 
               <p style={s.adminText}>
-                Gestisci giornate e formazioni di{" "}
-                {app.competitionName ?? "questa competizione"}.
+                Imposta la durata dello slot, controlla gli invii e resetta solo le formazioni da correggere.
               </p>
+
+              <ul style={s.adminList}>
+                <li>Definisci la durata dello slot.</li>
+                <li>Verifica che tutti abbiano inviato.</li>
+                <li>Resetta solo gli invii errati.</li>
+              </ul>
             </div>
 
             <button style={s.adminBtn} onClick={() => router.push("/admin")}>
-              Apri
+              Guida
             </button>
           </div>
         )}
@@ -1649,6 +1735,18 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 650,
     fontSize: 11.5,
     lineHeight: 1.35,
+  },
+
+  adminList: {
+    margin: "7px 0 0",
+    padding: 0,
+    listStyle: "none",
+    display: "grid",
+    gap: 3,
+    color: "#64748b",
+    fontWeight: 750,
+    fontSize: 11,
+    lineHeight: 1.25,
   },
 
   adminBtn: {

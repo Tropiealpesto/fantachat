@@ -82,10 +82,19 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 function PlayerAvatar({ row, size = 30 }: { row: Row; size?: number }) {
-  if (row.image_url) {
+  const [failed, setFailed] = useState(false);
+
+  if (row.image_url && !failed) {
     return (
       <span style={{ ...s.avatarWrap, width: size, height: size }}>
-        <img src={row.image_url} alt="" style={s.avatarImg} loading="lazy" />
+        <img
+          src={row.image_url}
+          alt=""
+          style={s.avatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
         <span style={s.avatarRole}>{row.role}</span>
       </span>
     );
@@ -579,11 +588,9 @@ function CompareMetric({ label, a, b, signed }: { label: string; a: number; b: n
   return (
     <div className="fc-stats-compare-metric" style={s.compareMetric}>
       <div style={s.compareMetricTop}>
-        <strong>{label}</strong>
-        <span>
-          <b>{text(a)}</b>
-          <i>{text(b)}</i>
-        </span>
+        <b style={s.compareValueLeft}>{text(a)}</b>
+        <strong style={s.compareLabel}>{label}</strong>
+        <b style={s.compareValueRight}>{text(b)}</b>
       </div>
       <div style={s.duelBars}>
         <span style={s.duelTrack}><span style={{ ...s.duelFillA, width: `${aWidth}%` }} /></span>
@@ -663,7 +670,10 @@ const s: Record<string, React.CSSProperties> = {
   miniSub: { display: "block", color: "#64748b", fontSize: 10.5, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   compareStats: { display: "grid", gap: 7 },
   compareMetric: { border: "1px solid #e5e7eb", background: "#fff", borderRadius: 13, padding: 10 },
-  compareMetricTop: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, color: "#0f172a", fontSize: 12.5, fontWeight: 950 },
+  compareMetricTop: { display: "grid", gridTemplateColumns: "minmax(52px,1fr) minmax(98px,auto) minmax(52px,1fr)", alignItems: "center", gap: 8, color: "#0f172a", fontSize: 12.5, fontWeight: 950 },
+  compareValueLeft: { color: "#15803d", fontSize: 14, fontWeight: 1000, fontVariantNumeric: "tabular-nums", textAlign: "left" },
+  compareLabel: { color: "#64748b", fontSize: 11.5, fontWeight: 950, textAlign: "center", lineHeight: 1.15 },
+  compareValueRight: { color: "#e07b1a", fontSize: 14, fontWeight: 1000, fontVariantNumeric: "tabular-nums", textAlign: "right" },
   duelBars: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 },
   duelTrack: { height: 5, borderRadius: 999, background: "#eef2f7", overflow: "hidden" },
   duelFillA: { display: "block", height: "100%", borderRadius: 999, background: "#15803d" },

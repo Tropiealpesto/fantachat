@@ -5,7 +5,7 @@ const sections: LegalSection[] = [
     title: "Chi tratta i dati",
     body: [
       "FantaChat tratta i dati personali necessari a erogare il servizio fantasy/social calcistico. Il gestore del servizio determina finalita e mezzi del trattamento e agisce come titolare del trattamento.",
-      "Per richieste privacy, accesso ai dati o cancellazione dell'account puoi usare il canale di contatto ufficiale indicato dal gestore dell'app o la pagina Cancellazione account.",
+      "Per richieste privacy, accesso ai dati o cancellazione dell'account puoi usare il canale di contatto ufficiale indicato dal gestore dell'app (fantachat.app.2026@gmail.com) o la pagina Cancellazione account.",
       "Questa informativa spiega quali dati usiamo quando crei un account, partecipi a una lega, invii formazioni, consulti classifiche o usi la chat di lega.",
     ],
   },

@@ -7,6 +7,7 @@ import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
 import CompetitionBadge from "../../components/CompetitionBadge";
 import { useRequireApp } from "../../hooks/useRequireApp";
+import { supabase } from "../../../lib/supabaseClient";
 import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
 
 type PlayerDetail = {
@@ -48,16 +49,53 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 function PlayerAvatar({ data }: { data: NonNullable<PlayerDetail> }) {
-  if (data.image_url) {
+  const [failed, setFailed] = useState(false);
+
+  if (data.image_url && !failed) {
     return (
       <span style={s.avatarWrap}>
-        <img src={data.image_url} alt="" style={s.avatarImg} loading="lazy" />
+        <img
+          src={data.image_url}
+          alt=""
+          style={s.avatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
         <span style={s.avatarRole}>{data.role}</span>
       </span>
     );
   }
 
   return <RoleBadge role={data.role} />;
+}
+
+async function withCatalogImage(playerId: string, data: PlayerDetail) {
+  if (!data || data.image_url) return data;
+
+  const { data: player } = await supabase
+    .from("real_players")
+    .select("image_url,real_team_id")
+    .eq("id", playerId)
+    .maybeSingle();
+
+  if (!player) return data;
+
+  let logoUrl: string | null = null;
+  if (player.real_team_id) {
+    const { data: team } = await supabase
+      .from("real_teams")
+      .select("logo_url")
+      .eq("id", player.real_team_id)
+      .maybeSingle();
+
+    logoUrl = team?.logo_url ?? null;
+  }
+
+  return {
+    ...data,
+    image_url: player.image_url ?? logoUrl,
+  };
 }
 
 export default function Giocatore() {
@@ -76,6 +114,7 @@ export default function Giocatore() {
       },
       null
     )
+      .then((detail) => withCatalogImage(String(params.id), detail))
       .then(setData)
       .finally(() => setLoading(false));
   }, [app.ready, params?.id, app.activeLeagueCompetitionId]);

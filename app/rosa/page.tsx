@@ -6,7 +6,6 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
-import { BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -15,6 +14,7 @@ type Player = {
   name: string;
   role: string;
   team: string;
+  image_url?: string | null;
 };
 
 type Coach = {
@@ -22,6 +22,7 @@ type Coach = {
   name: string;
   team: string;
   real_team_id?: string | null;
+  image_url?: string | null;
 };
 
 type Matchday = {
@@ -85,12 +86,6 @@ type ExpectedLineupRow = {
   player_name: string;
   role?: string | null;
   status?: string | null;
-};
-
-type Kit = {
-  primary: string;
-  secondary: string;
-  pattern: BadgePattern;
 };
 
 type Slot = {
@@ -157,93 +152,6 @@ function hour(value?: string | null) {
   }).format(new Date(value));
 }
 
-function fallbackColor(seed?: string | null) {
-  const colors = ["#14532d", "#1d4ed8", "#991b1b", "#854d0e", "#0f766e", "#4338ca"];
-  const value = (seed ?? "").split("").reduce((sum, c) => sum + c.charCodeAt(0), 0);
-  return colors[value % colors.length];
-}
-
-function TeamShirt({
-  team,
-  colors,
-  size = 40,
-}: {
-  team?: string | null;
-  colors?: Kit | null;
-  size?: number;
-}) {
-  const primary = colors?.primary ?? fallbackColor(team);
-  const secondary = colors?.secondary ?? "#ffffff";
-  const stripe =
-    colors?.pattern === "stripes"
-      ? `repeating-linear-gradient(90deg, ${primary} 0 8px, ${secondary} 8px 13px)`
-      : colors?.pattern === "split"
-        ? `linear-gradient(90deg, ${primary} 0 50%, ${secondary} 50% 100%)`
-        : primary;
-
-  return (
-    <span
-      style={{
-        width: size,
-        height: Math.round(size * 0.92),
-        display: "inline-block",
-        position: "relative",
-        flexShrink: 0,
-      }}
-      aria-hidden="true"
-    >
-      <span
-        style={{
-          position: "absolute",
-          inset: `${Math.round(size * 0.16)}px ${Math.round(size * 0.18)}px 0`,
-          background: stripe,
-          borderRadius: "4px 4px 3px 3px",
-          border: "1px solid rgba(255,255,255,.42)",
-        }}
-      />
-      <span
-        style={{
-          position: "absolute",
-          left: 0,
-          top: Math.round(size * 0.2),
-          width: Math.round(size * 0.25),
-          height: Math.round(size * 0.34),
-          background: primary,
-          borderRadius: "4px 1px 3px 3px",
-          transform: "skewY(-16deg)",
-          border: "1px solid rgba(255,255,255,.34)",
-        }}
-      />
-      <span
-        style={{
-          position: "absolute",
-          right: 0,
-          top: Math.round(size * 0.2),
-          width: Math.round(size * 0.25),
-          height: Math.round(size * 0.34),
-          background: primary,
-          borderRadius: "1px 4px 3px 3px",
-          transform: "skewY(16deg)",
-          border: "1px solid rgba(255,255,255,.34)",
-        }}
-      />
-      <span
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: Math.round(size * 0.15),
-          width: Math.round(size * 0.24),
-          height: Math.round(size * 0.16),
-          transform: "translateX(-50%)",
-          background: "#ffffff",
-          borderRadius: "0 0 999px 999px",
-          opacity: 0.78,
-        }}
-      />
-    </span>
-  );
-}
-
 export default function RosaPage() {
   const app = useRequireApp(false);
   const router = useRouter();
@@ -261,13 +169,8 @@ export default function RosaPage() {
   const [expectedLineups, setExpectedLineups] = useState<ExpectedLineupRow[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
   const [coachSheetOpen, setCoachSheetOpen] = useState(false);
+  const [probablesOpen, setProbablesOpen] = useState(false);
   const [selectedCoachId, setSelectedCoachId] = useState("");
-  const [teamColors, setTeamColors] = useState<Record<string, Kit>>({});
-
-  function kitOf(team?: string | null): Kit | null {
-    if (!team) return null;
-    return teamColors[team.trim().toLowerCase()] ?? null;
-  }
 
   const roles = useMemo(
     () =>
@@ -319,7 +222,7 @@ export default function RosaPage() {
 
         if (error) throw error;
 
-        const nextForm = normalizeFormData(data);
+        const nextForm = await withPlayerImages(normalizeFormData(data));
 
         setForm(nextForm);
         setSelected(buildInitialSelected(nextForm.players_per_role, nextForm.lineup));
@@ -374,39 +277,6 @@ export default function RosaPage() {
       off = true;
     };
   }, [app.activeLeagueCompetitionId, form.competition_id, form.matchday?.number]);
-
-  useEffect(() => {
-    const lc = app.activeLeagueCompetitionId;
-    if (!lc) return;
-
-    let off = false;
-
-    supabase
-      .rpc("get_competition_team_colors", {
-        p_league_competition_id: lc,
-      })
-      .then(({ data }) => {
-        if (off || !data) return;
-
-        const m: Record<string, Kit> = {};
-
-        (data as any[]).forEach((r) => {
-          if (r.name && r.color_primary) {
-            m[String(r.name).trim().toLowerCase()] = {
-              primary: r.color_primary,
-              secondary: r.color_secondary || r.color_primary,
-              pattern: (r.kit_pattern || "split") as BadgePattern,
-            };
-          }
-        });
-
-        setTeamColors(m);
-      });
-
-    return () => {
-      off = true;
-    };
-  }, [app.activeLeagueCompetitionId]);
 
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
@@ -625,7 +495,6 @@ export default function RosaPage() {
             selected={selected}
             roles={roles}
             locked={locked}
-            kitOf={kitOf}
             coachEnabled={form.coach_enabled}
             coach={selectedCoach}
             onCoachPress={() => setCoachSheetOpen(true)}
@@ -648,32 +517,28 @@ export default function RosaPage() {
           )}
         </section>
 
-        <ExpectedLineupsCard rows={expectedLineups} fixturesCount={fixtures.length} />
+        <div style={s.contextGrid}>
+          <TopTeamsPanel rows={top} />
+          <FixturesPanel rows={fixtures} topNames={topNames} />
+        </div>
 
         <div style={s.quickGrid}>
           <RosaActionCard
-            tone="green"
-            icon="P"
-            title="Partite"
-            value={fixtures.length === 0 ? "0" : String(fixtures.length)}
-            label={fixtures.length === 1 ? "partita" : "partite"}
-          />
-
-          <RosaActionCard
-            tone="orange"
-            icon="6"
-            title="Top 6"
-            value={top.length === 0 ? "0" : String(top.length)}
-            label={top.length === 1 ? "squadra" : "squadre"}
-          />
-
-          <RosaActionCard
             tone="dark"
             icon="#"
-            title="Stats"
+            title="Statistiche"
             value="Apri"
             label="database"
             onClick={() => router.push("/statistiche")}
+          />
+
+          <RosaActionCard
+            tone="green"
+            icon="PF"
+            title="Probabili"
+            value={expectedLineups.length ? String(expectedLineups.length) : "Apri"}
+            label="formazioni"
+            onClick={() => setProbablesOpen(true)}
           />
         </div>
       </main>
@@ -683,7 +548,6 @@ export default function RosaPage() {
           role={activeSlot.role}
           currentId={currentSlotId}
           options={sheetOptions}
-          kitOf={kitOf}
           onClose={() => setActiveSlot(null)}
           onClear={() => {
             selectPlayer(activeSlot.role, activeSlot.index, "");
@@ -712,6 +576,14 @@ export default function RosaPage() {
         />
       )}
 
+      {probablesOpen && (
+        <ProbablesSheet
+          rows={expectedLineups}
+          fixturesCount={fixtures.length}
+          onClose={() => setProbablesOpen(false)}
+        />
+      )}
+
       <BottomNav />
     </>
   );
@@ -722,7 +594,6 @@ function CampoInterattivo(props: {
   selected: Record<string, string[]>;
   roles: [string, number][];
   locked: boolean;
-  kitOf: (team?: string | null) => Kit | null;
   coachEnabled: boolean;
   coach: Coach | null;
   onCoachPress: () => void;
@@ -835,11 +706,7 @@ function CampoInterattivo(props: {
                 >
                   {slot.player ? (
                     <>
-                      <TeamShirt
-                        team={slot.player.team}
-                        colors={props.kitOf(slot.player.team)}
-                        size={30}
-                      />
+                      <PlayerAvatar player={slot.player} role={slot.role} size={31} field />
                       <span style={s.slotName}>
                         {slot.role === "P"
                           ? slot.player.team || slot.player.name
@@ -871,7 +738,7 @@ function CampoInterattivo(props: {
             cursor: props.locked ? "default" : "pointer",
           }}
         >
-          <RoleBadge role="AL" />
+          <CoachAvatar coach={props.coach} size={28} />
           <span style={props.coach ? s.coachName : s.slotNameMuted}>
             {props.coach ? shortName(props.coach.name) : "Allenatore"}
           </span>
@@ -886,7 +753,6 @@ function PlayerSheet(props: {
   role: string;
   currentId: string;
   options: Player[];
-  kitOf: (team?: string | null) => Kit | null;
   onClose: () => void;
   onClear: () => void;
   onSelect: (id: string) => void;
@@ -962,7 +828,7 @@ function PlayerSheet(props: {
                 background: p.id === props.currentId ? "#f0fdf4" : "white",
               }}
             >
-              <TeamShirt team={p.team} colors={props.kitOf(p.team)} size={34} />
+              <PlayerAvatar player={p} role={p.role} size={34} />
 
               <span style={s.resultText}>
                 <b>{label(p)}</b>
@@ -1053,7 +919,7 @@ function CoachSheet(props: {
                 background: coach.id === props.currentId ? "#f0fdf4" : "white",
               }}
             >
-              <RoleBadge role="AL" />
+              <CoachAvatar coach={coach} size={34} />
 
               <span style={s.resultText}>
                 <b>{coach.name}</b>
@@ -1114,6 +980,135 @@ function RoleBadge({
   );
 }
 
+function PlayerAvatar({
+  player,
+  role,
+  size = 34,
+  field = false,
+}: {
+  player?: Player | null;
+  role: string;
+  size?: number;
+  field?: boolean;
+}) {
+  const [failed, setFailed] = useState(false);
+  const image = player?.image_url;
+
+  if (image && !failed) {
+    return (
+      <span
+        className="fc-player-avatar"
+        style={{
+          ...s.playerAvatar,
+          width: size,
+          height: size,
+          border: field ? "2px solid rgba(255,255,255,.82)" : "1px solid #e5e7eb",
+        }}
+      >
+        <img
+          src={image}
+          alt=""
+          style={s.playerAvatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+        <span style={s.playerAvatarRole}>{role}</span>
+      </span>
+    );
+  }
+
+  return <RoleBadge role={role} field={field} />;
+}
+
+function CoachAvatar({ coach, size = 32 }: { coach: Coach | null; size?: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (coach?.image_url && !failed) {
+    return (
+      <span
+        className="fc-player-avatar"
+        style={{
+          ...s.playerAvatar,
+          width: size,
+          height: size,
+          border: "1px solid #e5e7eb",
+        }}
+      >
+        <img
+          src={coach.image_url}
+          alt=""
+          style={s.playerAvatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+        <span style={{ ...s.playerAvatarRole, background: "#7c3aed" }}>AL</span>
+      </span>
+    );
+  }
+
+  return <RoleBadge role="AL" />;
+}
+
+function TopTeamsPanel({ rows }: { rows: TopRow[] }) {
+  return (
+    <section className="fc-dark-neon-info-card fc-rosa-orange-panel" style={s.contextPanel}>
+      <div style={s.contextHead}>
+        <h2 style={s.contextTitle}>Top squadre</h2>
+        <span style={s.contextCount}>{rows.length}</span>
+      </div>
+
+      {rows.length > 0 ? (
+        <div style={s.contextList}>
+          {rows.slice(0, 6).map((row) => (
+            <div key={`${row.rank}-${row.name}`} style={s.contextRow}>
+              <b style={s.contextRank}>{row.rank}</b>
+              <strong style={s.contextName}>{row.name}</strong>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={s.contextEmpty}>Top 6 non ancora impostata.</div>
+      )}
+    </section>
+  );
+}
+
+function FixturesPanel({ rows, topNames }: { rows: FixtureRow[]; topNames: Set<string> }) {
+  function TeamName({ name }: { name: string }) {
+    const top = topNames.has(norm(name));
+    return (
+      <span style={{ ...s.fixtureTeam, ...(top ? s.fixtureTeamTop : {}) }}>
+        {name}
+      </span>
+    );
+  }
+
+  return (
+    <section className="fc-dark-neon-info-card fc-rosa-orange-panel" style={s.contextPanel}>
+      <div style={s.contextHead}>
+        <h2 style={s.contextTitle}>Partite</h2>
+        <span style={s.contextCount}>{rows.length}</span>
+      </div>
+
+      {rows.length > 0 ? (
+        <div style={s.contextList}>
+          {rows.slice(0, 8).map((row, index) => (
+            <div key={`${row.home}-${row.away}-${index}`} style={s.fixtureRow}>
+              <TeamName name={row.home} />
+              <small style={s.fixtureVs}>vs</small>
+              <TeamName name={row.away} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={s.contextEmpty}>Calendario non ancora disponibile.</div>
+      )}
+    </section>
+  );
+}
+
 function RosaActionCard({
   tone,
   icon,
@@ -1145,63 +1140,142 @@ function RosaActionCard({
   );
 }
 
-function ExpectedLineupsCard({
+function ProbablesSheet({
   rows,
   fixturesCount,
+  onClose,
 }: {
   rows: ExpectedLineupRow[];
   fixturesCount: number;
+  onClose: () => void;
 }) {
   const visible = rows.slice(0, 10);
   const teams = new Set(rows.map((row) => row.team_name).filter(Boolean)).size;
 
   return (
-    <section className="fc-dark-neon-info-card" style={s.expectedCard}>
-      <div style={s.sectionHeader}>
-        <div>
-          <h2 style={s.sectionTitle}>Probabili formazioni</h2>
-          <p style={s.expectedSub}>
-            {rows.length > 0
-              ? `${rows.length} giocatori segnalati${teams ? `, ${teams} squadre` : ""}`
-              : fixturesCount > 0
-                ? `${fixturesCount} partite in calendario. Probabili non ancora disponibili.`
-                : "Non ancora pubblicate per questa giornata."}
-          </p>
+    <div style={s.sheetLayer}>
+      <button
+        type="button"
+        aria-label="Chiudi probabili formazioni"
+        style={s.sheetBackdrop}
+        onClick={onClose}
+      />
+
+      <section className="fc-dark-neon-info-card" style={s.probablesSheet}>
+        <div style={s.sheetHandle} />
+
+        <div style={s.sheetHead}>
+          <div>
+            <h2 style={s.sheetTitle}>Probabili formazioni</h2>
+            <p style={s.sheetSubtitle}>
+              {rows.length > 0
+                ? `${rows.length} giocatori segnalati${teams ? `, ${teams} squadre` : ""}`
+                : fixturesCount > 0
+                  ? `${fixturesCount} partite in calendario.`
+                  : "Giornata non ancora popolata."}
+            </p>
+          </div>
+
+          <button type="button" onClick={onClose} style={s.closeBtn}>
+            ×
+          </button>
         </div>
 
-        <span style={s.expectedBadge}>{rows.length > 0 ? "Disponibili" : "In attesa"}</span>
-      </div>
-
-      {visible.length > 0 ? (
-        <div style={s.expectedList}>
-          {visible.map((row, index) => (
-            <div key={`${row.fixture_id ?? row.fixture_name}-${row.team_name}-${row.player_name}-${index}`} style={s.expectedRow}>
-              <RoleBadge role={row.role ?? "?"} small />
-
-              <span style={s.expectedText}>
-                <b>{row.player_name}</b>
-                <small>{row.team_name}</small>
-              </span>
-
-              <span style={s.expectedStatus}>
-                {row.status === "starter" ? "Titolare" : row.status === "candidate" ? "Possibile" : "Info"}
-              </span>
-            </div>
-          ))}
-
-          {rows.length > visible.length && (
-            <button type="button" style={s.expectedMore}>
-              +{rows.length - visible.length} altri giocatori
-            </button>
-          )}
+        <div style={s.expectedNotice}>
+          Le probabili formazioni mancanti verranno aggiunte a breve.
         </div>
-      ) : (
-        <div style={s.expectedEmpty}>
-          Le probabili formazioni compariranno qui appena Sportmonks le renderà disponibili per la giornata.
-        </div>
-      )}
-    </section>
+
+        {visible.length > 0 ? (
+          <div style={s.expectedList}>
+            {visible.map((row, index) => (
+              <div key={`${row.fixture_id ?? row.fixture_name}-${row.team_name}-${row.player_name}-${index}`} style={s.expectedRow}>
+                <RoleBadge role={row.role ?? "?"} small />
+
+                <span style={s.expectedText}>
+                  <b>{row.player_name}</b>
+                  <small>{row.team_name}</small>
+                </span>
+
+                <span style={s.expectedStatus}>
+                  {row.status === "starter" ? "Titolare" : row.status === "candidate" ? "Possibile" : "Info"}
+                </span>
+              </div>
+            ))}
+
+            {rows.length > visible.length && (
+              <button type="button" style={s.expectedMore}>
+                +{rows.length - visible.length} altri giocatori
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={s.expectedEmpty}>
+            Nessuna probabile formazione disponibile in questo momento.
+          </div>
+        )}
+      </section>
+    </div>
   );
+}
+
+async function withPlayerImages(form: FormData): Promise<FormData> {
+  const ids = form.players.map((p) => p.id).filter(Boolean);
+  const coachIds = form.coaches.map((c) => c.id).filter(Boolean);
+  if (ids.length === 0 && coachIds.length === 0) return form;
+
+  const { data: players } = ids.length
+    ? await supabase
+        .from("real_players")
+        .select("id,image_url,real_team_id")
+        .in("id", ids)
+    : { data: [] };
+
+  const { data: coaches } = coachIds.length
+    ? await supabase
+        .from("real_coaches")
+        .select("id,image_url,real_team_id")
+        .in("id", coachIds)
+    : { data: [] };
+
+  const teamIds = Array.from(
+    new Set([
+      ...(players ?? []).map((p) => p.real_team_id).filter(Boolean),
+      ...(coaches ?? []).map((c) => c.real_team_id).filter(Boolean),
+    ])
+  ) as string[];
+  let logos = new Map<string, string | null>();
+
+  if (teamIds.length > 0) {
+    const { data: teams } = await supabase
+      .from("real_teams")
+      .select("id,logo_url")
+      .in("id", teamIds);
+
+    logos = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+  }
+
+  const images = new Map<string, string | null>();
+  const coachImages = new Map<string, string | null>();
+
+  for (const player of players ?? []) {
+    images.set(player.id, player.image_url ?? logos.get(player.real_team_id ?? "") ?? null);
+  }
+
+  for (const coach of coaches ?? []) {
+    coachImages.set(coach.id, coach.image_url ?? logos.get(coach.real_team_id ?? "") ?? null);
+  }
+
+  return {
+    ...form,
+    players: form.players.map((player) => ({
+      ...player,
+      image_url: player.image_url ?? images.get(player.id) ?? null,
+    })),
+    coaches: form.coaches.map((coach) => ({
+      ...coach,
+      image_url: coach.image_url ?? coachImages.get(coach.id) ?? null,
+    })),
+  };
 }
 
 function normalizeFormData(value: any): FormData {
@@ -1561,9 +1635,134 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: "stretch",
   },
 
+  contextGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 9,
+    alignItems: "stretch",
+  },
+
+  contextPanel: {
+    minWidth: 0,
+    minHeight: 132,
+    background: "white",
+    border: "1px solid #f4c99d",
+    borderRadius: 12,
+    padding: 10,
+    boxShadow: "0 5px 16px rgba(15,23,42,.045)",
+    display: "grid",
+    gridTemplateRows: "auto 1fr",
+    gap: 8,
+  },
+
+  contextHead: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+
+  contextTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 13.5,
+    lineHeight: 1.05,
+    fontWeight: 1000,
+    letterSpacing: "-0.02em",
+  },
+
+  contextCount: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 7,
+    background: "#fff7ed",
+    color: "#c56b14",
+    display: "grid",
+    placeItems: "center",
+    padding: "0 6px",
+    fontSize: 10.5,
+    fontWeight: 1000,
+  },
+
+  contextList: {
+    minWidth: 0,
+    display: "grid",
+    alignContent: "start",
+    gap: 5,
+  },
+
+  contextRow: {
+    minWidth: 0,
+    display: "grid",
+    gridTemplateColumns: "20px 1fr",
+    alignItems: "center",
+    gap: 6,
+    borderBottom: "1px solid #f6efe7",
+    paddingBottom: 5,
+  },
+
+  contextRank: {
+    color: "#c56b14",
+    fontSize: 11,
+    fontWeight: 1000,
+    fontVariantNumeric: "tabular-nums",
+  },
+
+  contextName: {
+    minWidth: 0,
+    color: "#0f172a",
+    fontSize: 11.5,
+    lineHeight: 1.1,
+    fontWeight: 950,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+  },
+
+  contextEmpty: {
+    alignSelf: "center",
+    color: "#64748b",
+    fontSize: 11.5,
+    lineHeight: 1.3,
+    fontWeight: 800,
+  },
+
+  fixtureRow: {
+    minWidth: 0,
+    display: "grid",
+    gridTemplateColumns: "minmax(0,1fr) auto minmax(0,1fr)",
+    alignItems: "center",
+    gap: 4,
+    borderBottom: "1px solid #f6efe7",
+    paddingBottom: 5,
+  },
+
+  fixtureTeam: {
+    minWidth: 0,
+    color: "#64748b",
+    fontSize: 10.5,
+    lineHeight: 1.1,
+    fontWeight: 800,
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+  },
+
+  fixtureTeamTop: {
+    color: "#0f172a",
+    fontWeight: 1000,
+  },
+
+  fixtureVs: {
+    color: "#c56b14",
+    fontSize: 9.5,
+    fontWeight: 1000,
+    textTransform: "uppercase",
+  },
+
   quickGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+    gridTemplateColumns: "repeat(2,minmax(0,1fr))",
     gap: 8,
   },
 
@@ -1736,6 +1935,69 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 12,
     lineHeight: 1.35,
     fontWeight: 800,
+  },
+
+  expectedNotice: {
+    border: "1px solid #f4c99d",
+    background: "#fff7ed",
+    borderRadius: 10,
+    padding: 10,
+    color: "#9a4d08",
+    fontSize: 12,
+    lineHeight: 1.35,
+    fontWeight: 900,
+  },
+
+  probablesSheet: {
+    position: "relative",
+    zIndex: 2,
+    width: "100%",
+    maxWidth: 520,
+    maxHeight: "68vh",
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: "16px 16px 0 0",
+    padding: "10px 12px calc(14px + env(safe-area-inset-bottom, 0px))",
+    boxShadow: "0 -16px 34px rgba(15,23,42,.18)",
+    display: "grid",
+    gridTemplateRows: "auto auto auto minmax(0,1fr)",
+    gap: 9,
+    pointerEvents: "auto",
+  },
+
+  playerAvatar: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    borderRadius: "50%",
+    background: "#f1f5f9",
+    boxShadow: "0 3px 10px rgba(15,23,42,.16)",
+    flexShrink: 0,
+  },
+
+  playerAvatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    borderRadius: "50%",
+    display: "block",
+  },
+
+  playerAvatarRole: {
+    position: "absolute",
+    right: -3,
+    bottom: -3,
+    width: 15,
+    height: 15,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background: "#0f172a",
+    color: "white",
+    border: "1.5px solid white",
+    fontSize: 8,
+    lineHeight: 1,
+    fontWeight: 1000,
   },
 
   infoIcon: {
