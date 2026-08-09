@@ -175,7 +175,9 @@ function fixtureStatus(stateId) {
 }
 
 function matchdayNumber(fixture) {
-  const parsed = Number.parseInt(String(fixture.round_name ?? ""), 10);
+  const source = String(fixture.round_name ?? fixture.round?.name ?? "");
+  const match = source.match(/(\d+)(?!.*\d)/);
+  const parsed = Number.parseInt(match?.[1] ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 

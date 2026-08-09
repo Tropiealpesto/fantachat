@@ -69,7 +69,6 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       updated="15 luglio 2026"
       intro="Questa informativa descrive in modo semplice come FantaChat raccoglie e usa i dati personali necessari al funzionamento dell'app."
-      note="Nota: il testo e' una base operativa per la beta e va verificato con i dati ufficiali del gestore prima della pubblicazione definitiva."
       sections={sections}
     />
   );

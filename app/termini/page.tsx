@@ -74,7 +74,6 @@ export default function TermsPage() {
       title="Termini di utilizzo"
       updated="15 luglio 2026"
       intro="Questi termini definiscono le regole principali per usare FantaChat, partecipare alle leghe e interagire con gli altri utenti."
-      note="FantaChat e' una fantasy/social app: non gestisce scommesse e non garantisce premi in denaro."
       sections={sections}
     />
   );

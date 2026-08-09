@@ -7,6 +7,12 @@ import { useRequireLeagueAdmin } from "../hooks/useRequireApp";
 
 const ADMIN_LINKS = [
   {
+    href: "/regole#ruolo-admin",
+    title: "Ruolo admin",
+    desc: "Cosa devi fare tu e cosa resta gestito dal superadmin.",
+    icon: "A",
+  },
+  {
     href: "/admin/formazioni",
     title: "Formazioni e slot",
     desc: "Controlla gli invii, resetta formazioni e imposta la durata slot.",

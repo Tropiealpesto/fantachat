@@ -265,7 +265,7 @@ export default function RegolePage() {
           </RuleCard>
         )}
 
-        <RuleCard title="Ruolo dell'admin">
+        <RuleCard id="ruolo-admin" title="Ruolo dell'admin">
           <p>
             L’admin gestisce la propria lega, non l’intera competizione.
           </p>
@@ -307,11 +307,12 @@ export default function RegolePage() {
 }
 
 function RuleCard(props: {
+  id?: string;
   title: string;
   children: React.ReactNode;
 }) {
   return (
-    <section style={s.card}>
+    <section id={props.id} style={s.card}>
       <h2 style={s.cardTitle}>{props.title}</h2>
       <div style={s.text}>{props.children}</div>
     </section>

@@ -48,7 +48,6 @@ export default function AccountDeletionPage() {
       title="Cancellazione account"
       updated="15 luglio 2026"
       intro="Questa pagina spiega come richiedere la cancellazione dell'account FantaChat e cosa aspettarsi durante la procedura."
-      note="La procedura manuale e' adatta alla beta. Per un lancio pubblico e' consigliabile aggiungere anche un flusso in-app guidato."
       sections={sections}
     />
   );

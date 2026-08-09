@@ -519,7 +519,11 @@ export default function RosaPage() {
 
         <div style={s.contextGrid}>
           <TopTeamsPanel rows={top} />
-          <FixturesPanel rows={fixtures} topNames={topNames} />
+          <FixturesPanel
+            rows={fixtures}
+            topNames={topNames}
+            matchdayNumber={form.matchday?.number ?? null}
+          />
         </div>
 
         <div style={s.quickGrid}>
@@ -1075,7 +1079,15 @@ function TopTeamsPanel({ rows }: { rows: TopRow[] }) {
   );
 }
 
-function FixturesPanel({ rows, topNames }: { rows: FixtureRow[]; topNames: Set<string> }) {
+function FixturesPanel({
+  rows,
+  topNames,
+  matchdayNumber,
+}: {
+  rows: FixtureRow[];
+  topNames: Set<string>;
+  matchdayNumber: number | null;
+}) {
   function TeamName({ name }: { name: string }) {
     const top = topNames.has(norm(name));
     return (
@@ -1088,7 +1100,9 @@ function FixturesPanel({ rows, topNames }: { rows: FixtureRow[]; topNames: Set<s
   return (
     <section className="fc-dark-neon-info-card fc-rosa-orange-panel" style={s.contextPanel}>
       <div style={s.contextHead}>
-        <h2 style={s.contextTitle}>Partite</h2>
+        <h2 style={s.contextTitle}>
+          Partite{matchdayNumber ? ` G${matchdayNumber}` : ""}
+        </h2>
         <span style={s.contextCount}>{rows.length}</span>
       </div>
 
