@@ -538,8 +538,10 @@ function GiornateTab(props: {
   setMsg: (x: string | null) => void;
 }) {
   const [startAt, setStartAt] = useState(() => {
-    const d = new Date(Date.now() + 5 * 60 * 1000);
+    const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
     d.setSeconds(0, 0);
+    d.setMinutes(45);
+    d.setHours(20);
     return d.toISOString().slice(0, 16);
   });
   const [busy, setBusy] = useState<string | null>(null);
@@ -605,7 +607,7 @@ function GiornateTab(props: {
     <section style={s.card}>
       <h2 style={s.cardTitle}>Gestione giornata</h2>
       <p style={s.muted}>
-        Apertura e chiusura sono globali per la competizione. Gli slot vengono generati per ogni lega attiva, dall’ultimo al primo in classifica.
+        Apertura e chiusura sono globali per la competizione. Inserisci l'orario della prima partita: gli slot vengono generati a ritroso e l'ultimo slot termina un'ora prima del calcio d'inizio.
       </p>
 
       <div style={s.infoStrip}>
@@ -613,7 +615,7 @@ function GiornateTab(props: {
         <b>Giornata {props.matchday}</b>
       </div>
 
-      <label style={s.label}>Inizio primo slot</label>
+      <label style={s.label}>Orario prima partita</label>
       <input
         type="datetime-local"
         value={startAt}
@@ -628,7 +630,7 @@ function GiornateTab(props: {
           disabled={Boolean(busy)}
           style={s.saveBtn}
         >
-          {busy === "open" ? "Apertura..." : "Apri giornata e crea slot"}
+          {busy === "open" ? "Apertura..." : "Apri giornata e calcola slot"}
         </button>
         <button
           type="button"
