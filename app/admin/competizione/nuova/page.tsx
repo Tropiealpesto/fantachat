@@ -43,15 +43,35 @@ type GameMode = {
   ruleset: Ruleset;
   coachEnabled: boolean;
 };
-
-const ROLE_LABELS: Record<string, string> = {
-  P: "Portieri",
-  D: "Difensori",
-  C: "Centrocampisti",
-  A: "Attaccanti",
+type FormationPreset = {
+  key: string;
+  name: string;
+  desc: string;
+  roles: Record<string, number>;
 };
 
 const DEFAULT_ROLES = { P: 1, D: 1, C: 1, A: 1 };
+
+const FORMATION_PRESETS: FormationPreset[] = [
+  {
+    key: "classico",
+    name: "Classico",
+    desc: "Il formato standard che non delude mai.",
+    roles: { P: 1, D: 1, C: 1, A: 1 },
+  },
+  {
+    key: "bilanciato",
+    name: "Bilanciato",
+    desc: "Vediamo le tue capacità di scelta in tutti i ruoli.",
+    roles: { P: 1, D: 2, C: 2, A: 2 },
+  },
+  {
+    key: "serie-a",
+    name: "Serie A",
+    desc: "Il modulo che ci ha resi famosi in Europa.",
+    roles: { P: 1, D: 3, C: 5, A: 2 },
+  },
+];
 
 const GAME_MODES: GameMode[] = [
   {
@@ -104,6 +124,7 @@ export default function NuovaCompetizione() {
   const [name, setName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [roles, setRoles] = useState<Record<string, number>>(DEFAULT_ROLES);
+  const [formationPreset, setFormationPreset] = useState(FORMATION_PRESETS[0].key);
   const [ruleset, setRuleset] = useState<Ruleset>("classico");
   const [coachEnabled, setCoachEnabled] = useState(false);
 
@@ -223,11 +244,9 @@ export default function NuovaCompetizione() {
     });
   }
 
-  function setRoleCount(role: string, value: number) {
-    setRoles((prev) => ({
-      ...prev,
-      [role]: Math.max(0, Math.min(5, Number(value) || 0)),
-    }));
+  function selectFormationPreset(preset: FormationPreset) {
+    setFormationPreset(preset.key);
+    setRoles(preset.roles);
   }
 
   function renderCompetitionCard(c: Competition) {
@@ -495,23 +514,34 @@ export default function NuovaCompetizione() {
           <div style={s.card}>
             <h2 style={s.cardTitle}>Formazione</h2>
             <p style={s.text}>
-              Scegli quanti giocatori schierare e quali ruoli. La Rosa si adatterà automaticamente.
+              Scegli il modulo della competizione. La Rosa si adatterà automaticamente.
             </p>
 
-            <div style={s.rolesGrid}>
-              {Object.entries(ROLE_LABELS).map(([role, label]) => (
-                <label key={role} style={s.roleRow}>
-                  <span>{label}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={5}
-                    value={roles[role] ?? 0}
-                    onChange={(e) => setRoleCount(role, Number(e.target.value))}
-                    style={s.roleInput}
-                  />
-                </label>
-              ))}
+            <div style={s.presetGrid}>
+              {FORMATION_PRESETS.map((preset) => {
+                const active = formationPreset === preset.key;
+                const moduleLabel = `${preset.roles.P}-${preset.roles.D}-${preset.roles.C}-${preset.roles.A}`;
+
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => selectFormationPreset(preset)}
+                    style={{
+                      ...s.presetCard,
+                      ...(active
+                        ? { borderColor: accent, background: `${accent}0d` }
+                        : {}),
+                    }}
+                  >
+                    <span style={s.presetTop}>
+                      <b>{preset.name}</b>
+                      <strong style={s.moduleBadge}>{moduleLabel}</strong>
+                    </span>
+                    <small style={s.presetDesc}>{preset.desc}</small>
+                  </button>
+                );
+              })}
             </div>
 
             <div style={s.totalPlayers}>
@@ -594,9 +624,22 @@ const s: Record<string, React.CSSProperties> = {
   memberRow: { display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, border: "1px solid #e5e7eb", background: "white", fontFamily: "inherit", fontWeight: 800, textAlign: "left" },
   check: { width: 22, height: 22, borderRadius: 7, background: "#16a34a", color: "white", display: "grid", placeItems: "center", fontWeight: 1000 },
   emptyCheck: { width: 22, height: 22, borderRadius: 7, border: "1px solid #d1d5db", display: "inline-block" },
-  rolesGrid: { display: "grid", gap: 9 },
-  roleRow: { display: "grid", gridTemplateColumns: "1fr 86px", alignItems: "center", gap: 10, fontWeight: 900, color: "#111827" },
-  roleInput: { padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", fontWeight: 900, textAlign: "center" },
+  presetGrid: { display: "grid", gap: 9 },
+  presetCard: {
+    display: "grid",
+    gap: 7,
+    width: "100%",
+    border: "1.5px solid #e5e7eb",
+    background: "white",
+    borderRadius: 15,
+    padding: 13,
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+  presetTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: "#111827", fontSize: 15 },
+  moduleBadge: { color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 999, padding: "4px 8px", fontSize: 12, fontWeight: 1000 },
+  presetDesc: { color: "#64748b", fontSize: 12.5, lineHeight: 1.35, fontWeight: 750 },
   totalPlayers: { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: 14, padding: 12, fontWeight: 900 },
   summaryType: { background: "#f9fafb", border: "1px solid #e5e7eb", color: "#374151", borderRadius: 14, padding: 12, fontWeight: 800, fontSize: 13 },
   actions: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
