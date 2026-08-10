@@ -5,9 +5,10 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
-import TeamBadge from "../components/TeamBadge";
+import TeamBadge, { type BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt } from "../../lib/rpc";
+import { supabase } from "../../lib/supabaseClient";
 
 type Row = {
   user_id: string;
@@ -52,6 +53,7 @@ export default function Classifica() {
   const app = useRequireApp(false);
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>>({});
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -100,6 +102,27 @@ export default function Classifica() {
       cancelled = true;
     };
   }, [app.ready, app.activeLeagueId, app.activeLeagueCompetitionId]);
+
+  useEffect(() => {
+    if (!app.ready || !app.activeLeagueId) return;
+
+    let off = false;
+
+    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
+      if (off) return;
+      const map: Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }> = {};
+      ((data as any[] | null) ?? []).forEach((m) => {
+        map[m.user_id] = {
+          primary: m.color_primary ?? null,
+          secondary: m.color_secondary ?? null,
+          pattern: m.kit_pattern ?? "split",
+        };
+      });
+      setMemberColors(map);
+    });
+
+    return () => { off = true; };
+  }, [app.ready, app.activeLeagueId]);
 
   const theme = app.competitionTheme;
 
@@ -243,6 +266,7 @@ export default function Classifica() {
             {sortedRows.map((r, index) => {
               const isMine = r.user_id === app.userId;
               const podium = index < 3;
+              const colors = memberColors[r.user_id];
 
               return (
                 <article
@@ -280,7 +304,13 @@ export default function Classifica() {
                     {cleanRank(r.rank)}
                   </div>
 
-                  <TeamBadge name={r.team_name} size={34} />
+                  <TeamBadge
+                    name={r.team_name}
+                    primary={colors?.primary ?? null}
+                    secondary={colors?.secondary ?? null}
+                    pattern={colors?.pattern ?? "split"}
+                    size={34}
+                  />
 
                   <div style={s.teamBlock}>
                     <div style={s.teamTop}>

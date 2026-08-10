@@ -208,6 +208,8 @@ export default function RosaPage() {
   );
 
   useEffect(() => {
+    let off = false;
+
     async function load() {
       if (!app.ready || !app.activeLeagueCompetitionId) return;
 
@@ -222,20 +224,35 @@ export default function RosaPage() {
 
         if (error) throw error;
 
-        const nextForm = await withPlayerImages(normalizeFormData(data));
+        const baseForm = normalizeFormData(data);
 
-        setForm(nextForm);
-        setSelected(buildInitialSelected(nextForm.players_per_role, nextForm.lineup));
-        setSelectedCoachId(nextForm.lineup?.coach?.real_coach_id ?? "");
-        setSaved(Boolean(nextForm.lineup?.id));
-      } catch (e: any) {
-        setErr(e?.message ?? String(e));
-      } finally {
+        if (off) return;
+
+        setForm(baseForm);
+        setSelected(buildInitialSelected(baseForm.players_per_role, baseForm.lineup));
+        setSelectedCoachId(baseForm.lineup?.coach?.real_coach_id ?? "");
+        setSaved(Boolean(baseForm.lineup?.id));
         setLoading(false);
+
+        withPlayerImages(baseForm)
+          .then((nextForm) => {
+            if (!off) setForm(nextForm);
+          })
+          .catch(() => {
+            // Le immagini sono un arricchimento visivo: la rosa deve restare usabile anche senza.
+          });
+      } catch (e: any) {
+        if (!off) setErr(e?.message ?? String(e));
+      } finally {
+        if (!off) setLoading(false);
       }
     }
 
     load();
+
+    return () => {
+      off = true;
+    };
   }, [app.ready, app.activeLeagueCompetitionId]);
 
   useEffect(() => {

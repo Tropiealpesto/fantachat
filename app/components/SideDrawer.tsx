@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { themeFromType } from "../../lib/competitionThemes";
 import LogoMark from "./LogoMark";
-import TeamBadge from "./TeamBadge";
+import TeamBadge, { type BadgePattern } from "./TeamBadge";
 
 type DrawerCompetition = {
   id: string; name: string; competition_type: string | null; competition_slug: string | null;
@@ -15,7 +15,7 @@ type Props = {
   isOpen: boolean; onClose: () => void; teamName: string; leagueName: string;
   isAdmin: boolean; isSuperAdmin: boolean; competitions: DrawerCompetition[];
   activeLeagueCompetitionId: string | null; onSwitchCompetition: (id: string) => void;
-  teamPrimary?: string | null; teamSecondary?: string | null;
+  teamPrimary?: string | null; teamSecondary?: string | null; teamPattern?: BadgePattern | null;
   uiTheme: "light" | "dark"; onThemeChange: (theme: "light" | "dark") => void;
 };
 
@@ -36,7 +36,7 @@ export default function SideDrawer(props: Props) {
           </div>
           <button onClick={props.onClose} style={s.close} aria-label="Chiudi menu">×</button>
           <div style={s.teamrow}>
-            <span style={s.tring}><TeamBadge name={props.teamName} primary={props.teamPrimary ?? null} secondary={props.teamSecondary ?? null} size={40} /></span>
+            <span style={s.tring}><TeamBadge name={props.teamName} primary={props.teamPrimary ?? null} secondary={props.teamSecondary ?? null} pattern={props.teamPattern ?? "split"} size={40} /></span>
             <div style={{ minWidth: 0 }}>
               <div style={s.tname}>{props.teamName}</div>
               <div style={s.tleague}>{props.leagueName}</div>

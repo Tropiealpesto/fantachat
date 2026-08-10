@@ -6,7 +6,7 @@ import AppBar from "./components/AppBar";
 import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 import CompetitionBadge from "./components/CompetitionBadge";
-import TeamBadge from "./components/TeamBadge";
+import TeamBadge, { type BadgePattern } from "./components/TeamBadge";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
 import { supabase } from "../lib/supabaseClient";
@@ -266,13 +266,15 @@ export default function Home() {
   const [myColors, setMyColors] = useState<{
     primary: string | null;
     secondary: string | null;
+    pattern: BadgePattern | null;
   }>({
     primary: null,
     secondary: null,
+    pattern: null,
   });
 
   const [memberColors, setMemberColors] = useState<
-    Record<string, { primary: string | null; secondary: string | null }>
+    Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>
   >({});
 
   const [colorsLoaded, setColorsLoaded] = useState(false);
@@ -386,13 +388,14 @@ export default function Home() {
         const arr = (data as any[] | null) ?? [];
         const mc: Record<
           string,
-          { primary: string | null; secondary: string | null }
+          { primary: string | null; secondary: string | null; pattern: BadgePattern | null }
         > = {};
 
         arr.forEach((m) => {
           mc[m.user_id] = {
             primary: m.color_primary ?? null,
             secondary: m.color_secondary ?? null,
+            pattern: m.kit_pattern ?? "split",
           };
         });
 
@@ -404,6 +407,7 @@ export default function Home() {
           setMyColors({
             primary: me.color_primary ?? null,
             secondary: me.color_secondary ?? null,
+            pattern: me.kit_pattern ?? "split",
           });
         }
 
@@ -679,6 +683,7 @@ export default function Home() {
           name={row.team_name}
           primary={c?.primary ?? null}
           secondary={c?.secondary ?? null}
+          pattern={c?.pattern ?? "split"}
           size={25}
         />
 
@@ -725,6 +730,7 @@ export default function Home() {
                 name={app.teamName}
                 primary={myColors.primary}
                 secondary={myColors.secondary}
+                pattern={myColors.pattern ?? "split"}
                 size={50}
               />
             </span>

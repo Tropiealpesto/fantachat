@@ -5,7 +5,7 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
-import TeamBadge from "../components/TeamBadge";
+import TeamBadge, { type BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
 import { supabase } from "../../lib/supabaseClient";
@@ -107,7 +107,7 @@ export default function LivePage() {
   const [err, setErr] = useState<string | null>(null);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [memberColors, setMemberColors] = useState<
-    Record<string, { primary: string | null; secondary: string | null }>
+    Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>
   >({});
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
@@ -155,13 +155,14 @@ export default function LivePage() {
 
         const mc: Record<
           string,
-          { primary: string | null; secondary: string | null }
+          { primary: string | null; secondary: string | null; pattern: BadgePattern | null }
         > = {};
 
         ((data as any[] | null) ?? []).forEach((m) => {
           mc[m.user_id] = {
             primary: m.color_primary ?? null,
             secondary: m.color_secondary ?? null,
+            pattern: m.kit_pattern ?? "split",
           };
         });
 
@@ -253,6 +254,7 @@ export default function LivePage() {
                     name={r.team_name}
                     primary={c?.primary ?? null}
                     secondary={c?.secondary ?? null}
+                    pattern={c?.pattern ?? "split"}
                     size={30}
                   />
 
@@ -336,7 +338,7 @@ export default function LivePage() {
         </p>
       </main>
 
-      <BottomNav />
+      <BottomNav withSpacer={false} />
     </>
   );
 }
@@ -345,7 +347,7 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "10px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 12px)",
+    padding: "10px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px)",
     display: "grid",
     gap: 8,
   },

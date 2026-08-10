@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
-import TeamBadge from "../../components/TeamBadge";
+import TeamBadge, { type BadgePattern } from "../../components/TeamBadge";
 import { useRequireApp } from "../../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
 import { supabase } from "../../../lib/supabaseClient";
@@ -36,7 +36,7 @@ export default function StoricoDetail() {
   const [data, setData] = useState<Data>({ matchday_number: null, rows: [] });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null }>>({});
+  const [memberColors, setMemberColors] = useState<Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>>({});
 
   useEffect(() => {
     if (!app.ready || !params?.id) return;
@@ -50,8 +50,8 @@ export default function StoricoDetail() {
     let off = false;
     supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
       if (off) return;
-      const mc: Record<string, { primary: string | null; secondary: string | null }> = {};
-      ((data as any[] | null) ?? []).forEach((m) => { mc[m.user_id] = { primary: m.color_primary ?? null, secondary: m.color_secondary ?? null }; });
+      const mc: Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }> = {};
+      ((data as any[] | null) ?? []).forEach((m) => { mc[m.user_id] = { primary: m.color_primary ?? null, secondary: m.color_secondary ?? null, pattern: m.kit_pattern ?? "split" }; });
       setMemberColors(mc);
     });
     return () => { off = true; };
@@ -81,7 +81,7 @@ export default function StoricoDetail() {
               <div key={r.user_id} style={{ ...s.card, ...(own ? s.cardYou : {}) }}>
                 <div style={s.rtop} onClick={() => setOpen((o) => ({ ...o, [r.user_id]: !o[r.user_id] }))}>
                   <div style={{ ...s.rank, ...(rc ? { background: rc, color: "white" } : {}) }}>{r.rank}</div>
-                  <TeamBadge name={r.team_name} primary={c?.primary ?? null} secondary={c?.secondary ?? null} size={34} />
+                  <TeamBadge name={r.team_name} primary={c?.primary ?? null} secondary={c?.secondary ?? null} pattern={c?.pattern ?? "split"} size={34} />
                   <div style={{ minWidth: 0 }}>
                     <div style={s.rname}>
                       <span style={s.rnameTxt}>{r.team_name}</span>

@@ -207,7 +207,7 @@ textarea:focus-visible {
 }
 
 .fc-bottom-spacer {
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + var(--safe-bottom));
 }
 
 .fc-bottom-nav {
@@ -215,14 +215,14 @@ textarea:focus-visible {
   left: 0;
   right: 0;
   bottom: 0;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + var(--safe-bottom));
   z-index: 100;
   max-width: none;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   align-items: stretch;
-  padding: 6px 10px;
+  padding: 6px 10px calc(6px + var(--safe-bottom));
   border-top: 1px solid rgba(219,228,221,0.92);
   border-radius: 0;
   background: rgba(255,255,255,0.96);
@@ -404,11 +404,6 @@ textarea:focus-visible {
 .fc-bottom-tab.is-active[data-tab-path="/chat"] {
   color: var(--brand-orange);
   background: color-mix(in srgb, var(--brand-orange) 12%, white);
-}
-
-.fc-chat-page-frame + .fc-bottom-nav {
-  height: calc(var(--nav-h) + var(--safe-bottom));
-  padding-bottom: calc(6px + var(--safe-bottom));
 }
 
 .fc-bottom-icon {

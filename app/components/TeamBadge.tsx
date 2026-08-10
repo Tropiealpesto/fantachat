@@ -2,7 +2,16 @@
 
 import React from "react";
 
-export type BadgePattern = "split" | "stripes" | "solid";
+export type BadgePattern =
+  | "split"
+  | "vertical"
+  | "horizontal"
+  | "quarters"
+  | "band"
+  | "slash"
+  | "stripes"
+  | "rings"
+  | "solid";
 
 function hue(str: string) {
   let h = 0;
@@ -34,7 +43,13 @@ function fallbackColors(name?: string | null): { primary: string; secondary: str
 }
 
 function buildBackground(primary: string, secondary: string, pattern: BadgePattern) {
+  if (pattern === "vertical") return `linear-gradient(90deg, ${primary} 0 50%, ${secondary} 50% 100%)`;
+  if (pattern === "horizontal") return `linear-gradient(180deg, ${primary} 0 50%, ${secondary} 50% 100%)`;
+  if (pattern === "quarters") return `conic-gradient(from 45deg, ${primary} 0 25%, ${secondary} 25% 50%, ${primary} 50% 75%, ${secondary} 75% 100%)`;
+  if (pattern === "band") return `linear-gradient(135deg, ${primary} 0 35%, #ffffff 35% 45%, ${secondary} 45% 100%)`;
+  if (pattern === "slash") return `linear-gradient(135deg, ${primary} 0 42%, ${secondary} 42% 58%, ${primary} 58% 100%)`;
   if (pattern === "stripes") return `repeating-linear-gradient(90deg, ${primary} 0 16%, ${secondary} 16% 32%)`;
+  if (pattern === "rings") return `radial-gradient(circle at center, ${primary} 0 34%, ${secondary} 35% 52%, ${primary} 53% 100%)`;
   if (pattern === "solid") return primary;
   return `linear-gradient(135deg, ${primary} 0 50%, ${secondary} 50% 100%)`; // split (diagonale)
 }

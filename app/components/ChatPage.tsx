@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { themeFromType } from "@/lib/competitionThemes";
-import TeamBadge from "./TeamBadge";
+import TeamBadge, { type BadgePattern } from "./TeamBadge";
 
 type Mention = { user_id: string; team_name: string };
 type CitedPlayer = { id: string; name: string; role: string; team: string };
@@ -14,7 +14,7 @@ type Message = {
   kind: string; content: string | null; meta: Meta; matchday_id: string | null;
   matchday_number: number | null; created_at: string; team_name?: string | null;
 };
-type Member = { user_id: string; team_name: string; role: string; color_primary?: string | null; color_secondary?: string | null };
+type Member = { user_id: string; team_name: string; role: string; color_primary?: string | null; color_secondary?: string | null; kit_pattern?: BadgePattern | null };
 type Competition = { id: string; name: string; competition_type: string | null };
 type PlayerHit = { real_player_id: string; name: string; role: string; team: string; points: number };
 
@@ -298,7 +298,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             return (
               <div key={m.id} style={{ ...s.row, flexDirection: own ? "row-reverse" : "row" }}>
                 {head ? (
-                  <TeamBadge name={m.team_name} primary={author?.color_primary ?? null} secondary={author?.color_secondary ?? null} size={30} />
+                  <TeamBadge name={m.team_name} primary={author?.color_primary ?? null} secondary={author?.color_secondary ?? null} pattern={author?.kit_pattern ?? "split"} size={30} />
                 ) : (
                   <div style={{ width: 30, flexShrink: 0 }} />
                 )}
@@ -339,7 +339,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             {token.kind === "person"
               ? peopleHits.map((m) => (
                   <button key={m.user_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPerson(m); }} className="fc-chat-suggest-row" style={s.taRow}>
-                    <TeamBadge name={m.team_name} primary={m.color_primary ?? null} secondary={m.color_secondary ?? null} size={26} />
+                    <TeamBadge name={m.team_name} primary={m.color_primary ?? null} secondary={m.color_secondary ?? null} pattern={m.kit_pattern ?? "split"} size={26} />
                     <span style={s.taName}>{m.team_name}</span>
                   </button>
                 ))

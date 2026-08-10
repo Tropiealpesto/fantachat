@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
-import TeamBadge from "../components/TeamBadge";
+import TeamBadge, { type BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -20,12 +20,25 @@ const PRESETS: [string, string][] = [
   ["#1d4ed8", "#e07b1a"],
 ];
 
+const PATTERNS: { key: BadgePattern; label: string }[] = [
+  { key: "split", label: "Diagonale" },
+  { key: "vertical", label: "Verticale" },
+  { key: "horizontal", label: "Orizzontale" },
+  { key: "quarters", label: "Quarti" },
+  { key: "band", label: "Banda" },
+  { key: "slash", label: "Taglio" },
+  { key: "stripes", label: "Strisce" },
+  { key: "rings", label: "Anelli" },
+  { key: "solid", label: "Pieno" },
+];
+
 export default function Personalizza() {
   const router = useRouter();
   const app = useRequireApp(false);
 
   const [primary, setPrimary] = useState("#15803d");
   const [secondary, setSecondary] = useState("#e07b1a");
+  const [pattern, setPattern] = useState<BadgePattern>("split");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -39,6 +52,7 @@ export default function Personalizza() {
       const me = (data as any[] | null)?.find((m) => m.user_id === app.userId);
       if (me?.color_primary) setPrimary(me.color_primary);
       if (me?.color_secondary) setSecondary(me.color_secondary);
+      if (me?.kit_pattern) setPattern(me.kit_pattern as BadgePattern);
     })();
     return () => { off = true; };
   }, [app.ready, app.userId, app.activeLeagueId]);
@@ -50,6 +64,7 @@ export default function Personalizza() {
       p_league_id: app.activeLeagueId,
       p_color_primary: primary,
       p_color_secondary: secondary,
+      p_kit_pattern: pattern,
     });
     setSaving(false);
     setSaved(true);
@@ -67,11 +82,11 @@ export default function Personalizza() {
       <main style={s.container}>
         <div style={s.card}>
           <h1 style={s.title}>Personalizza la tua squadra</h1>
-          <p style={s.desc}>Scegli i due colori del tuo stemma. Compariranno in chat, classifica e home.</p>
+          <p style={s.desc}>Scegli colori e disegno del tuo stemma. Comparira in chat, classifica e home.</p>
 
           <div style={s.preview}>
             <span style={s.ring}>
-              <TeamBadge name={app.teamName} primary={primary} secondary={secondary} size={104} />
+              <TeamBadge name={app.teamName} primary={primary} secondary={secondary} pattern={pattern} size={104} />
             </span>
             <div style={s.pvname}>{app.teamName ?? "La mia squadra"}</div>
           </div>
@@ -101,6 +116,36 @@ export default function Personalizza() {
             ))}
           </div>
 
+          <div style={s.lab}>Disegno stemma</div>
+          <div style={s.patternGrid}>
+            {PATTERNS.map((p) => {
+              const active = p.key === pattern;
+
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setPattern(p.key)}
+                  style={{
+                    ...s.patternCard,
+                    borderColor: active ? "#15803d" : "#e5e7eb",
+                    background: active ? "#f0fdf4" : "#ffffff",
+                  }}
+                >
+                  <TeamBadge
+                    name={app.teamName}
+                    primary={primary}
+                    secondary={secondary}
+                    pattern={p.key}
+                    size={38}
+                    showInitials={false}
+                  />
+                  <span style={{ ...s.patternName, color: active ? "#15803d" : "#475569" }}>{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           <button type="button" onClick={save} disabled={saving} style={{ ...s.cta, opacity: saving ? 0.6 : 1 }}>
             {saved ? "Salvato ✓" : saving ? "Salvataggio…" : "Salva colori"}
           </button>
@@ -126,5 +171,8 @@ const s: Record<string, React.CSSProperties> = {
   colorInput: { width: 34, height: 34, border: "none", borderRadius: 10, background: "none", padding: 0, cursor: "pointer" },
   presets: { display: "flex", gap: 9, flexWrap: "wrap" },
   preset: { width: 36, height: 36, borderRadius: "50%", border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.2)", cursor: "pointer" },
+  patternGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
+  patternCard: { border: "1px solid #e5e7eb", borderRadius: 14, padding: "10px 6px", background: "#fff", cursor: "pointer", display: "grid", justifyItems: "center", gap: 7, fontFamily: "inherit" },
+  patternName: { fontSize: 10.5, fontWeight: 900 },
   cta: { width: "100%", border: 0, borderRadius: 14, padding: 15, fontWeight: 800, fontSize: 16, color: "#fff", background: "#15803d", marginTop: 20, cursor: "pointer", boxShadow: "0 10px 22px rgba(21,128,61,.22)" },
 };
