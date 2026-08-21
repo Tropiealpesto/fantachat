@@ -26,6 +26,14 @@ type HomeData = {
     status: string;
     slot_start?: string | null;
     slot_end?: string | null;
+    deadline_end_at?: string | null;
+  } | null;
+  my_slot?: {
+    id: string;
+    order: number;
+    starts_at: string;
+    ends_at: string;
+    is_open: boolean;
   } | null;
   lineup?: {
     total_points: number;
@@ -245,6 +253,24 @@ function formatDeadline(value?: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(d);
+}
+
+function formatSlotRange(start?: string | null, end?: string | null) {
+  if (!start || !end) return null;
+
+  const s = new Date(start);
+  const e = new Date(end);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
+
+  const day = new Intl.DateTimeFormat("it-IT", {
+    weekday: "short",
+  }).format(s);
+  const time = new Intl.DateTimeFormat("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${day} ${time.format(s)}-${time.format(e)}`;
 }
 
 function homeHeroBackground() {
@@ -664,7 +690,8 @@ export default function Home() {
           team: p.team ?? "",
           points: Number(p.points ?? 0),
         }));
-  const matchdayDeadline = formatDeadline(data.matchday?.slot_end);
+  const mySlotLabel = formatSlotRange(data.my_slot?.starts_at, data.my_slot?.ends_at);
+  const matchdayDeadline = formatDeadline(data.matchday?.deadline_end_at ?? data.matchday?.slot_end);
 
   function StandLine({ row, mine }: { row: StandRow; mine: boolean }) {
     const c = memberColors[row.user_id];
@@ -770,7 +797,12 @@ export default function Home() {
           <div style={{ flex: 1 }}>
             <div style={s.label}>Giornata corrente</div>
             <div style={s.matchday}>{data.matchday?.number ?? "—"}</div>
-            {matchdayDeadline && (
+            {mySlotLabel ? (
+              <div style={s.deadline}>
+                Il tuo slot {mySlotLabel}
+                {data.my_slot?.is_open ? " · aperto" : ""}
+              </div>
+            ) : matchdayDeadline && (
               <div style={s.deadline}>Chiude {matchdayDeadline}</div>
             )}
           </div>

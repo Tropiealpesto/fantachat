@@ -44,6 +44,8 @@ type LineupSlot = {
 type LineupData = {
   id?: string;
   submitted_at?: string;
+  status?: string;
+  error?: string | null;
   players?: {
     role: string;
     real_player_id: string;
@@ -65,6 +67,7 @@ type FormData = {
   coaches: Coach[];
   slot?: LineupSlot | null;
   lineup: LineupData | null;
+  draft: LineupData | null;
 };
 
 type TopRow = {
@@ -118,6 +121,7 @@ const EMPTY_FORM: FormData = {
   coaches: [],
   slot: null,
   lineup: null,
+  draft: null,
 };
 
 function roleOrder(role: string) {
@@ -161,6 +165,7 @@ export default function RosaPage() {
   const [selected, setSelected] = useState<Record<string, string[]>>({});
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -228,9 +233,11 @@ export default function RosaPage() {
 
         if (off) return;
 
+        const initialData = baseForm.lineup ?? baseForm.draft;
+
         setForm(baseForm);
-        setSelected(buildInitialSelected(baseForm.players_per_role, baseForm.lineup));
-        setSelectedCoachId(baseForm.lineup?.coach?.real_coach_id ?? "");
+        setSelected(buildInitialSelected(baseForm.players_per_role, initialData));
+        setSelectedCoachId(initialData?.coach?.real_coach_id ?? "");
         setSaved(Boolean(baseForm.lineup?.id));
         setLoading(false);
 
@@ -298,6 +305,7 @@ export default function RosaPage() {
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
     const otherPlayers = others.map((id) => byId.get(id)).filter(Boolean) as Player[];
+    const draftMode = !slotOpen && !saved;
 
     const usedTeams = new Set(otherPlayers.map((p) => norm(p.team)));
     const topUsed = otherPlayers.some((p) => topNames.has(norm(p.team)));
@@ -307,6 +315,8 @@ export default function RosaPage() {
       .filter((p) => {
         if (p.id === currentId) return true;
         if (selectedIds.includes(p.id)) return false;
+
+        if (draftMode) return true;
 
         const teamKey = norm(p.team);
 
@@ -392,11 +402,66 @@ export default function RosaPage() {
     }
   }
 
+  async function saveDraft() {
+    setErr(null);
+    setMsg(null);
+
+    if (!app.activeLeagueCompetitionId || !form.matchday?.id) {
+      return setErr("Nessuna giornata aperta.");
+    }
+
+    if (!form.is_participant) {
+      return setErr("Non partecipi a questa competizione.");
+    }
+
+    const validationError = validate();
+
+    if (validationError) {
+      return setErr(validationError);
+    }
+
+    const payload = Object.entries(selected).flatMap(([role, ids]) =>
+      ids.filter(Boolean).map((real_player_id) => ({ role, real_player_id }))
+    );
+
+    setSavingDraft(true);
+
+    try {
+      const { error } = await supabase.rpc("save_lineup_draft", {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+        p_matchday_id: form.matchday.id,
+        p_players: payload,
+        p_coach_id: form.coach_enabled ? selectedCoachId : null,
+      });
+
+      if (error) throw error;
+
+      setForm((prev) => ({
+        ...prev,
+        draft: {
+          id: prev.draft?.id,
+          status: "pending",
+          error: null,
+          players: payload,
+          coach: form.coach_enabled && selectedCoachId ? { real_coach_id: selectedCoachId } : null,
+        },
+      }));
+      setMsg("Bozza salvata. Se sarà valida alla fine del tuo slot, verrà inviata automaticamente.");
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
   if (!app.ready || loading) return <LoadingScreen />;
 
   const accent = app.competitionTheme.primary;
   const slotOpen = Boolean(form.slot?.is_open);
-  const locked = saved || !form.is_participant || !form.matchday || !slotOpen;
+  const canEdit = !saved && form.is_participant && Boolean(form.matchday) && Boolean(form.slot);
+  const canSubmitOfficial = canEdit && slotOpen;
+  const locked = !canEdit;
+  const hasDraft = Boolean(form.draft?.id || form.draft?.players?.length);
 
   const selectedCount = selectedIds.length + (form.coach_enabled && selectedCoachId ? 1 : 0);
   const completionLabel = `${selectedCount}/${totalRequired}`;
@@ -484,7 +549,19 @@ export default function RosaPage() {
 
           {form.slot && !slotOpen && !saved && (
             <div style={s.warn}>
-              Il tuo slot è {hour(form.slot.starts_at)}-{hour(form.slot.ends_at)}.
+              Il tuo slot è {hour(form.slot.starts_at)}-{hour(form.slot.ends_at)}. Puoi preparare una bozza anticipata.
+            </div>
+          )}
+
+          {hasDraft && !saved && form.draft?.status === "pending" && (
+            <div className="fc-dark-neon-message" style={s.ok}>
+              Bozza salvata. Verrà provata automaticamente alla fine del tuo slot.
+            </div>
+          )}
+
+          {hasDraft && !saved && form.draft?.status === "failed" && (
+            <div className="fc-dark-neon-error" style={s.err}>
+              Bozza non inviata: {form.draft?.error ?? "non rispetta i vincoli."}
             </div>
           )}
 
@@ -519,18 +596,31 @@ export default function RosaPage() {
           />
 
           {!saved && (
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving || locked}
-              style={{
-                ...s.btn,
-                background:
-                  !locked ? accent : "#d1d5db",
-              }}
-            >
-              {saving ? "Salvataggio..." : "Salva formazione"}
-            </button>
+            <div style={s.actionStack}>
+              <button
+                type="button"
+                onClick={saveDraft}
+                disabled={savingDraft || !canEdit}
+                style={{
+                  ...s.secondaryBtn,
+                  opacity: canEdit ? 1 : 0.6,
+                }}
+              >
+                {savingDraft ? "Salvataggio bozza..." : hasDraft ? "Aggiorna bozza" : "Salva bozza"}
+              </button>
+
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving || !canSubmitOfficial}
+                style={{
+                  ...s.btn,
+                  background: canSubmitOfficial ? accent : "#d1d5db",
+                }}
+              >
+                {saving ? "Salvataggio..." : "Invia formazione"}
+              </button>
+            </div>
           )}
         </section>
 
@@ -1325,6 +1415,7 @@ function normalizeFormData(value: any): FormData {
     coaches: Array.isArray(value?.coaches) ? value.coaches : [],
     slot: value?.slot ?? null,
     lineup: value?.lineup ?? null,
+    draft: value?.draft ?? null,
   };
 }
 
@@ -1657,6 +1748,25 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: "inherit",
     cursor: "pointer",
     marginTop: 9,
+  },
+
+  actionStack: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: 8,
+    marginTop: 9,
+  },
+
+  secondaryBtn: {
+    width: "100%",
+    padding: 10,
+    border: "1px solid #f4c99d",
+    color: "#b45309",
+    background: "#fff7ed",
+    borderRadius: 8,
+    fontWeight: 1000,
+    fontFamily: "inherit",
+    cursor: "pointer",
   },
 
   duo: {
