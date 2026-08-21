@@ -1,6 +1,9 @@
-﻿"use client";
+"use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabaseClient";
+import { useApp } from "./AppContext";
 
 const TABS = [
   { path: "/", label: "Home" },
@@ -27,8 +30,85 @@ function Icon({ path, active }: { path: string; active: boolean }) {
 export default function BottomNav({ unreadCount = 0, withSpacer = true, activePath }: BottomNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const app = useApp();
+  const [computedUnread, setComputedUnread] = useState(0);
   const currentPath = activePath ?? pathname;
   const isActive = (path: string) => (path === "/" ? currentPath === "/" : currentPath.startsWith(path));
+  const isChat = currentPath.startsWith("/chat");
+  const shownUnread = unreadCount || computedUnread;
+
+  useEffect(() => {
+    if (!app.ready || !app.activeLeagueId || !app.userId) {
+      return;
+    }
+
+    const key = `fantachat:last-chat-seen:${app.activeLeagueId}`;
+    const now = () => new Date().toISOString();
+
+    const markSeen = () => {
+      try {
+        window.localStorage.setItem(key, now());
+      } catch {}
+      setComputedUnread(0);
+    };
+
+    const loadUnread = async () => {
+      let lastSeen: string | null = null;
+      try {
+        lastSeen = window.localStorage.getItem(key);
+      } catch {}
+
+      if (!lastSeen) {
+        try {
+          window.localStorage.setItem(key, now());
+        } catch {}
+        return;
+      }
+
+      const { data } = await supabase
+        .from("messages")
+        .select("id,user_id")
+        .eq("league_id", app.activeLeagueId)
+        .gt("created_at", lastSeen)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      setComputedUnread((data ?? []).filter((message) => message.user_id !== app.userId).length);
+    };
+
+    if (isChat) {
+      window.setTimeout(markSeen, 0);
+    } else {
+      loadUnread();
+    }
+
+    const channel = supabase
+      .channel(`bottom-nav-unread:${app.activeLeagueId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `league_id=eq.${app.activeLeagueId}` },
+        (payload) => {
+          const userId = (payload.new as { user_id?: string | null }).user_id;
+          if (isChat) {
+            markSeen();
+            return;
+          }
+          if (userId !== app.userId) setComputedUnread((count) => Math.min(count + 1, 99));
+        }
+      )
+      .subscribe();
+
+    const onFocus = () => {
+      if (isChat) markSeen();
+      else loadUnread();
+    };
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      supabase.removeChannel(channel);
+    };
+  }, [app.ready, app.activeLeagueId, app.userId, isChat]);
 
   return (
     <>
@@ -47,9 +127,9 @@ export default function BottomNav({ unreadCount = 0, withSpacer = true, activePa
             >
               <div className="fc-bottom-icon">
                 <Icon path={tab.path} active={active} />
-                {tab.path === "/chat" && unreadCount > 0 && (
+                {tab.path === "/chat" && shownUnread > 0 && (
                   <div className="fc-unread-badge">
-                    {unreadCount > 99 ? "99+" : unreadCount}
+                    {shownUnread > 99 ? "99+" : shownUnread}
                   </div>
                 )}
               </div>

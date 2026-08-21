@@ -79,7 +79,7 @@ const s: Record<string, React.CSSProperties> = {
     top: "calc(var(--appbar-h) + var(--appbar-safe-top))",
     left: 0,
     right: 0,
-    bottom: "calc(var(--nav-h) + var(--safe-bottom))",
+    bottom: "calc(var(--nav-h) + var(--nav-safe-bottom))",
     background: "#f4f7f4",
     overflow: "hidden",
   },
