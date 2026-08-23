@@ -7,7 +7,7 @@ import { themeFromType } from "@/lib/competitionThemes";
 import TeamBadge, { type BadgePattern } from "./TeamBadge";
 
 type Mention = { user_id: string; team_name: string };
-type CitedPlayer = { id: string; name: string; role: string; team: string };
+type CitedPlayer = { id: string; name: string; role: string; team: string; image_url?: string | null };
 type Meta = { mentions?: Mention[]; players?: CitedPlayer[] } | null;
 type Message = {
   id: string; league_id: string; league_competition_id: string | null; user_id: string | null;
@@ -16,7 +16,7 @@ type Message = {
 };
 type Member = { user_id: string; team_name: string; role: string; color_primary?: string | null; color_secondary?: string | null; kit_pattern?: BadgePattern | null };
 type Competition = { id: string; name: string; competition_type: string | null };
-type PlayerHit = { real_player_id: string; name: string; role: string; team: string; points: number };
+type PlayerHit = { real_player_id: string; name: string; role: string; team: string; points: number; image_url?: string | null };
 
 type Props = {
   leagueId: string; currentUserId: string; currentTeamName: string;
@@ -65,6 +65,68 @@ function RoleBadge({ role, size = 30 }: { role: string; size?: number }) {
   );
 }
 
+function PlayerChipAvatar({ role, imageUrl, size = 26 }: { role: string; imageUrl?: string | null; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const c = ROLE_META[role] ?? { bg: "#f1f5f9", fg: "#475569" };
+
+  if (imageUrl && !failed) {
+    return (
+      <span
+        className="fc-player-avatar"
+        style={{
+          position: "relative",
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          display: "inline-grid",
+          placeItems: "center",
+          background: "#f1f5f9",
+          border: `1px solid ${c.fg}`,
+          boxShadow: "0 2px 7px rgba(15,23,42,.12)",
+          flexShrink: 0,
+        }}
+      >
+        <img
+          src={imageUrl}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            borderRadius: "50%",
+            display: "block",
+          }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            right: -4,
+            bottom: -4,
+            width: Math.max(12, size * 0.48),
+            height: Math.max(12, size * 0.48),
+            borderRadius: "50%",
+            display: "grid",
+            placeItems: "center",
+            background: c.fg,
+            color: "white",
+            border: "1.5px solid white",
+            fontSize: Math.max(7, size * 0.28),
+            lineHeight: 1,
+            fontWeight: 1000,
+          }}
+        >
+          {role}
+        </span>
+      </span>
+    );
+  }
+
+  return <RoleBadge role={role} size={size} />;
+}
+
 export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetitionId, competitions = [] }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,6 +137,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   const [playerHits, setPlayerHits] = useState<PlayerHit[]>([]);
   const [mentions, setMentions] = useState<Mention[]>([]);
   const [cited, setCited] = useState<CitedPlayer[]>([]);
+  const [playerImages, setPlayerImages] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -124,6 +187,58 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     () => Array.from(new Set(messages.flatMap((m) => (m.meta?.players ?? []).map((p) => p.id)))),
     [messages]
   );
+
+  const imageIds = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...citedIds,
+          ...cited.map((p) => p.id),
+          ...playerHits.map((p) => p.real_player_id),
+        ].filter(Boolean))
+      ),
+    [citedIds, cited, playerHits]
+  );
+
+  useEffect(() => {
+    if (imageIds.length === 0) return;
+
+    let off = false;
+
+    async function loadImages() {
+      const { data: players } = await supabase
+        .from("real_players")
+        .select("id,image_url,real_team_id")
+        .in("id", imageIds);
+
+      const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
+      let logos = new Map<string, string | null>();
+
+      if (teamIds.length > 0) {
+        const { data: teams } = await supabase
+          .from("real_teams")
+          .select("id,logo_url")
+          .in("id", teamIds);
+
+        logos = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+      }
+
+      const next: Record<string, string | null> = {};
+
+      for (const player of players ?? []) {
+        next[player.id] = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+      }
+
+      if (!off) setPlayerImages((prev) => ({ ...prev, ...next }));
+    }
+
+    loadImages();
+
+    return () => {
+      off = true;
+    };
+  }, [imageIds]);
+
   useEffect(() => {
     if (!activeLeagueCompetitionId || citedIds.length === 0) return;
     let off = false;
@@ -184,7 +299,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     const t = activeToken(input);
     const before = t ? input.slice(0, t.start) : input;
     setInput(before);
-    setCited((c) => (c.some((x) => x.id === p.real_player_id) ? c : [...c, { id: p.real_player_id, name: p.name, role: p.role, team: p.team }]));
+    setCited((c) => (c.some((x) => x.id === p.real_player_id) ? c : [...c, { id: p.real_player_id, name: p.name, role: p.role, team: p.team, image_url: p.image_url ?? playerImages[p.real_player_id] ?? null }]));
     setPts((prev) => ({ ...prev, [p.real_player_id]: Number(p.points) }));
     setToken(null); taRef.current?.focus();
   }
@@ -314,7 +429,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                     <span style={{ whiteSpace: "pre-wrap" }}>{renderText(m.content)}</span>
                     {players.map((p) => (
                       <span key={p.id} className="fc-chat-player-chip" style={s.pchip}>
-                        <RoleBadge role={p.role} size={26} />
+                        <PlayerChipAvatar role={p.role} imageUrl={p.image_url ?? playerImages[p.id]} size={26} />
                         <span style={s.pinfo}>
                           <span style={s.pn}>{playerLabel(p)}</span>
                           <span style={s.pt}>{playerSub(p)}</span>
@@ -345,7 +460,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                 ))
               : playerHits.map((p) => (
                   <button key={p.real_player_id} type="button" onMouseDown={(e) => { e.preventDefault(); pickPlayer(p); }} className="fc-chat-suggest-row" style={s.taRow}>
-                    <RoleBadge role={p.role} size={24} />
+                    <PlayerChipAvatar role={p.role} imageUrl={p.image_url ?? playerImages[p.real_player_id]} size={24} />
                     <span style={s.pinfo}><span style={s.taName}>{playerLabel(p)}</span><span style={s.pt}>{playerSub(p)}</span></span>
                     {ptsTag(p.real_player_id)}
                   </button>
@@ -359,7 +474,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         <div className="fc-chat-cited" style={s.citedBar}>
           {cited.map((p) => (
             <span key={p.id} style={s.citedChip}>
-              <RoleBadge role={p.role} size={18} />
+              <PlayerChipAvatar role={p.role} imageUrl={p.image_url ?? playerImages[p.id]} size={18} />
               {playerLabel(p)}
               <button type="button" onClick={() => setCited((c) => c.filter((x) => x.id !== p.id))} style={s.citedX}>✕</button>
             </span>

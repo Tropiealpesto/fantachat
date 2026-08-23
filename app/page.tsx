@@ -144,10 +144,11 @@ function RoleDot({ role, size = 34 }: { role: string; size?: number }) {
 
 function LineupAvatar({ player, size = 24 }: { player: LineupPlayer; size?: number }) {
   const [failed, setFailed] = useState(false);
+  const meta = roleColor(player.role);
 
   if (player.image_url && !failed) {
     return (
-      <span style={{ ...s.lineupAvatar, width: size, height: size }}>
+      <span style={{ ...s.lineupAvatar, width: size, height: size, borderColor: meta.fg }}>
         <img
           src={player.image_url}
           alt=""
@@ -156,7 +157,7 @@ function LineupAvatar({ player, size = 24 }: { player: LineupPlayer; size?: numb
           referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
         />
-        <span style={s.lineupAvatarRole}>{player.role}</span>
+        <span style={{ ...s.lineupAvatarRole, background: meta.fg }}>{player.role}</span>
       </span>
     );
   }
@@ -216,6 +217,48 @@ async function withHomeImages(competitionId: string | null, data: HomeData): Pro
         }
       : data.lineup,
   };
+}
+
+async function withTopPlayerImages(
+  competitionId: string | null,
+  rows: TopPlayer[]
+): Promise<TopPlayer[]> {
+  if (!competitionId || rows.length === 0) return rows;
+
+  const { data: players } = await supabase
+    .from("real_players")
+    .select("name,role,team,image_url,real_team_id")
+    .eq("competition_id", competitionId)
+    .eq("active", true);
+
+  const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
+  let logos = new Map<string, string | null>();
+
+  if (teamIds.length > 0) {
+    const { data: teams } = await supabase
+      .from("real_teams")
+      .select("id,logo_url")
+      .in("id", teamIds);
+
+    logos = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+  }
+
+  const images = new Map<string, string | null>();
+
+  for (const player of players ?? []) {
+    const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+    images.set(playerKey(player.role, player.name, player.team), image);
+    if (player.role === "P") images.set(playerKey(player.role, player.team, player.team), image);
+  }
+
+  return rows.map((player) => ({
+    ...player,
+    image_url:
+      player.image_url ??
+      images.get(playerKey(player.role, player.name, player.team)) ??
+      images.get(playerKey(player.role, player.team, player.team)) ??
+      null,
+  }));
 }
 
 function ptsStyle(v: number | null | undefined): React.CSSProperties {
@@ -478,16 +521,17 @@ export default function Home() {
         p_league_competition_id: lc,
         p_limit: 12,
       })
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!off && data) {
-          setTopPlayers(data as TopPlayer[]);
+          const enriched = await withTopPlayerImages(app.competitionId, data as TopPlayer[]);
+          if (!off) setTopPlayers(enriched);
         }
       });
 
     return () => {
       off = true;
     };
-  }, [app.activeLeagueCompetitionId]);
+  }, [app.activeLeagueCompetitionId, app.competitionId]);
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
@@ -977,15 +1021,7 @@ export default function Home() {
             <div style={s.topGrid}>
               {playerStatRows.map((p, i) => (
                 <div key={`${p.name}-${i}`} style={s.topPlayerCard}>
-                  <span
-                    style={{
-                      ...s.roleMini,
-                      background: roleColor(p.role).bg,
-                      color: roleColor(p.role).fg,
-                    }}
-                  >
-                    {p.role}
-                  </span>
+                  <LineupAvatar player={p} size={24} />
 
                   <div style={{ minWidth: 0 }}>
                     <div style={s.topName}>{shortName(p.name)}</div>
@@ -1626,7 +1662,7 @@ const s: Record<string, React.CSSProperties> = {
 
   topPlayerCard: {
     display: "grid",
-    gridTemplateColumns: "20px 1fr auto",
+    gridTemplateColumns: "26px 1fr auto",
     alignItems: "center",
     gap: 8,
     border: 0,
@@ -1634,6 +1670,43 @@ const s: Record<string, React.CSSProperties> = {
     padding: "8px 0",
     background: "transparent",
     borderBottom: "1px solid #f1f5f9",
+  },
+
+  lineupAvatar: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    borderRadius: "50%",
+    background: "#f8fafc",
+    border: "1.5px solid #e5e7eb",
+    boxShadow: "0 2px 7px rgba(15,23,42,.14)",
+    overflow: "visible",
+    flexShrink: 0,
+  },
+
+  lineupAvatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    borderRadius: "50%",
+    display: "block",
+  },
+
+  lineupAvatarRole: {
+    position: "absolute",
+    right: -4,
+    bottom: -4,
+    width: 13,
+    height: 13,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    color: "white",
+    border: "1.5px solid white",
+    boxShadow: "0 1px 3px rgba(15,23,42,.16)",
+    fontSize: 7,
+    lineHeight: 1,
+    fontWeight: 1000,
   },
 
   roleMini: {

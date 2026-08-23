@@ -15,6 +15,7 @@ type LivePlayer = {
   name: string;
   team: string;
   points: number;
+  image_url?: string | null;
 };
 
 type LiveRow = {
@@ -68,6 +69,10 @@ function liveColor(v: number) {
   return "#64748b";
 }
 
+function playerKey(role: string, name?: string | null, team?: string | null) {
+  return `${role}|${(name ?? "").trim().toLowerCase()}|${(team ?? "").trim().toLowerCase()}`;
+}
+
 function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
   const meta =
     ROLE_META[role] ?? {
@@ -99,6 +104,44 @@ function RoleDot({ role, size = 26 }: { role: string; size?: number }) {
   );
 }
 
+function PlayerAvatar({ player, size = 24 }: { player: LivePlayer; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const meta =
+    ROLE_META[player.role] ?? {
+      bg: "#f1f5f9",
+      fg: "#475569",
+      label: player.role,
+    };
+
+  if (player.image_url && !failed) {
+    return (
+      <span
+        className="fc-player-avatar"
+        style={{
+          ...s.playerAvatar,
+          width: size,
+          height: size,
+          borderColor: meta.fg,
+        }}
+      >
+        <img
+          src={player.image_url}
+          alt=""
+          style={s.playerAvatarImg}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+        <span style={{ ...s.playerAvatarRole, background: meta.fg }}>
+          {meta.label}
+        </span>
+      </span>
+    );
+  }
+
+  return <RoleDot role={player.role} size={size} />;
+}
+
 export default function LivePage() {
   const app = useRequireApp(true);
 
@@ -109,6 +152,49 @@ export default function LivePage() {
   const [memberColors, setMemberColors] = useState<
     Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>
   >({});
+  const [playerImages, setPlayerImages] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    if (!app.ready || !app.competitionId) return;
+
+    let off = false;
+
+    async function loadImages() {
+      const { data: players } = await supabase
+        .from("real_players")
+        .select("name,role,team,image_url,real_team_id")
+        .eq("competition_id", app.competitionId)
+        .eq("active", true);
+
+      const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
+      let logos = new Map<string, string | null>();
+
+      if (teamIds.length > 0) {
+        const { data: teams } = await supabase
+          .from("real_teams")
+          .select("id,logo_url")
+          .in("id", teamIds);
+
+        logos = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
+      }
+
+      const images: Record<string, string | null> = {};
+
+      for (const player of players ?? []) {
+        const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+        images[playerKey(player.role, player.name, player.team)] = image;
+        if (player.role === "P") images[playerKey(player.role, player.team, player.team)] = image;
+      }
+
+      if (!off) setPlayerImages(images);
+    }
+
+    loadImages();
+
+    return () => {
+      off = true;
+    };
+  }, [app.ready, app.competitionId]);
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
 
@@ -298,27 +384,38 @@ export default function LivePage() {
                     {r.players.length === 0 ? (
                       <div style={s.noLineup}>Nessuna formazione schierata.</div>
                     ) : (
-                      r.players.map((p, i) => (
+                      r.players.map((p, i) => {
+                        const player = {
+                          ...p,
+                          image_url:
+                            p.image_url ??
+                            playerImages[playerKey(p.role, p.name, p.team)] ??
+                            playerImages[playerKey(p.role, p.team, p.team)] ??
+                            null,
+                        };
+
+                        return (
                         <div key={`${p.name}-${i}`} style={s.playerRow}>
                           <div style={s.playerLeft}>
-                            <RoleDot role={p.role} size={18} />
+                            <PlayerAvatar player={player} size={24} />
                           </div>
 
                           <div style={s.playerInfo}>
-                            <div style={s.playerName}>{pLabel(p)}</div>
-                            <div style={s.playerSub}>{pSub(p)}</div>
+                            <div style={s.playerName}>{pLabel(player)}</div>
+                            <div style={s.playerSub}>{pSub(player)}</div>
                           </div>
 
                           <span
                             style={{
                               ...s.playerPoints,
-                              color: liveColor(p.points),
+                              color: liveColor(player.points),
                             }}
                           >
-                            {liveValue(p.points)}
+                            {liveValue(player.points)}
                           </span>
                         </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 )}
@@ -531,10 +628,45 @@ const s: Record<string, React.CSSProperties> = {
 
   playerLeft: {
     position: "relative",
-    width: 22,
-    height: 22,
+    width: 26,
+    height: 26,
     display: "grid",
     alignItems: "center",
+  },
+
+  playerAvatar: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    borderRadius: "50%",
+    background: "#f1f5f9",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 2px 7px rgba(15,23,42,.12)",
+    flexShrink: 0,
+  },
+
+  playerAvatarImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    borderRadius: "50%",
+    display: "block",
+  },
+
+  playerAvatarRole: {
+    position: "absolute",
+    right: -4,
+    bottom: -4,
+    width: 14,
+    height: 14,
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    color: "white",
+    border: "1.5px solid white",
+    fontSize: 7,
+    lineHeight: 1,
+    fontWeight: 1000,
   },
 
   playerInfo: {
