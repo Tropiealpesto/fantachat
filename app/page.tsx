@@ -174,6 +174,7 @@ async function withHomeImages(competitionId: string | null, data: HomeData): Pro
 
   const lineupPlayers = data.lineup?.players ?? [];
   if (lineupPlayers.length === 0) return data;
+  if (lineupPlayers.every((player) => player.image_url)) return data;
 
   const { data: players } = await supabase
     .from("real_players")
@@ -224,6 +225,7 @@ async function withTopPlayerImages(
   rows: TopPlayer[]
 ): Promise<TopPlayer[]> {
   if (!competitionId || rows.length === 0) return rows;
+  if (rows.every((player) => player.image_url)) return rows;
 
   const { data: players } = await supabase
     .from("real_players")

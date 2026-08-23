@@ -1364,6 +1364,12 @@ async function withPlayerImages(form: FormData): Promise<FormData> {
   const ids = form.players.map((p) => p.id).filter(Boolean);
   const coachIds = form.coaches.map((c) => c.id).filter(Boolean);
   if (ids.length === 0 && coachIds.length === 0) return form;
+  if (
+    form.players.every((player) => player.image_url) &&
+    form.coaches.every((coach) => coach.image_url)
+  ) {
+    return form;
+  }
 
   const { data: players } = ids.length
     ? await supabase
