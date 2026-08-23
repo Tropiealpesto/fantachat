@@ -189,6 +189,14 @@ function normalizeStatName(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+function statNames(detail) {
+  return [
+    detail.type?.name,
+    detail.type?.developer_name,
+    detail.type?.code,
+  ].map(normalizeStatName).filter(Boolean);
+}
+
 function numericStatValue(value) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   const parsed = Number(String(value ?? "").replace("%", "").replace(",", "."));
@@ -198,17 +206,19 @@ function numericStatValue(value) {
 function statValue(details, names, options = {}) {
   const wanted = names.map(normalizeStatName);
   const excluded = (options.exclude ?? []).map(normalizeStatName);
+  const exact = Boolean(options.exact);
   const rows = (details ?? []).filter((detail) => {
-    const type = normalizeStatName(detail.type?.name ?? detail.type?.developer_name);
-    if (!type) return false;
-    if (excluded.some((name) => type === name || type.includes(name))) return false;
-    return wanted.some((name) => type === name || type.includes(name));
+    const types = statNames(detail);
+    if (types.length === 0) return false;
+    if (excluded.some((name) => types.some((type) => type === name || type.includes(name)))) return false;
+    if (exact) return wanted.some((name) => types.some((type) => type === name));
+    return wanted.some((name) => types.some((type) => type === name || type.includes(name)));
   });
 
   const found =
     rows.find((detail) => {
-      const type = normalizeStatName(detail.type?.name ?? detail.type?.developer_name);
-      return wanted.some((name) => type === name);
+      const types = statNames(detail);
+      return wanted.some((name) => types.some((type) => type === name));
     }) ?? rows[0];
 
   const value = found?.data?.value;
@@ -528,12 +538,12 @@ async function importStatsForFixture(competition, season, fixture) {
         real_player_id: realPlayer.id,
       },
       {
-        goals: intStatValue(details, STAT_TYPES.goals),
-        assists: intStatValue(details, STAT_TYPES.assists),
+        goals: intStatValue(details, STAT_TYPES.goals, { exact: true }),
+        assists: intStatValue(details, STAT_TYPES.assists, { exact: true }),
         yellow,
         red,
-        pen_missed: intStatValue(details, STAT_TYPES.penMissed),
-        pen_saved: intStatValue(details, STAT_TYPES.penSaved),
+        pen_missed: intStatValue(details, STAT_TYPES.penMissed, { exact: true }),
+        pen_saved: intStatValue(details, STAT_TYPES.penSaved, { exact: true }),
         goals_conceded: conceded,
         clean_sheet: conceded === 0,
         xg: statValue(details, STAT_TYPES.xg) || null,
