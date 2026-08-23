@@ -201,7 +201,7 @@ export default function SuperadminPage() {
       <section style={s.syncCard}>
         <div>
           <h2 style={s.syncTitle}>Dati Sportmonks</h2>
-          <p style={s.syncText}>Aggiorna probabili formazioni e statistiche recenti/live. Catalogo e calendario si aggiornano da PC quando serve.</p>
+          <p style={s.syncText}>Aggiorna solo statistiche, risultati e punteggi live. Catalogo, mercato e calendario si aggiornano da PC quando serve.</p>
         </div>
 
         <button

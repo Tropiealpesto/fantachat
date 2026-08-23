@@ -75,11 +75,10 @@ export async function POST(request: NextRequest) {
               catalog: false,
               fixtures: false,
               stats: true,
-              expectedLineups: true,
+              expectedLineups: false,
               matchday: matchday > 0 ? matchday : undefined,
               statsWindowHoursBefore: 72,
               statsWindowHoursAfter: 6,
-              expectedLineupsWindowHours: 120,
             };
 
     const summary = await syncModule.runSportmonksSync({

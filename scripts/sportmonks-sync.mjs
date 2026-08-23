@@ -185,15 +185,38 @@ function matchdayNumber(fixture) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function statValue(details, names) {
-  const wanted = names.map((name) => name.toLowerCase());
-  const found = details.find((detail) => {
-    const type = String(detail.type?.name ?? detail.type?.developer_name ?? "").toLowerCase();
+function normalizeStatName(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function numericStatValue(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const parsed = Number(String(value ?? "").replace("%", "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function statValue(details, names, options = {}) {
+  const wanted = names.map(normalizeStatName);
+  const excluded = (options.exclude ?? []).map(normalizeStatName);
+  const rows = (details ?? []).filter((detail) => {
+    const type = normalizeStatName(detail.type?.name ?? detail.type?.developer_name);
+    if (!type) return false;
+    if (excluded.some((name) => type === name || type.includes(name))) return false;
     return wanted.some((name) => type === name || type.includes(name));
   });
 
+  const found =
+    rows.find((detail) => {
+      const type = normalizeStatName(detail.type?.name ?? detail.type?.developer_name);
+      return wanted.some((name) => type === name);
+    }) ?? rows[0];
+
   const value = found?.data?.value;
-  return typeof value === "number" ? value : Number(value ?? 0) || 0;
+  return numericStatValue(value);
+}
+
+function intStatValue(details, names, options = {}) {
+  return Math.trunc(Math.max(0, statValue(details, names, options)));
 }
 
 function eventCount(events, playerId, names) {
@@ -205,16 +228,29 @@ function eventCount(events, playerId, names) {
   }).length;
 }
 
-function teamStatValue(statistics, participantId, names) {
-  const wanted = names.map((name) => name.toLowerCase());
-  const found = (statistics ?? []).find((stat) => {
+function teamStatValue(statistics, participantId, names, options = {}) {
+  const wanted = names.map(normalizeStatName);
+  const excluded = (options.exclude ?? []).map(normalizeStatName);
+  const rows = (statistics ?? []).filter((stat) => {
     if (stat.participant_id !== participantId) return false;
-    const type = String(stat.type?.name ?? stat.type?.developer_name ?? "").toLowerCase();
+    const type = normalizeStatName(stat.type?.name ?? stat.type?.developer_name);
+    if (!type) return false;
+    if (excluded.some((name) => type === name || type.includes(name))) return false;
     return wanted.some((name) => type === name || type.includes(name));
   });
 
+  const found =
+    rows.find((stat) => {
+      const type = normalizeStatName(stat.type?.name ?? stat.type?.developer_name);
+      return wanted.some((name) => type === name);
+    }) ?? rows[0];
+
   const value = found?.data?.value;
-  return typeof value === "number" ? value : Number(value ?? 0) || 0;
+  return numericStatValue(value);
+}
+
+function teamIntStatValue(statistics, participantId, names, options = {}) {
+  return Math.trunc(Math.max(0, teamStatValue(statistics, participantId, names, options)));
 }
 
 function displayName(person) {
@@ -480,8 +516,8 @@ async function importStatsForFixture(competition, season, fixture) {
 
     const details = lineup.details ?? [];
     const conceded = teamScores.get(lineup.team_id)?.goalsAgainst ?? 0;
-    const yellow = statValue(details, STAT_TYPES.yellow) || eventCount(detail.events, lineup.player_id, STAT_TYPES.yellow);
-    const red = statValue(details, STAT_TYPES.red) || eventCount(detail.events, lineup.player_id, STAT_TYPES.red);
+    const yellow = intStatValue(details, STAT_TYPES.yellow) || eventCount(detail.events, lineup.player_id, STAT_TYPES.yellow);
+    const red = intStatValue(details, STAT_TYPES.red) || eventCount(detail.events, lineup.player_id, STAT_TYPES.red);
 
     await upsertByLookup(
       "player_stats",
@@ -492,22 +528,22 @@ async function importStatsForFixture(competition, season, fixture) {
         real_player_id: realPlayer.id,
       },
       {
-        goals: statValue(details, STAT_TYPES.goals),
-        assists: statValue(details, STAT_TYPES.assists),
+        goals: intStatValue(details, STAT_TYPES.goals),
+        assists: intStatValue(details, STAT_TYPES.assists),
         yellow,
         red,
-        pen_missed: statValue(details, STAT_TYPES.penMissed),
-        pen_saved: statValue(details, STAT_TYPES.penSaved),
+        pen_missed: intStatValue(details, STAT_TYPES.penMissed),
+        pen_saved: intStatValue(details, STAT_TYPES.penSaved),
         goals_conceded: conceded,
         clean_sheet: conceded === 0,
         xg: statValue(details, STAT_TYPES.xg) || null,
         xa: statValue(details, STAT_TYPES.xa) || null,
-        passes_completed: statValue(details, STAT_TYPES.passesCompleted),
+        passes_completed: intStatValue(details, STAT_TYPES.passesCompleted, { exclude: ["percentage", "%"] }),
         pass_accuracy: statValue(details, STAT_TYPES.passAccuracy) || null,
-        tackles: statValue(details, STAT_TYPES.tackles),
-        interceptions: statValue(details, STAT_TYPES.interceptions),
+        tackles: intStatValue(details, STAT_TYPES.tackles),
+        interceptions: intStatValue(details, STAT_TYPES.interceptions),
         npxg: statValue(details, STAT_TYPES.npxg) || null,
-        saves: statValue(details, STAT_TYPES.saves),
+        saves: intStatValue(details, STAT_TYPES.saves),
         save_pct: null,
         sportmonks_fixture_id: detail.id,
         source: "sportmonks",
@@ -525,7 +561,7 @@ async function importStatsForFixture(competition, season, fixture) {
 
     const keeper = await findKeeperByTeam(competition.id, realTeam.id);
     const score = teamScores.get(participant.id);
-    const saves = teamStatValue(detail.statistics, participant.id, STAT_TYPES.saves);
+    const saves = teamIntStatValue(detail.statistics, participant.id, STAT_TYPES.saves);
     const conceded = score?.goalsAgainst ?? 0;
     const savePct = saves + conceded > 0 ? (saves / (saves + conceded)) * 100 : null;
 
@@ -544,7 +580,7 @@ async function importStatsForFixture(competition, season, fixture) {
           yellow: 0,
           red: 0,
           pen_missed: 0,
-          pen_saved: statValue([], STAT_TYPES.penSaved),
+          pen_saved: 0,
           goals_conceded: conceded,
           clean_sheet: conceded === 0,
           xg: null,
