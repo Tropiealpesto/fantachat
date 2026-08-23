@@ -42,13 +42,6 @@ function readLocalEnv(path) {
 
 const env = { ...readLocalEnv(resolve(process.cwd(), ".env.local")), ...process.env };
 
-for (const key of ["SPORTMONKS_API_TOKEN", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
-  if (!env[key]) {
-    console.error(`Manca ${key} in .env.local.`);
-    process.exit(1);
-  }
-}
-
 function supabaseJwtRole(key) {
   try {
     const payload = JSON.parse(Buffer.from(key.split(".")[1] ?? "", "base64url").toString("utf8"));
@@ -58,14 +51,25 @@ function supabaseJwtRole(key) {
   }
 }
 
-if (supabaseJwtRole(env.SUPABASE_SERVICE_ROLE_KEY) !== "service_role") {
-  console.error("SUPABASE_SERVICE_ROLE_KEY non sembra una service role key valida.");
-  process.exit(1);
-}
+let supabase = null;
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+function ensureRuntimeEnv() {
+  for (const key of ["SPORTMONKS_API_TOKEN", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
+    if (!env[key]) {
+      throw new Error(`Manca ${key}. Aggiungila nelle Environment Variables di Vercel e redeploya.`);
+    }
+  }
+
+  if (supabaseJwtRole(env.SUPABASE_SERVICE_ROLE_KEY) !== "service_role") {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY non sembra una service role key valida.");
+  }
+
+  if (!supabase) {
+    supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+  }
+}
 
 let selectedMatchday = 0;
 let statsWindowHoursBefore = 8;
@@ -696,10 +700,22 @@ async function fixturesForExpectedLineups(competition, season) {
   return data ?? [];
 }
 
+function isExpectedLineupsAccessError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("403") && message.toLowerCase().includes("expectedlineups");
+}
+
 async function importExpectedLineupsForFixture(competition, season, fixture) {
-  const detail = await sportmonks(`/fixtures/${fixture.sportmonks_id}`, {
-    include: "expectedLineups",
-  });
+  let detail;
+  try {
+    detail = await sportmonks(`/fixtures/${fixture.sportmonks_id}`, {
+      include: "expectedLineups",
+    });
+  } catch (error) {
+    if (isExpectedLineupsAccessError(error)) return { count: 0, skipped: true };
+    throw error;
+  }
+
   const rows = detail.expectedlineups ?? detail.expectedLineups ?? [];
   let count = 0;
 
@@ -743,21 +759,25 @@ async function importExpectedLineupsForFixture(competition, season, fixture) {
     count += 1;
   }
 
-  return count;
+  return { count, skipped: false };
 }
 
 async function importExpectedLineups(competition, season) {
   const fixtures = await fixturesForExpectedLineups(competition, season);
-  const totals = { fixtures: fixtures.length, expectedLineups: 0 };
+  const totals = { fixtures: fixtures.length, expectedLineups: 0, skippedFixtures: 0 };
 
   for (const fixture of fixtures) {
-    totals.expectedLineups += await importExpectedLineupsForFixture(competition, season, fixture);
+    const result = await importExpectedLineupsForFixture(competition, season, fixture);
+    totals.expectedLineups += result.count;
+    if (result.skipped) totals.skippedFixtures += 1;
   }
 
   return totals;
 }
 
 export async function runSportmonksSync(options = {}) {
+  ensureRuntimeEnv();
+
   const onlyCatalog = Boolean(options.catalog);
   const onlyFixtures = Boolean(options.fixtures);
   const onlyStats = Boolean(options.stats);

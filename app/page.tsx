@@ -825,7 +825,7 @@ export default function Home() {
               background: data.matchday ? theme.primary : "#d1d5db",
             }}
           >
-            {hasLineup ? "Modifica rosa" : "Invia rosa"}
+            {hasLineup ? "Vedi rosa" : "Invia rosa"}
           </button>
         </div>
 

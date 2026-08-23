@@ -157,7 +157,7 @@ export default function SuperadminPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ mode: "recent" }),
       });
 
       const payload = await response.json().catch(() => ({}));
@@ -201,7 +201,7 @@ export default function SuperadminPage() {
       <section style={s.syncCard}>
         <div>
           <h2 style={s.syncTitle}>Dati Sportmonks</h2>
-          <p style={s.syncText}>Aggiorna catalogo, calendario, probabili formazioni e statistiche recenti/live.</p>
+          <p style={s.syncText}>Aggiorna probabili formazioni e statistiche recenti/live. Catalogo e calendario si aggiornano da PC quando serve.</p>
         </div>
 
         <button
@@ -214,7 +214,7 @@ export default function SuperadminPage() {
             cursor: syncingSportmonks ? "default" : "pointer",
           }}
         >
-          {syncingSportmonks ? "Aggiorno..." : "Aggiorna"}
+          {syncingSportmonks ? "Aggiorno..." : "Aggiorna dati live"}
         </button>
       </section>
 

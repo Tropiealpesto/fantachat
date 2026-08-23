@@ -46,23 +46,49 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const matchday = Number(body?.matchday ?? 0);
+  const mode = String(body?.mode ?? "recent");
   const startedAt = Date.now();
 
   try {
     const syncModule = (await import("../../../../scripts/sportmonks-sync.mjs")) as SyncModule;
+    const syncOptions =
+      mode === "catalog"
+        ? {
+            catalog: true,
+            fixtures: true,
+            stats: false,
+            expectedLineups: false,
+            matchday: matchday > 0 ? matchday : undefined,
+          }
+        : mode === "full"
+          ? {
+              catalog: true,
+              fixtures: true,
+              stats: true,
+              expectedLineups: true,
+              matchday: matchday > 0 ? matchday : undefined,
+              statsWindowHoursBefore: 12,
+              statsWindowHoursAfter: 3,
+              expectedLineupsWindowHours: 96,
+            }
+          : {
+              catalog: false,
+              fixtures: false,
+              stats: true,
+              expectedLineups: true,
+              matchday: matchday > 0 ? matchday : undefined,
+              statsWindowHoursBefore: 72,
+              statsWindowHoursAfter: 6,
+              expectedLineupsWindowHours: 120,
+            };
+
     const summary = await syncModule.runSportmonksSync({
-      catalog: true,
-      fixtures: true,
-      stats: true,
-      expectedLineups: true,
-      matchday: matchday > 0 ? matchday : undefined,
-      statsWindowHoursBefore: 12,
-      statsWindowHoursAfter: 3,
-      expectedLineupsWindowHours: 96,
+      ...syncOptions,
     });
 
     return Response.json({
       ok: true,
+      mode,
       duration_ms: Date.now() - startedAt,
       summary,
     });

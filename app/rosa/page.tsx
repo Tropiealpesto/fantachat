@@ -510,7 +510,9 @@ export default function RosaPage() {
             <div>
               <h1 style={s.title}>Rosa</h1>
               <p style={s.subtitle}>
-                Tocca uno slot nel campo per scegliere il giocatore.
+                {saved
+                  ? "Formazione inviata: puoi consultarla, ma non modificarla."
+                  : "Tocca uno slot nel campo per scegliere il giocatore."}
               </p>
             </div>
 
@@ -543,7 +545,7 @@ export default function RosaPage() {
             <div style={s.warn}>Nessuna giornata aperta.</div>
           )}
 
-          {form.is_participant && form.matchday && !form.slot && (
+          {form.is_participant && form.matchday && !form.slot && !saved && (
             <div style={s.warn}>Il tuo slot formazione non è ancora disponibile.</div>
           )}
 
