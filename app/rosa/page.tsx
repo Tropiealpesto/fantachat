@@ -68,6 +68,8 @@ type FormData = {
   slot?: LineupSlot | null;
   lineup: LineupData | null;
   draft: LineupData | null;
+  unavailable_player_ids: string[];
+  unavailable_coach_ids: string[];
 };
 
 type TopRow = {
@@ -122,6 +124,8 @@ const EMPTY_FORM: FormData = {
   slot: null,
   lineup: null,
   draft: null,
+  unavailable_player_ids: [],
+  unavailable_coach_ids: [],
 };
 
 function roleOrder(role: string) {
@@ -210,6 +214,16 @@ export default function RosaPage() {
   const topNames = useMemo(
     () => new Set(top.map((t) => norm(t.name))),
     [top]
+  );
+
+  const unavailablePlayerIds = useMemo(
+    () => new Set(form.unavailable_player_ids ?? []),
+    [form.unavailable_player_ids]
+  );
+
+  const unavailableCoachIds = useMemo(
+    () => new Set(form.unavailable_coach_ids ?? []),
+    [form.unavailable_coach_ids]
   );
 
   useEffect(() => {
@@ -314,6 +328,7 @@ export default function RosaPage() {
       .filter((p) => p.role === role)
       .filter((p) => {
         if (p.id === currentId) return true;
+        if (unavailablePlayerIds.has(p.id)) return false;
         if (selectedIds.includes(p.id)) return false;
 
         if (draftMode) return true;
@@ -483,6 +498,10 @@ export default function RosaPage() {
   const sheetOptions = activeSlot
     ? availableFor(activeSlot.role, currentSlotId)
     : [];
+
+  const coachOptions = form.coaches.filter(
+    (coach) => coach.id === selectedCoachId || !unavailableCoachIds.has(coach.id)
+  );
 
   return (
     <>
@@ -676,7 +695,7 @@ export default function RosaPage() {
       {coachSheetOpen && (
         <CoachSheet
           currentId={selectedCoachId}
-          options={form.coaches}
+          options={coachOptions}
           onClose={() => setCoachSheetOpen(false)}
           onClear={() => {
             setSelectedCoachId("");
@@ -1418,6 +1437,8 @@ function normalizeFormData(value: any): FormData {
     slot: value?.slot ?? null,
     lineup: value?.lineup ?? null,
     draft: value?.draft ?? null,
+    unavailable_player_ids: Array.isArray(value?.unavailable_player_ids) ? value.unavailable_player_ids : [],
+    unavailable_coach_ids: Array.isArray(value?.unavailable_coach_ids) ? value.unavailable_coach_ids : [],
   };
 }
 

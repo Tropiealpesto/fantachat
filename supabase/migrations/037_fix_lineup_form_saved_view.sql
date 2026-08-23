@@ -189,6 +189,22 @@ begin
         end
       )
     end,
+    'unavailable_player_ids', coalesce((
+      select jsonb_agg(distinct lp.real_player_id)
+      from public.lineup_players lp
+      join public.lineups li on li.id = lp.lineup_id
+      where li.league_competition_id = p_league_competition_id
+        and li.matchday_id = v_matchday.id
+        and li.user_id <> auth.uid()
+        and li.submitted_at is not null
+    ), '[]'::jsonb),
+    'unavailable_coach_ids', coalesce((
+      select jsonb_agg(distinct lc.real_coach_id)
+      from public.lineup_coaches lc
+      where lc.league_competition_id = p_league_competition_id
+        and lc.matchday_id = v_matchday.id
+        and lc.user_id <> auth.uid()
+    ), '[]'::jsonb),
     'players_per_role', v_players_per_role,
     'players', coalesce((
       select jsonb_agg(
