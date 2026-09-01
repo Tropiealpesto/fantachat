@@ -168,6 +168,22 @@ export default function SuperadminPage() {
 
       const seconds = Math.max(1, Math.round(Number(payload.duration_ms ?? 0) / 1000));
       setMsg(`Dati Sportmonks aggiornati ✅ (${seconds}s).`);
+
+      if (selectedCompetition?.active_season_id) {
+        fetch("/api/notifications/process", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            competitionId: selectedCompetition.id,
+            seasonId: selectedCompetition.active_season_id,
+            matchdayNumber: matchday,
+          }),
+        }).catch(() => {});
+      }
+
       await loadCompetitions();
     } catch (error) {
       setErr(error instanceof Error ? error.message : String(error));
@@ -574,6 +590,23 @@ function GiornateTab(props: {
     }
 
     props.setMsg(String(data ?? "Giornata aperta"));
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (token) {
+      fetch("/api/notifications/matchday-opened", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          competitionId: props.competition.id,
+          seasonId,
+          matchdayNumber: props.matchday,
+        }),
+      }).catch(() => {});
+    }
   }
 
   async function closeMatchday() {

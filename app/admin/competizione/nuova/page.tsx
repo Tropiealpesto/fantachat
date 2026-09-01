@@ -154,6 +154,7 @@ export default function NuovaCompetizione() {
     () => Object.values(roles).reduce((sum, n) => sum + (Number(n) || 0), 0),
     [roles]
   );
+  const maxTopPlayers = Math.max(1, Math.ceil(totalPlayers * 0.25));
 
   const selectedMode = useMemo(
     () =>
@@ -546,6 +547,10 @@ export default function NuovaCompetizione() {
 
             <div style={s.totalPlayers}>
               Totale giocatori da schierare: <b>{totalPlayers}</b>
+              <br />
+              <span>
+                Giocatori Top 6 consentiti: <b>{maxTopPlayers}</b>
+              </span>
             </div>
 
             <div style={s.summaryType}>

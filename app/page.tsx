@@ -7,6 +7,7 @@ import BottomNav from "./components/BottomNav";
 import LoadingScreen from "./components/LoadingScreen";
 import CompetitionBadge from "./components/CompetitionBadge";
 import TeamBadge, { type BadgePattern } from "./components/TeamBadge";
+import PushNotificationPrompt from "./components/PushNotificationPrompt";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
 import { supabase } from "../lib/supabaseClient";
@@ -831,6 +832,8 @@ export default function Home() {
 
       <main style={s.container}>
         {err && <div style={s.error}>Errore: {err}</div>}
+
+        <PushNotificationPrompt />
 
         <div style={s.matchdayCard}>
           <div style={s.matchdayIcon}>

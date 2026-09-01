@@ -80,14 +80,13 @@ export default function RegolePage() {
           <ul style={s.list}>
             <li>Non puoi scegliere un giocatore già preso da un altro partecipante.</li>
             <li>Puoi schierare al massimo un giocatore per squadra reale.</li>
-            <li>Puoi schierare al massimo un giocatore proveniente dalle Top 6.</li>
+            <li>Puoi schierare giocatori Top 6 fino al 25% della rosa, arrotondato per eccesso.</li>
             <li>Il portiere rappresenta la squadra, non il singolo portiere.</li>
           </ul>
 
           <p>
-            Nella Serie A base la formazione è composta da 1 portiere, 1 difensore,
-            1 centrocampista e 1 attaccante. Alcune competizioni possono avere una
-            composizione diversa.
+            L’admin può scegliere tra tre moduli ufficiali: Classico 1-1-1-1,
+            Bilanciato 1-2-2-2 e Serie A 1-3-5-2.
           </p>
         </RuleCard>
 
@@ -104,8 +103,8 @@ export default function RegolePage() {
           </p>
 
           <p>
-            Il limite Top 6 riguarda solo i giocatori. L’allenatore, quando
-            previsto, è uno slot separato.
+            Il limite Top 6 riguarda solo i giocatori ed è calcolato sul modulo
+            scelto. L’allenatore, quando previsto, è uno slot separato.
           </p>
         </RuleCard>
 

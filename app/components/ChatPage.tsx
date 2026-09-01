@@ -311,10 +311,25 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     const usedMentions = mentions.filter((m) => text.includes("@" + m.team_name));
     const meta = { mentions: usedMentions, players: cited };
     setInput(""); setMentions([]); setCited([]); setToken(null);
-    await supabase.rpc("send_chat_message", {
+    const { data: messageId, error } = await supabase.rpc("send_chat_message", {
       p_league_id: leagueId, p_league_competition_id: activeLeagueCompetitionId ?? null,
       p_matchday_id: null, p_content: text, p_kind: "text", p_meta: meta,
     });
+    if (!error) {
+      supabase.auth.getSession().then(({ data }) => {
+        const accessToken = data.session?.access_token;
+        if (!accessToken) return;
+
+        fetch("/api/notifications/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ leagueId, messageId, content: text }),
+        }).catch(() => {});
+      });
+    }
     await loadMessages();
     setSending(false);
   }

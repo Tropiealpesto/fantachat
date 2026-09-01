@@ -199,6 +199,7 @@ export default function RosaPage() {
     [roles]
   );
 
+  const topLimit = Math.max(1, Math.ceil(totalPlayers * 0.25));
   const totalRequired = totalPlayers + (form.coach_enabled ? 1 : 0);
 
   const byId = useMemo(
@@ -322,7 +323,7 @@ export default function RosaPage() {
     const draftMode = !slotOpen && !saved;
 
     const usedTeams = new Set(otherPlayers.map((p) => norm(p.team)));
-    const topUsed = otherPlayers.some((p) => topNames.has(norm(p.team)));
+    const selectedTopCount = otherPlayers.filter((p) => topNames.has(norm(p.team))).length;
 
     return form.players
       .filter((p) => p.role === role)
@@ -336,7 +337,7 @@ export default function RosaPage() {
         const teamKey = norm(p.team);
 
         if (usedTeams.has(teamKey)) return false;
-        if (topUsed && topNames.has(teamKey)) return false;
+        if (selectedTopCount >= topLimit && topNames.has(teamKey)) return false;
 
         return true;
       })
