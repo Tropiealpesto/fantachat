@@ -1236,7 +1236,7 @@ function FixturesPanel({
 
       {rows.length > 0 ? (
         <div style={s.contextList}>
-          {rows.slice(0, 8).map((row, index) => (
+          {rows.map((row, index) => (
             <div key={`${row.home}-${row.away}-${index}`} style={s.fixtureRow}>
               <TeamName name={row.home} />
               <small style={s.fixtureVs}>vs</small>
@@ -1728,7 +1728,7 @@ const s: Record<string, React.CSSProperties> = {
 
   coachSlot: {
     position: "absolute",
-    right: 8,
+    left: 8,
     top: 8,
     zIndex: 4,
     border: "1px solid rgba(255,255,255,.22)",

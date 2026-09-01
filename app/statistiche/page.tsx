@@ -23,8 +23,14 @@ type Row = {
   worst_points: number;
 };
 
+type MatchdayOption = {
+  matchday_number: number;
+  status: string | null;
+};
+
 type Section = "overview" | "players" | "compare";
 type MetricKey = "avg" | "total" | "played" | "best" | "worst";
+type SortDir = "desc" | "asc";
 
 const ROLES = [
   { k: "ALL", label: "Tutti" },
@@ -138,7 +144,11 @@ async function withCatalogImages(rows: Row[]) {
 export default function Statistiche() {
   const app = useRequireApp(true);
   const router = useRouter();
-  const [rows, setRows] = useState<Row[]>([]);
+  const [overallRows, setOverallRows] = useState<Row[]>([]);
+  const [matchdayRows, setMatchdayRows] = useState<Row[]>([]);
+  const [matchdays, setMatchdays] = useState<MatchdayOption[]>([]);
+  const [selectedMatchday, setSelectedMatchday] = useState<number | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState<Section>("overview");
   const [q, setQ] = useState("");
@@ -151,11 +161,57 @@ export default function Statistiche() {
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
-    rpcJson<Row[]>("get_player_stats", { p_league_competition_id: app.activeLeagueCompetitionId }, [])
-      .then((r) => withCatalogImages(r ?? []))
-      .then((r) => setRows(r))
-      .finally(() => setLoading(false));
+    let off = false;
+    Promise.all([
+      rpcJson<Row[]>("get_player_stats", { p_league_competition_id: app.activeLeagueCompetitionId }, [])
+        .then((r) => withCatalogImages(r ?? [])),
+      rpcJson<MatchdayOption[]>(
+        "get_player_stats_matchdays",
+        { p_league_competition_id: app.activeLeagueCompetitionId },
+        []
+      ).catch(() => []),
+    ])
+      .then(([stats, dayRows]) => {
+        if (off) return;
+        setOverallRows(stats);
+        setMatchdayRows([]);
+        setMatchdays(dayRows ?? []);
+      })
+      .finally(() => {
+        if (!off) setLoading(false);
+      });
+    return () => {
+      off = true;
+    };
   }, [app.ready, app.activeLeagueCompetitionId]);
+
+  useEffect(() => {
+    if (!app.ready || !app.activeLeagueCompetitionId || loading) return;
+    if (selectedMatchday == null) return;
+
+    let off = false;
+    rpcJson<Row[]>(
+      "get_player_stats_by_matchday",
+      {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+        p_matchday_number: selectedMatchday,
+      },
+      []
+    )
+      .then((r) => withCatalogImages(r ?? []))
+      .then((r) => {
+        if (!off) setMatchdayRows(r);
+      })
+      .catch(() => {
+        if (!off) setMatchdayRows([]);
+      });
+
+    return () => {
+      off = true;
+    };
+  }, [app.ready, app.activeLeagueCompetitionId, loading, selectedMatchday]);
+
+  const rows = selectedMatchday == null ? overallRows : matchdayRows;
 
   const topThree = useMemo(
     () =>
@@ -188,17 +244,18 @@ export default function Statistiche() {
         if (!needle) return true;
         return `${r.player_name} ${r.team_name ?? ""} ${r.role}`.toLowerCase().includes(needle);
       });
+    const direction = sortDir === "desc" ? 1 : -1;
     return [...base]
-      .sort((a, b) => metricValue(b, metric) - metricValue(a, metric) || playerLabel(a).localeCompare(playerLabel(b)))
+      .sort((a, b) => (metricValue(b, metric) - metricValue(a, metric)) * direction || playerLabel(a).localeCompare(playerLabel(b)))
       .map((r, i) => ({ ...r, rank: i + 1 }));
-  }, [rows, q, role, metric]);
+  }, [rows, q, role, metric, sortDir]);
 
   const maxMetric = useMemo(() => Math.max(1, ...filtered.map((r) => Math.abs(metricValue(r, metric)))), [filtered, metric]);
   const visibleRows = showAll ? filtered : filtered.slice(0, 24);
-  const effectiveCompareA = compareA || rows[0]?.player_id || "";
-  const effectiveCompareB = compareB || rows.find((r) => r.player_id !== effectiveCompareA)?.player_id || effectiveCompareA;
-  const playerA = rows.find((r) => r.player_id === effectiveCompareA) ?? rows[0];
-  const playerB = rows.find((r) => r.player_id === effectiveCompareB) ?? rows.find((r) => r.player_id !== playerA?.player_id) ?? rows[0];
+  const effectiveCompareA = compareA || overallRows[0]?.player_id || "";
+  const effectiveCompareB = compareB || overallRows.find((r) => r.player_id !== effectiveCompareA)?.player_id || effectiveCompareA;
+  const playerA = overallRows.find((r) => r.player_id === effectiveCompareA) ?? overallRows[0];
+  const playerB = overallRows.find((r) => r.player_id === effectiveCompareB) ?? overallRows.find((r) => r.player_id !== playerA?.player_id) ?? overallRows[0];
   const bestAverage = topThree[0]?.avg_points ?? 0;
   const worstAverage = flopThree[0]?.avg_points ?? 0;
   const accent = app.competitionTheme.primary;
@@ -237,14 +294,59 @@ export default function Statistiche() {
           <Tab active={section === "compare"} onClick={() => setSection("compare")} label="Confronto" />
         </nav>
 
+        {section !== "compare" && (
+          <section className="fc-stats-controls" style={s.scopeControls}>
+            <div style={s.dayFilters}>
+              <button
+                type="button"
+                className={`fc-stats-day${selectedMatchday == null ? " is-active" : ""}`}
+                style={{ ...s.dayBtn, ...(selectedMatchday == null ? s.dayBtnActive : {}) }}
+                onClick={() => {
+                  setSelectedMatchday(null);
+                  setShowAll(false);
+                }}
+              >
+                Totale
+              </button>
+              {matchdays.map((md) => (
+                <button
+                  key={md.matchday_number}
+                  type="button"
+                  className={`fc-stats-day${selectedMatchday === md.matchday_number ? " is-active" : ""}`}
+                  style={{ ...s.dayBtn, ...(selectedMatchday === md.matchday_number ? s.dayBtnActive : {}) }}
+                  onClick={() => {
+                    setSelectedMatchday(md.matchday_number);
+                    setShowAll(false);
+                  }}
+                >
+                  G{md.matchday_number}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="fc-stats-sort"
+              style={s.sortBtn}
+              onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+            >
+              {sortDir === "desc" ? "Dal più alto" : "Dal più basso"}
+            </button>
+          </section>
+        )}
+
         {section === "overview" && (
           <>
             <section className="fc-stats-card fc-stats-impact" style={s.card}>
               <div style={s.sectionHead}>
-                <div>
-                  <h2 style={s.sectionTitle}>Top 3 del momento</h2>
-                  <p style={s.sectionSub}>Media punti più alta nella competizione.</p>
-                </div>
+              <div>
+                <h2 style={s.sectionTitle}>Top 3 del momento</h2>
+                  <p style={s.sectionSub}>
+                    {selectedMatchday == null
+                      ? "Media punti più alta nella competizione."
+                      : `Punteggi migliori della giornata ${selectedMatchday}.`}
+                  </p>
+              </div>
                 <button type="button" style={s.linkBtn} onClick={() => setSection("players")}>Vedi tutti</button>
               </div>
 
@@ -318,7 +420,11 @@ export default function Statistiche() {
             <div style={s.sectionHead}>
               <div>
                 <h2 style={s.sectionTitle}>Tutti i giocatori</h2>
-                <p style={s.sectionSub}>Ricerca e ordina la lista completa.</p>
+                <p style={s.sectionSub}>
+                  {selectedMatchday == null
+                    ? "Ricerca e ordina la lista completa."
+                    : `Statistiche della giornata ${selectedMatchday}.`}
+                </p>
               </div>
               <span className="fc-stats-count" style={s.count}>{filtered.length}</span>
             </div>
@@ -443,7 +549,7 @@ export default function Statistiche() {
       {activeCompare && (
         <ComparePlayerSheet
           title={activeCompare === "A" ? "Scegli giocatore A" : "Scegli giocatore B"}
-          rows={rows}
+          rows={overallRows}
           currentId={activeCompare === "A" ? playerA?.player_id ?? "" : playerB?.player_id ?? ""}
           onClose={() => setActiveCompare(null)}
           onSelect={(id) => {
@@ -614,6 +720,11 @@ const s: Record<string, React.CSSProperties> = {
   tabs: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 4, background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 4, boxShadow: "0 4px 14px rgba(15,23,42,.045)" },
   tab: { border: 0, background: "transparent", borderRadius: 10, padding: "9px 5px", color: "#64748b", fontSize: 12, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
   tabActive: { background: "#0f172a", color: "white" },
+  scopeControls: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 8, background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 8, boxShadow: "0 4px 14px rgba(15,23,42,.045)" },
+  dayFilters: { display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" },
+  dayBtn: { flex: "0 0 auto", border: "1px solid #e5e7eb", background: "#f8fafc", color: "#64748b", borderRadius: 999, padding: "8px 10px", fontSize: 11.5, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
+  dayBtnActive: { background: "#0f172a", color: "white", borderColor: "#0f172a" },
+  sortBtn: { border: "1px solid rgba(224,123,26,.30)", background: "#fff7ed", color: "#c45f0a", borderRadius: 999, padding: "8px 10px", fontSize: 11.5, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.055)" },
   sectionHead: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 },
   sectionTitle: { margin: 0, color: "#0f172a", fontSize: 18, lineHeight: 1.05, fontWeight: 1000, letterSpacing: "-0.02em" },

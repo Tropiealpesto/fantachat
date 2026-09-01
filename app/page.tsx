@@ -1000,6 +1000,46 @@ export default function Home() {
           </section>
         )}
 
+        {recap?.has_data && (
+          <div style={s.recapCard}>
+            <div style={s.recapRow}>
+              <div style={s.recapIcon}>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M4 19V5" />
+                  <path d="M4 19h16" />
+                  <path d="m7 15 3-4 3 2 4-7" />
+                  <path d="M17 6h3v3" />
+                </svg>
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={s.recapLabel}>Recap giornata {recap.matchday_number}</div>
+                <p style={s.recapText}>
+                  <b>{recap.leader_team}</b> guida il turno con{" "}
+                  {fmt(recap.leader_points)} punti. MVP: <b>{mvpLabel}</b>{" "}
+                  ({signedFmt(recap.mvp_points)}).
+                </p>
+                <div style={{ display: "none" }}>
+                  Nyx · Giornata {recap.matchday_number}
+                </div>
+
+                <p style={{ display: "none" }}>
+                  La giornata va a <b>{recap.leader_team}</b> con{" "}
+                  {fmt(recap.leader_points)} punti. Migliore in campo{" "}
+                  <b>{mvpLabel}</b> ({signedFmt(recap.mvp_points)}).
+                </p>
+              </div>
+            </div>
+
+            <button style={s.recapBtn} onClick={() => router.push("/storico")}>
+              Vedi storico giornata
+            </button>
+            <button style={{ display: "none" }} onClick={() => router.push("/storico")}>
+              Leggi la puntata intera →
+            </button>
+          </div>
+        )}
+
         <section style={{ ...s.card, padding: 14 }}>
           <div style={s.sectionHeader}>
             <h2 style={s.sectionTitleSm}>Statistiche giocatori</h2>
@@ -1050,46 +1090,6 @@ export default function Home() {
           <b style={s.rulesText}>Regole competizione</b>
           <span style={s.rulesArrow}>›</span>
         </button>
-
-        {recap?.has_data && (
-          <div style={s.recapCard}>
-            <div style={s.recapRow}>
-              <div style={s.recapIcon}>
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M4 19V5" />
-                  <path d="M4 19h16" />
-                  <path d="m7 15 3-4 3 2 4-7" />
-                  <path d="M17 6h3v3" />
-                </svg>
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={s.recapLabel}>Recap giornata {recap.matchday_number}</div>
-                <p style={s.recapText}>
-                  <b>{recap.leader_team}</b> guida il turno con{" "}
-                  {fmt(recap.leader_points)} punti. MVP: <b>{mvpLabel}</b>{" "}
-                  ({signedFmt(recap.mvp_points)}).
-                </p>
-                <div style={{ display: "none" }}>
-                  Nyx · Giornata {recap.matchday_number}
-                </div>
-
-                <p style={{ display: "none" }}>
-                  La giornata va a <b>{recap.leader_team}</b> con{" "}
-                  {fmt(recap.leader_points)} punti. Migliore in campo{" "}
-                  <b>{mvpLabel}</b> ({signedFmt(recap.mvp_points)}).
-                </p>
-              </div>
-            </div>
-
-            <button style={s.recapBtn} onClick={() => router.push("/storico")}>
-              Vedi storico giornata
-            </button>
-            <button style={{ display: "none" }} onClick={() => router.push("/storico")}>
-              Leggi la puntata intera →
-            </button>
-          </div>
-        )}
 
         {app.isAdmin && (
           <div style={s.adminCard}>

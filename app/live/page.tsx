@@ -49,6 +49,22 @@ const ROLE_META: Record<string, { bg: string; fg: string; label: string }> = {
   AL: { bg: "#F5F3FF", fg: "#7C3AED", label: "AL" },
 };
 
+const ROLE_ORDER: Record<string, number> = {
+  AL: 0,
+  P: 1,
+  D: 2,
+  C: 3,
+  A: 4,
+};
+
+function sortLivePlayers(players: LivePlayer[]) {
+  return [...players].sort(
+    (a, b) =>
+      (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9) ||
+      pLabel(a).localeCompare(pLabel(b))
+  );
+}
+
 function pLabel(p: LivePlayer) {
   if (p.role === "AL") return p.name;
   return p.role === "P" ? p.team || p.name : p.name;
@@ -384,7 +400,7 @@ export default function LivePage() {
                     {r.players.length === 0 ? (
                       <div style={s.noLineup}>Nessuna formazione schierata.</div>
                     ) : (
-                      r.players.map((p, i) => {
+                      sortLivePlayers(r.players).map((p, i) => {
                         const player = {
                           ...p,
                           image_url:

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -221,6 +221,7 @@ async function withCatalogImage(playerId: string, data: PlayerDetail) {
 export default function Giocatore() {
   const app = useRequireApp(true);
   const params = useParams();
+  const router = useRouter();
   const [data, setData] = useState<PlayerDetail>(null);
   const [loading, setLoading] = useState(true);
   const [openMatchday, setOpenMatchday] = useState<number | null>(null);
@@ -253,6 +254,10 @@ export default function Giocatore() {
       <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
 
       <main className="fc-player-page" style={s.container}>
+        <button type="button" style={s.backBtn} onClick={() => router.back()}>
+          ← Indietro
+        </button>
+
         {!data ? (
           <div className="fc-player-card" style={s.card}>Giocatore non trovato.</div>
         ) : (
@@ -377,6 +382,7 @@ function Kpi({ label, value, positive, negative }: { label: string; value: strin
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "14px 14px 100px", display: "grid", gap: 10 },
+  backBtn: { justifySelf: "start", border: "1px solid #e5e7eb", background: "white", color: "#0f172a", borderRadius: 12, padding: "9px 12px", fontSize: 12.5, fontWeight: 900, fontFamily: "inherit", cursor: "pointer", boxShadow: "0 3px 10px rgba(15,23,42,.05)" },
   hero: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.06)" },
   identity: { display: "grid", gridTemplateColumns: "42px 1fr", alignItems: "center", gap: 11, marginTop: 14 },
   roleBadge: { width: 42, height: 42, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 15, fontWeight: 1000, border: "1px solid rgba(255,255,255,.9)", boxShadow: "0 2px 8px rgba(15,23,42,.08)" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -33,6 +33,7 @@ function RoleBadge({ role }: { role: string }) {
 export default function StoricoDetail() {
   const app = useRequireApp(true);
   const params = useParams();
+  const router = useRouter();
   const [data, setData] = useState<Data>({ matchday_number: null, rows: [] });
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -66,6 +67,10 @@ export default function StoricoDetail() {
     <>
       <AppBar league={app.leagueName} team={app.teamName} onMenuOpen={app.openDrawer} />
       <main style={s.container}>
+        <button type="button" style={s.backBtn} onClick={() => router.back()}>
+          ← Indietro
+        </button>
+
         <div style={s.head}>
           <h1 style={s.h1}>Giornata {data.matchday_number ?? "—"}</h1>
           <p style={s.sub}>Tabellone finale della giornata</p>
@@ -128,6 +133,7 @@ export default function StoricoDetail() {
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px" },
+  backBtn: { justifySelf: "start", border: "1px solid #e5e7eb", background: "white", color: "#0f172a", borderRadius: 12, padding: "9px 12px", fontSize: 12.5, fontWeight: 900, fontFamily: "inherit", cursor: "pointer", boxShadow: "0 3px 10px rgba(15,23,42,.05)", marginBottom: 10 },
   head: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 4px 16px rgba(15,23,42,.06)" },
   h1: { fontSize: 22, fontWeight: 1000, color: "#0f172a", margin: 0 },
   sub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: "4px 0 0" },
