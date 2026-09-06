@@ -175,7 +175,7 @@ export default function Statistiche() {
         if (off) return;
         setOverallRows(stats);
         setMatchdayRows([]);
-        setMatchdays(dayRows ?? []);
+        setMatchdays([...(dayRows ?? [])].sort((a, b) => a.matchday_number - b.matchday_number));
       })
       .finally(() => {
         if (!off) setLoading(false);
@@ -272,13 +272,13 @@ export default function Statistiche() {
         <section className="fc-stats-hero" style={s.hero}>
           <div style={s.heroTop}>
             <CompetitionBadge name={app.competitionName} type={app.competitionType} />
-            <span className="fc-stats-status" style={s.status}>Live data</span>
+            <span className="fc-stats-status" style={s.status}>Dati live</span>
           </div>
 
           <div style={s.heroCopy}>
             <span className="fc-stats-eyebrow" style={s.eyebrow}>Zona statistiche</span>
-            <h1 style={s.h1}>Numeri che pesano.</h1>
-            <p style={s.hsub}>Top, flop, confronto e ricerca completa dei giocatori della competizione.</p>
+            <h1 style={s.h1}>Statistiche</h1>
+            <p style={s.hsub}>Top, flop, confronto e ricerca completa dei giocatori.</p>
           </div>
 
           <div style={s.heroKpis}>
@@ -337,6 +337,25 @@ export default function Statistiche() {
 
         {section === "overview" && (
           <>
+            {topThree[0] && (
+              <section className="fc-stats-card fc-stats-spotlight" style={s.spotlight}>
+                <div style={s.spotlightMain}>
+                  <span style={s.spotlightLabel}>In evidenza</span>
+                  <div style={s.spotlightPlayer}>
+                    <PlayerAvatar row={topThree[0]} size={48} />
+                    <span style={{ minWidth: 0 }}>
+                      <b style={s.spotlightName}>{playerLabel(topThree[0])}</b>
+                      <small style={s.spotlightSub}>{playerSub(topThree[0])}</small>
+                    </span>
+                  </div>
+                </div>
+                <div style={s.spotlightScore}>
+                  <small style={s.spotlightScoreLabel}>{selectedMatchday == null ? "media" : `G${selectedMatchday}`}</small>
+                  <strong style={s.spotlightScoreValue}>{fmt(topThree[0].avg_points)}</strong>
+                </div>
+              </section>
+            )}
+
             <section className="fc-stats-card fc-stats-impact" style={s.card}>
               <div style={s.sectionHead}>
               <div>
@@ -708,15 +727,15 @@ function CompareMetric({ label, a, b, signed }: { label: string; a: number; b: n
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "12px 14px calc(86px + env(safe-area-inset-bottom, 0px))", display: "grid", gap: 10 },
-  hero: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#ffffff 0%,#fbfdfb 46%,#fff7ed 100%)", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 12px 30px rgba(15,23,42,.07)" },
+  hero: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#ffffff 0%,#fbfdfb 58%,#fffaf3 100%)", border: "1px solid #e5e7eb", borderRadius: 16, padding: 12, boxShadow: "0 8px 20px rgba(15,23,42,.05)" },
   heroTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  status: { border: "1px solid rgba(224,123,26,.28)", color: "#c45f0a", background: "#fff7ed", borderRadius: 999, padding: "7px 10px", fontSize: 11, fontWeight: 950 },
-  heroCopy: { marginTop: 18 },
-  eyebrow: { color: "#15803d", fontSize: 11, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".06em" },
-  h1: { margin: "4px 0 0", color: "#0f172a", fontSize: 34, lineHeight: .94, fontWeight: 1000, letterSpacing: "-0.03em" },
-  hsub: { margin: "9px 0 0", maxWidth: 380, color: "#64748b", fontSize: 13, lineHeight: 1.35, fontWeight: 800 },
-  heroKpis: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8, marginTop: 15 },
-  kpi: { background: "rgba(255,255,255,.82)", border: "1px solid #e5e7eb", borderRadius: 13, padding: "10px 8px", display: "grid", gap: 3, minWidth: 0 },
+  status: { border: "1px solid rgba(224,123,26,.22)", color: "#c45f0a", background: "rgba(255,247,237,.72)", borderRadius: 999, padding: "5px 8px", fontSize: 10.5, fontWeight: 950 },
+  heroCopy: { marginTop: 12 },
+  eyebrow: { color: "#15803d", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
+  h1: { margin: "3px 0 0", color: "#0f172a", fontSize: 25, lineHeight: 1, fontWeight: 1000 },
+  hsub: { margin: "6px 0 0", maxWidth: 380, color: "#64748b", fontSize: 12.5, lineHeight: 1.28, fontWeight: 800 },
+  heroKpis: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 6, marginTop: 11 },
+  kpi: { background: "rgba(255,255,255,.74)", border: "1px solid #eef2f7", borderRadius: 11, padding: "8px 7px", display: "grid", gap: 2, minWidth: 0 },
   tabs: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 4, background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 4, boxShadow: "0 4px 14px rgba(15,23,42,.045)" },
   tab: { border: 0, background: "transparent", borderRadius: 10, padding: "9px 5px", color: "#64748b", fontSize: 12, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
   tabActive: { background: "#0f172a", color: "white" },
@@ -730,6 +749,15 @@ const s: Record<string, React.CSSProperties> = {
   sectionTitle: { margin: 0, color: "#0f172a", fontSize: 18, lineHeight: 1.05, fontWeight: 1000, letterSpacing: "-0.02em" },
   sectionSub: { margin: "4px 0 0", color: "#64748b", fontSize: 12, lineHeight: 1.25, fontWeight: 800 },
   linkBtn: { border: 0, background: "transparent", color: "#15803d", fontSize: 12, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
+  spotlight: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12, background: "linear-gradient(135deg,#0f7f3d 0%,#0b5c2f 72%,#e07b1a 170%)", border: "1px solid rgba(15,127,61,.35)", borderRadius: 18, padding: 14, color: "white", boxShadow: "0 14px 28px rgba(15,127,61,.20)" },
+  spotlightMain: { minWidth: 0, display: "grid", gap: 9 },
+  spotlightLabel: { color: "rgba(255,255,255,.72)", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
+  spotlightPlayer: { minWidth: 0, display: "grid", gridTemplateColumns: "48px 1fr", alignItems: "center", gap: 10 },
+  spotlightName: { display: "block", color: "white", fontSize: 18, lineHeight: 1.05, fontWeight: 1000, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  spotlightSub: { display: "block", color: "rgba(255,255,255,.76)", fontSize: 11.5, fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 },
+  spotlightScore: { display: "grid", justifyItems: "end", gap: 1, minWidth: 64 },
+  spotlightScoreLabel: { color: "rgba(255,255,255,.72)", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase" },
+  spotlightScoreValue: { color: "white", fontSize: 31, lineHeight: 1, fontWeight: 1000, fontVariantNumeric: "tabular-nums" },
   podium: { display: "grid", gridTemplateColumns: "1.12fr .94fr .94fr", gap: 8, alignItems: "stretch" },
   podiumCard: { minWidth: 0, border: "1px solid #e5e7eb", background: "#fbfdfb", borderRadius: 15, padding: 10, display: "grid", justifyItems: "start", gap: 7, textAlign: "left", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,23,42,.04)" },
   podiumFirst: { background: "linear-gradient(160deg,#0f7f3d,#0b5c2f)", borderColor: "rgba(15,127,61,.42)", color: "white", boxShadow: "0 12px 28px rgba(15,127,61,.22)" },
