@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
-import CompetitionBadge from "../components/CompetitionBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
@@ -26,6 +25,15 @@ type Row = {
 type MatchdayOption = {
   matchday_number: number;
   status: string | null;
+};
+
+type PlayerHistoryPoint = {
+  matchday_number: number;
+  points: number;
+};
+
+type PlayerDetail = {
+  history?: PlayerHistoryPoint[] | null;
 };
 
 type Section = "overview" | "players" | "compare";
@@ -158,6 +166,7 @@ export default function Statistiche() {
   const [compareA, setCompareA] = useState("");
   const [compareB, setCompareB] = useState("");
   const [activeCompare, setActiveCompare] = useState<"A" | "B" | null>(null);
+  const [coverHistory, setCoverHistory] = useState<PlayerHistoryPoint[]>([]);
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId) return;
@@ -256,11 +265,73 @@ export default function Statistiche() {
   const effectiveCompareB = compareB || overallRows.find((r) => r.player_id !== effectiveCompareA)?.player_id || effectiveCompareA;
   const playerA = overallRows.find((r) => r.player_id === effectiveCompareA) ?? overallRows[0];
   const playerB = overallRows.find((r) => r.player_id === effectiveCompareB) ?? overallRows.find((r) => r.player_id !== playerA?.player_id) ?? overallRows[0];
+  const coverPlayer = topThree[0];
   const bestAverage = topThree[0]?.avg_points ?? 0;
-  const worstAverage = flopThree[0]?.avg_points ?? 0;
+  const recordPoints = useMemo(() => Math.max(0, ...rows.map((r) => Number(r.best_points) || 0)), [rows]);
+  const roleHot = useMemo(() => {
+    const grouped = new Map<string, { role: string; total: number; count: number }>();
+    for (const row of rows) {
+      const points = Number(row.avg_points) || 0;
+      if (points <= 0) continue;
+      const item = grouped.get(row.role) ?? { role: row.role, total: 0, count: 0 };
+      item.total += points;
+      item.count += 1;
+      grouped.set(row.role, item);
+    }
+    return [...grouped.values()]
+      .map((item) => ({ ...item, average: item.count > 0 ? item.total / item.count : 0 }))
+      .sort((a, b) => b.average - a.average)[0];
+  }, [rows]);
+  const teamHot = useMemo(() => {
+    const grouped = new Map<string, { team: string; total: number; count: number }>();
+    for (const row of rows) {
+      if (!row.team_name) continue;
+      const points = Number(row.total_points) || 0;
+      if (points <= 0) continue;
+      const item = grouped.get(row.team_name) ?? { team: row.team_name, total: 0, count: 0 };
+      item.total += points;
+      item.count += 1;
+      grouped.set(row.team_name, item);
+    }
+    return [...grouped.values()].sort((a, b) => b.total - a.total || b.count - a.count)[0];
+  }, [rows]);
+  const coverGraph = useMemo(() => {
+    if (coverHistory.length > 0) return coverHistory.slice(-6);
+    if (!coverPlayer) return [];
+    return [{ matchday_number: selectedMatchday ?? matchdays[0]?.matchday_number ?? 1, points: Number(coverPlayer.avg_points) || 0 }];
+  }, [coverHistory, coverPlayer, matchdays, selectedMatchday]);
   const accent = app.competitionTheme.primary;
 
   const openPlayer = useCallback((id: string) => router.push(`/giocatore/${id}`), [router]);
+
+  useEffect(() => {
+    if (!app.ready || !app.activeLeagueCompetitionId || !coverPlayer?.player_id) return;
+    let off = false;
+    rpcJson<PlayerDetail | null>(
+      "get_player_detail",
+      {
+        p_real_player_id: coverPlayer.player_id,
+        p_league_competition_id: app.activeLeagueCompetitionId,
+      },
+      null
+    )
+      .then((detail) => {
+        if (off) return;
+        const history = (detail?.history ?? [])
+          .map((point) => ({
+            matchday_number: Number(point.matchday_number) || 0,
+            points: Number(point.points) || 0,
+          }))
+          .filter((point) => point.matchday_number > 0);
+        setCoverHistory(history);
+      })
+      .catch(() => {
+        if (!off) setCoverHistory([]);
+      });
+    return () => {
+      off = true;
+    };
+  }, [app.ready, app.activeLeagueCompetitionId, coverPlayer?.player_id]);
 
   if (!app.ready || loading) return <LoadingScreen />;
 
@@ -271,20 +342,19 @@ export default function Statistiche() {
       <main className="fc-stats-page" style={s.container}>
         <section className="fc-stats-hero" style={s.hero}>
           <div style={s.heroTop}>
-            <CompetitionBadge name={app.competitionName} type={app.competitionType} />
+            <span style={s.heroBadge}><span style={s.heroDot} />{app.competitionName}</span>
             <span className="fc-stats-status" style={s.status}>Dati live</span>
           </div>
 
           <div style={s.heroCopy}>
-            <span className="fc-stats-eyebrow" style={s.eyebrow}>Zona statistiche</span>
-            <h1 style={s.h1}>Statistiche</h1>
-            <p style={s.hsub}>Top, flop, confronto e ricerca completa dei giocatori.</p>
+            <h1 style={s.h1}>Zona statistiche</h1>
+            <p style={s.hsub}>Top performer, rischi, ruoli caldi e statistiche decisive in una sola schermata.</p>
           </div>
 
           <div style={s.heroKpis}>
-            <Kpi label="Giocatori" value={String(rows.length)} />
             <Kpi label="Top media" value={fmt(bestAverage)} tone="good" />
-            <Kpi label="Flop media" value={fmt(worstAverage)} tone="warn" />
+            <Kpi label="Giornate" value={String(matchdays.length)} />
+            <Kpi label="Punteggio record" value={fmt(recordPoints)} tone="warn" />
           </div>
         </section>
 
@@ -337,57 +407,78 @@ export default function Statistiche() {
 
         {section === "overview" && (
           <>
-            {topThree[0] && (
-              <section className="fc-stats-card fc-stats-spotlight" style={s.spotlight}>
-                <div style={s.spotlightMain}>
-                  <span style={s.spotlightLabel}>In evidenza</span>
-                  <div style={s.spotlightPlayer}>
-                    <PlayerAvatar row={topThree[0]} size={48} />
-                    <span style={{ minWidth: 0 }}>
-                      <b style={s.spotlightName}>{playerLabel(topThree[0])}</b>
-                      <small style={s.spotlightSub}>{playerSub(topThree[0])}</small>
-                    </span>
+            {coverPlayer && (
+              <section className="fc-stats-card fc-stats-cover" style={s.coverCard}>
+                <div style={s.sectionHead}>
+                  <div>
+                    <h2 style={s.sectionTitle}>Uomo copertina</h2>
+                    <p style={s.sectionSub}>Rendimento giornata per giornata.</p>
                   </div>
+                  <button type="button" style={s.linkBtn} onClick={() => openPlayer(coverPlayer.player_id)}>Scheda</button>
                 </div>
-                <div style={s.spotlightScore}>
-                  <small style={s.spotlightScoreLabel}>{selectedMatchday == null ? "media" : `G${selectedMatchday}`}</small>
-                  <strong style={s.spotlightScoreValue}>{fmt(topThree[0].avg_points)}</strong>
-                </div>
+
+                <button type="button" style={s.coverMain} onClick={() => openPlayer(coverPlayer.player_id)}>
+                  <PlayerAvatar row={coverPlayer} size={56} />
+                  <span style={{ minWidth: 0 }}>
+                    <b style={s.coverName}>{playerLabel(coverPlayer)}</b>
+                    <small style={s.coverSub}>{playerSub(coverPlayer)}</small>
+                  </span>
+                  <strong style={s.coverScore}>{fmt(coverPlayer.avg_points)}</strong>
+                </button>
+
+                <MiniTrend points={coverGraph} />
               </section>
             )}
 
-            <section className="fc-stats-card fc-stats-impact" style={s.card}>
+            <section style={s.insightGrid}>
+              {roleHot && (
+                <div className="fc-stats-card" style={{ ...s.insightTile, ...s.insightGreen }}>
+                  <small style={s.insightLabel}>Ruolo caldo</small>
+                  <strong style={s.insightTitle}>{ROLE_META[roleHot.role]?.label ?? roleHot.role}</strong>
+                  <span style={s.insightText}>Media positiva: {fmt(roleHot.average)} punti</span>
+                </div>
+              )}
+              {teamHot && (
+                <div className="fc-stats-card" style={{ ...s.insightTile, ...s.insightOrange }}>
+                  <small style={s.insightLabel}>Squadra hot</small>
+                  <strong style={s.insightTitle}>{teamHot.team}</strong>
+                  <span style={s.insightText}>{fmt(teamHot.total)} punti dai giocatori con statistiche</span>
+                </div>
+              )}
+            </section>
+
+            <section className="fc-stats-card" style={s.card}>
               <div style={s.sectionHead}>
-              <div>
-                <h2 style={s.sectionTitle}>Top 3 del momento</h2>
-                  <p style={s.sectionSub}>
-                    {selectedMatchday == null
-                      ? "Media punti più alta nella competizione."
-                      : `Punteggi migliori della giornata ${selectedMatchday}.`}
-                  </p>
-              </div>
-                <button type="button" style={s.linkBtn} onClick={() => setSection("players")}>Vedi tutti</button>
+                <div>
+                  <h2 style={s.sectionTitle}>Top e flop</h2>
+                  <p style={s.sectionSub}>Vista immediata prima della scelta.</p>
+                </div>
+                <button type="button" style={s.linkBtn} onClick={() => setSection("players")}>Database</button>
               </div>
 
-              <div style={s.podium}>
-                {topThree.map((r, index) => (
-                  <button
-                    key={r.player_id}
-                    type="button"
-                    className={`fc-stats-podium-card ${index === 0 ? "is-first" : ""}`}
-                    style={{ ...s.podiumCard, ...(index === 0 ? s.podiumFirst : {}) }}
-                    onClick={() => openPlayer(r.player_id)}
-                  >
-                    <span style={{ ...s.podiumRank, ...(index === 0 ? { background: "#e07b1a", color: "white" } : {}) }}>
-                      #{index + 1}
-                    </span>
+              <div style={s.boardList}>
+                {topThree.slice(0, 2).map((r, index) => (
+                  <button key={r.player_id} type="button" className="fc-stats-board-row" style={s.boardRow} onClick={() => openPlayer(r.player_id)}>
+                    <span style={s.boardRank}>{index + 1}</span>
                     <PlayerAvatar row={r} />
-                    <span style={s.podiumName}>{playerLabel(r)}</span>
-                    <span style={s.podiumMeta}>{playerSub(r)}</span>
-                    <strong style={s.podiumScore}>{fmt(r.avg_points)}</strong>
-                    <small style={s.podiumSmall}>media</small>
+                    <span style={{ minWidth: 0 }}>
+                      <b style={s.compactName}>{playerLabel(r)}</b>
+                      <small style={s.compactSub}>{index === 0 ? "Top media" : "Top equilibrio"} · {r.role}</small>
+                    </span>
+                    <strong style={{ ...s.compactScore, color: "var(--fc-primary)" }}>{fmt(r.avg_points)}</strong>
                   </button>
                 ))}
+                {flopThree[0] && (
+                  <button type="button" className="fc-stats-board-row" style={s.boardRow} onClick={() => openPlayer(flopThree[0].player_id)}>
+                    <span style={{ ...s.boardRank, ...s.boardRankBad }}>F</span>
+                    <PlayerAvatar row={flopThree[0]} />
+                    <span style={{ minWidth: 0 }}>
+                      <b style={s.compactName}>{playerLabel(flopThree[0])}</b>
+                      <small style={s.compactSub}>Flop media · {flopThree[0].role}</small>
+                    </span>
+                    <strong style={{ ...s.compactScore, color: "#dc2626" }}>{fmt(flopThree[0].avg_points)}</strong>
+                  </button>
+                )}
                 {topThree.length === 0 && <div className="fc-stats-empty" style={s.empty}>Nessun giocatore disponibile.</div>}
               </div>
             </section>
@@ -395,41 +486,39 @@ export default function Statistiche() {
             <section className="fc-stats-card" style={s.card}>
               <div style={s.sectionHead}>
                 <div>
-                  <h2 style={s.sectionTitle}>Flop 3</h2>
-                  <p style={s.sectionSub}>Prestazioni da valutare prima di schierare la rosa.</p>
+                  <h2 style={s.sectionTitle}>Da confrontare</h2>
+                  <p style={s.sectionSub}>Scelte simili, rendimento diverso.</p>
                 </div>
+                <button type="button" style={s.linkBtn} onClick={() => setSection("compare")}>Apri</button>
               </div>
-
-              <div style={s.compactList}>
-                {flopThree.map((r, index) => (
-                  <button key={r.player_id} type="button" className="fc-stats-compact-row" style={s.compactRow} onClick={() => openPlayer(r.player_id)}>
-                    <span style={s.flopRank}>{index + 1}</span>
-                    <PlayerAvatar row={r} />
-                    <span style={s.compactNameWrap}>
-                      <b style={s.compactName}>{playerLabel(r)}</b>
-                      <small style={s.compactSub}>{playerSub(r)}</small>
+              <div style={s.compareSuggestions}>
+                {topThree[0] && topThree[1] && (
+                  <button type="button" style={s.suggestionRow} onClick={() => {
+                    setCompareA(topThree[0].player_id);
+                    setCompareB(topThree[1].player_id);
+                    setSection("compare");
+                  }}>
+                    <span style={s.suggestionText}>
+                      <b>{playerLabel(topThree[0])} vs {playerLabel(topThree[1])}</b>
+                      <small>Media, totale, best e worst</small>
                     </span>
-                    <strong style={{ ...s.compactScore, color: "#dc2626" }}>{fmt(r.avg_points)}</strong>
+                    <strong style={s.suggestionVs}>VS</strong>
                   </button>
-                ))}
+                )}
+                {topThree[0] && flopThree[0] && (
+                  <button type="button" style={s.suggestionRow} onClick={() => {
+                    setCompareA(topThree[0].player_id);
+                    setCompareB(flopThree[0].player_id);
+                    setSection("compare");
+                  }}>
+                    <span style={s.suggestionText}>
+                      <b>{playerLabel(topThree[0])} vs {playerLabel(flopThree[0])}</b>
+                      <small>Top performer contro rischio</small>
+                    </span>
+                    <strong style={s.suggestionVs}>VS</strong>
+                  </button>
+                )}
               </div>
-            </section>
-
-            <section className="fc-stats-actions" style={s.actions}>
-              <button type="button" className="fc-stats-action" style={s.actionCard} onClick={() => setSection("compare")}>
-                <span style={s.actionIcon}>vs</span>
-                <span>
-                  <b>Confronta due giocatori</b>
-                  <small>Media, totale, partite, best e worst.</small>
-                </span>
-              </button>
-              <button type="button" className="fc-stats-action" style={s.actionCard} onClick={() => setSection("players")}>
-                <span style={s.actionIcon}>#</span>
-                <span>
-                  <b>Apri database</b>
-                  <small>Filtra per nome, squadra, ruolo o metrica.</small>
-                </span>
-              </button>
             </section>
           </>
         )}
@@ -596,7 +685,33 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: "goo
   return (
     <div className="fc-stats-kpi" style={s.kpi}>
       <small>{label}</small>
-      <b style={{ color: tone === "good" ? "var(--fc-primary)" : tone === "warn" ? "#e07b1a" : "#0f172a" }}>{value}</b>
+      <b style={{ color: tone === "warn" ? "#fed7aa" : "white" }}>{value}</b>
+    </div>
+  );
+}
+
+function MiniTrend({ points }: { points: PlayerHistoryPoint[] }) {
+  const max = Math.max(1, ...points.map((point) => Math.abs(Number(point.points) || 0)));
+
+  return (
+    <div style={s.trendWrap} aria-label="Andamento punteggi giornalieri">
+      {points.map((point) => {
+        const value = Number(point.points) || 0;
+        const height = Math.max(14, Math.min(58, (Math.abs(value) / max) * 58));
+        return (
+          <span key={point.matchday_number} style={s.trendItem}>
+            <span
+              style={{
+                ...s.trendBar,
+                height,
+                background: value < 0 ? "linear-gradient(180deg,#f97316,#dc2626)" : "linear-gradient(180deg,#16a34a,#e07b1a)",
+              }}
+            />
+            <small style={s.trendLabel}>G{point.matchday_number}</small>
+          </span>
+        );
+      })}
+      {points.length === 0 && <span style={s.trendEmpty}>Andamento disponibile dopo le prime statistiche.</span>}
     </div>
   );
 }
@@ -727,15 +842,17 @@ function CompareMetric({ label, a, b, signed }: { label: string; a: number; b: n
 
 const s: Record<string, React.CSSProperties> = {
   container: { maxWidth: 520, margin: "0 auto", padding: "12px 14px calc(86px + env(safe-area-inset-bottom, 0px))", display: "grid", gap: 10 },
-  hero: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#ffffff 0%,#fbfdfb 58%,#fffaf3 100%)", border: "1px solid #e5e7eb", borderRadius: 16, padding: 12, boxShadow: "0 8px 20px rgba(15,23,42,.05)" },
+  hero: { position: "relative", overflow: "hidden", background: "radial-gradient(circle at 88% 4%,rgba(224,123,26,.95),transparent 30%), linear-gradient(140deg,#064c2a 0%,#07853f 70%,#15a85d 100%)", border: 0, borderRadius: 20, padding: 15, boxShadow: "0 16px 30px rgba(7,133,63,.22)", color: "white" },
   heroTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  status: { border: "1px solid rgba(224,123,26,.22)", color: "#c45f0a", background: "rgba(255,247,237,.72)", borderRadius: 999, padding: "5px 8px", fontSize: 10.5, fontWeight: 950 },
+  heroBadge: { display: "inline-flex", alignItems: "center", gap: 7, maxWidth: "60%", borderRadius: 999, padding: "6px 10px", background: "rgba(255,255,255,.15)", color: "rgba(255,255,255,.92)", fontSize: 11.5, fontWeight: 950, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  heroDot: { width: 7, height: 7, borderRadius: "50%", background: "#e07b1a", flexShrink: 0 },
+  status: { border: "1px solid rgba(255,255,255,.16)", color: "rgba(255,255,255,.92)", background: "rgba(255,255,255,.13)", borderRadius: 999, padding: "6px 9px", fontSize: 10.5, fontWeight: 950, whiteSpace: "nowrap" },
   heroCopy: { marginTop: 12 },
-  eyebrow: { color: "#15803d", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
-  h1: { margin: "3px 0 0", color: "#0f172a", fontSize: 25, lineHeight: 1, fontWeight: 1000 },
-  hsub: { margin: "6px 0 0", maxWidth: 380, color: "#64748b", fontSize: 12.5, lineHeight: 1.28, fontWeight: 800 },
-  heroKpis: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 6, marginTop: 11 },
-  kpi: { background: "rgba(255,255,255,.74)", border: "1px solid #eef2f7", borderRadius: 11, padding: "8px 7px", display: "grid", gap: 2, minWidth: 0 },
+  eyebrow: { color: "#15803d", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: 0 },
+  h1: { margin: 0, color: "white", fontSize: 30, lineHeight: 1, fontWeight: 1000, letterSpacing: 0 },
+  hsub: { margin: "8px 0 0", maxWidth: 390, color: "rgba(255,255,255,.78)", fontSize: 12.5, lineHeight: 1.3, fontWeight: 800 },
+  heroKpis: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 7, marginTop: 14 },
+  kpi: { background: "rgba(255,255,255,.14)", border: "1px solid rgba(255,255,255,.16)", borderRadius: 14, padding: "9px 7px", display: "grid", gap: 3, minWidth: 0, textAlign: "center", color: "white" },
   tabs: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 4, background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 4, boxShadow: "0 4px 14px rgba(15,23,42,.045)" },
   tab: { border: 0, background: "transparent", borderRadius: 10, padding: "9px 5px", color: "#64748b", fontSize: 12, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
   tabActive: { background: "#0f172a", color: "white" },
@@ -746,9 +863,34 @@ const s: Record<string, React.CSSProperties> = {
   sortBtn: { border: "1px solid rgba(224,123,26,.30)", background: "#fff7ed", color: "#c45f0a", borderRadius: 999, padding: "8px 10px", fontSize: 11.5, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.055)" },
   sectionHead: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 12 },
-  sectionTitle: { margin: 0, color: "#0f172a", fontSize: 18, lineHeight: 1.05, fontWeight: 1000, letterSpacing: "-0.02em" },
+  sectionTitle: { margin: 0, color: "#0f172a", fontSize: 18, lineHeight: 1.05, fontWeight: 1000, letterSpacing: 0 },
   sectionSub: { margin: "4px 0 0", color: "#64748b", fontSize: 12, lineHeight: 1.25, fontWeight: 800 },
   linkBtn: { border: 0, background: "transparent", color: "#15803d", fontSize: 12, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
+  coverCard: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 14, boxShadow: "0 10px 24px rgba(15,23,42,.065)" },
+  coverMain: { width: "100%", display: "grid", gridTemplateColumns: "56px minmax(0,1fr) auto", alignItems: "center", gap: 11, border: 0, background: "transparent", padding: 0, textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
+  coverName: { display: "block", color: "#0f172a", fontSize: 16, lineHeight: 1.08, fontWeight: 1000, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  coverSub: { display: "block", color: "#64748b", fontSize: 11.5, fontWeight: 800, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  coverScore: { color: "#15803d", fontSize: 28, lineHeight: 1, fontWeight: 1000, fontVariantNumeric: "tabular-nums" },
+  trendWrap: { display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", alignItems: "end", gap: 7, minHeight: 78, padding: "14px 2px 0", marginTop: 4 },
+  trendItem: { minWidth: 0, height: 74, display: "grid", gridTemplateRows: "1fr auto", justifyItems: "center", alignItems: "end", gap: 4 },
+  trendBar: { display: "block", width: "100%", maxWidth: 28, borderRadius: "999px 999px 5px 5px", minHeight: 14, boxShadow: "0 7px 15px rgba(21,128,61,.16)" },
+  trendLabel: { color: "#64748b", fontSize: 10, fontWeight: 900 },
+  trendEmpty: { gridColumn: "1 / -1", alignSelf: "center", justifySelf: "center", color: "#64748b", fontSize: 12, fontWeight: 850, textAlign: "center" },
+  insightGrid: { display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 9 },
+  insightTile: { minHeight: 112, borderRadius: 18, padding: 13, display: "grid", alignContent: "start", gap: 7, boxShadow: "0 8px 20px rgba(15,23,42,.045)" },
+  insightGreen: { background: "linear-gradient(145deg,#ffffff 0%,#eaf8ef 100%)", border: "1px solid rgba(21,128,61,.18)" },
+  insightOrange: { background: "linear-gradient(145deg,#ffffff 0%,#fff3e6 100%)", border: "1px solid rgba(224,123,26,.22)" },
+  insightLabel: { color: "#64748b", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: 0 },
+  insightTitle: { color: "#0f172a", fontSize: 19, lineHeight: 1.05, fontWeight: 1000 },
+  insightText: { color: "#64748b", fontSize: 11.5, lineHeight: 1.25, fontWeight: 800 },
+  boardList: { display: "grid", gap: 2 },
+  boardRow: { display: "grid", gridTemplateColumns: "26px 30px minmax(0,1fr) auto", alignItems: "center", gap: 9, border: 0, borderTop: "1px solid #f1f5f9", background: "white", padding: "9px 0", textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
+  boardRank: { width: 26, height: 26, borderRadius: 9, background: "#eaf8ef", color: "#15803d", display: "grid", placeItems: "center", fontSize: 11.5, fontWeight: 1000 },
+  boardRankBad: { background: "#fff3e6", color: "#c45f0a" },
+  compareSuggestions: { display: "grid", gap: 0 },
+  suggestionRow: { width: "100%", display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", alignItems: "center", gap: 10, border: 0, borderTop: "1px solid #f1f5f9", background: "white", padding: "10px 0", textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
+  suggestionText: { minWidth: 0, display: "grid", gap: 2, color: "#0f172a", fontSize: 13, fontWeight: 950 },
+  suggestionVs: { color: "#15803d", fontSize: 13, fontWeight: 1000 },
   spotlight: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12, background: "linear-gradient(135deg,#0f7f3d 0%,#0b5c2f 72%,#e07b1a 170%)", border: "1px solid rgba(15,127,61,.35)", borderRadius: 18, padding: 14, color: "white", boxShadow: "0 14px 28px rgba(15,127,61,.20)" },
   spotlightMain: { minWidth: 0, display: "grid", gap: 9 },
   spotlightLabel: { color: "rgba(255,255,255,.72)", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: ".04em" },
