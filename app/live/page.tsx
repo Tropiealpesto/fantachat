@@ -455,7 +455,7 @@ export default function LivePage() {
         </p>
       </main>
 
-      <BottomNav withSpacer={false} flush />
+      <BottomNav />
     </>
   );
 }
@@ -464,7 +464,7 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "10px 12px calc(var(--nav-h) + 12px)",
+    padding: "10px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 14px)",
     display: "grid",
     gap: 8,
   },
