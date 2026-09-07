@@ -7,6 +7,7 @@ import BottomNav from "../../../components/BottomNav";
 import CompetitionBadge from "../../../components/CompetitionBadge";
 import { useRequireLeagueAdmin } from "../../../hooks/useRequireApp";
 import { supabase } from "../../../../lib/supabaseClient";
+import { humanError } from "../../../../lib/humanError";
 
 type Competition = {
   id: string;
@@ -173,7 +174,7 @@ export default function NuovaCompetizione() {
 
       const rpcResult = await supabase.rpc("get_competition_catalog");
       if (rpcResult.error) {
-        setErr(rpcResult.error.message);
+        setErr(humanError(rpcResult.error));
         setCompetitions([]);
         setCatalogLoading(false);
         setMembersLoading(false);
@@ -193,7 +194,7 @@ export default function NuovaCompetizione() {
       });
 
       if (membersRpc.error) {
-        setErr(membersRpc.error.message);
+        setErr(humanError(membersRpc.error));
         setMembers([]);
         setMembersLoading(false);
         setCatalogLoading(false);
@@ -219,7 +220,7 @@ export default function NuovaCompetizione() {
       });
 
       if (rpcResult.error) {
-        setErr(rpcResult.error.message);
+        setErr(humanError(rpcResult.error));
         setSeasons([]);
         setSeasonId("");
         return;
@@ -307,7 +308,7 @@ export default function NuovaCompetizione() {
       p_players_per_role: roles,
     });
 
-    if (error) { setBusy(false); return setErr(error.message); }
+    if (error) { setBusy(false); return setErr(humanError(error)); }
 
     const id = (data as any)?.league_competition_id ?? data;
 
@@ -318,7 +319,7 @@ export default function NuovaCompetizione() {
       });
       if (rulesResult.error && !(ruleset === "classico" && isMissingRpc(rulesResult.error.message))) {
         setBusy(false);
-        return setErr(rulesResult.error.message);
+        return setErr(humanError(rulesResult.error));
       }
 
       const coachResult = await supabase.rpc("set_coach_mode", {
@@ -327,7 +328,7 @@ export default function NuovaCompetizione() {
       });
       if (coachResult.error && !(coachEnabled === false && isMissingRpc(coachResult.error.message))) {
         setBusy(false);
-        return setErr(coachResult.error.message);
+        return setErr(humanError(coachResult.error));
       }
 
       await app.setActiveCompetition(String(id));

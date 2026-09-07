@@ -11,8 +11,10 @@ import PushNotificationPrompt from "./components/PushNotificationPrompt";
 import { useRequireApp } from "./hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../lib/rpc";
 import { supabase } from "../lib/supabaseClient";
+import { humanError } from "../lib/humanError";
 
 type LineupPlayer = {
+  real_player_id?: string | null;
   role: string;
   name: string;
   team?: string | null;
@@ -73,6 +75,7 @@ type StandRow = {
 };
 
 type TopPlayer = {
+  real_player_id?: string | null;
   name: string;
   role: string;
   team: string;
@@ -179,7 +182,7 @@ async function withHomeImages(competitionId: string | null, data: HomeData): Pro
 
   const { data: players } = await supabase
     .from("real_players")
-    .select("name,role,team,image_url,real_team_id")
+    .select("id,name,role,team,image_url,real_team_id")
     .eq("competition_id", competitionId)
     .eq("active", true);
 
@@ -199,6 +202,7 @@ async function withHomeImages(competitionId: string | null, data: HomeData): Pro
 
   for (const player of players ?? []) {
     const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+    images.set(String(player.id), image);
     images.set(playerKey(player.role, player.name, player.team), image);
     if (player.role === "P") images.set(playerKey(player.role, player.team, player.team), image);
   }
@@ -212,6 +216,7 @@ async function withHomeImages(competitionId: string | null, data: HomeData): Pro
             ...player,
             image_url:
               player.image_url ??
+              (player.real_player_id ? images.get(player.real_player_id) : null) ??
               images.get(playerKey(player.role, player.name, player.team)) ??
               images.get(playerKey(player.role, player.team, player.team)) ??
               null,
@@ -230,7 +235,7 @@ async function withTopPlayerImages(
 
   const { data: players } = await supabase
     .from("real_players")
-    .select("name,role,team,image_url,real_team_id")
+    .select("id,name,role,team,image_url,real_team_id")
     .eq("competition_id", competitionId)
     .eq("active", true);
 
@@ -250,6 +255,7 @@ async function withTopPlayerImages(
 
   for (const player of players ?? []) {
     const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+    images.set(String(player.id), image);
     images.set(playerKey(player.role, player.name, player.team), image);
     if (player.role === "P") images.set(playerKey(player.role, player.team, player.team), image);
   }
@@ -258,6 +264,7 @@ async function withTopPlayerImages(
     ...player,
     image_url:
       player.image_url ??
+      (player.real_player_id ? images.get(player.real_player_id) : null) ??
       images.get(playerKey(player.role, player.name, player.team)) ??
       images.get(playerKey(player.role, player.team, player.team)) ??
       null,
@@ -424,7 +431,7 @@ export default function Home() {
         }
       } catch (e: any) {
         if (!cancelled) {
-          setErr(e?.message ?? String(e));
+          setErr(humanError(e));
           setData(emptyHome);
         }
       } finally {
@@ -1022,23 +1029,11 @@ export default function Home() {
                   {fmt(recap.leader_points)} punti. MVP: <b>{mvpLabel}</b>{" "}
                   ({signedFmt(recap.mvp_points)}).
                 </p>
-                <div style={{ display: "none" }}>
-                  Nyx · Giornata {recap.matchday_number}
-                </div>
-
-                <p style={{ display: "none" }}>
-                  La giornata va a <b>{recap.leader_team}</b> con{" "}
-                  {fmt(recap.leader_points)} punti. Migliore in campo{" "}
-                  <b>{mvpLabel}</b> ({signedFmt(recap.mvp_points)}).
-                </p>
               </div>
             </div>
 
             <button style={s.recapBtn} onClick={() => router.push("/storico")}>
               Vedi storico giornata
-            </button>
-            <button style={{ display: "none" }} onClick={() => router.push("/storico")}>
-              Leggi la puntata intera →
             </button>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useApp } from "./AppContext";
+import { humanError } from "../../lib/humanError";
 
 type Status = "checking" | "unsupported" | "hidden" | "ready" | "denied" | "active" | "busy";
 
@@ -39,6 +40,32 @@ async function postWithSession(path: string, body: unknown) {
   }
 
   return json;
+}
+
+async function getPushRegistration() {
+  if (!navigator.serviceWorker.controller) {
+    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  }
+
+  return navigator.serviceWorker.ready;
+}
+
+async function saveSubscription(publicKey: string) {
+  const registration = await getPushRegistration();
+  const existing = await registration.pushManager.getSubscription();
+  const subscription =
+    existing ??
+    (await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    }));
+
+  await postWithSession("/api/push/subscribe", {
+    subscription: subscription.toJSON(),
+    userAgent: navigator.userAgent,
+  });
+
+  return subscription;
 }
 
 export default function PushNotificationPrompt() {
@@ -95,10 +122,9 @@ export default function PushNotificationPrompt() {
     }
 
     if (Notification.permission === "granted") {
-      navigator.serviceWorker.ready
-        .then((registration) => registration.pushManager.getSubscription())
-        .then((subscription) => {
-          if (active) setStatus(subscription ? "active" : "ready");
+      saveSubscription(publicKey)
+        .then(() => {
+          if (active) setStatus("active");
         })
         .catch(() => {
           if (active) setStatus("ready");
@@ -127,27 +153,14 @@ export default function PushNotificationPrompt() {
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      const subscription =
-        existing ??
-        (await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
-        }));
-
-      await postWithSession("/api/push/subscribe", {
-        subscription: subscription.toJSON(),
-        userAgent: navigator.userAgent,
-      });
-
+      await saveSubscription(publicKey);
       await postWithSession("/api/push/test", {});
 
       setStatus("active");
       setMessage("Notifiche attive.");
     } catch (error) {
       setStatus("ready");
-      setMessage(error instanceof Error ? error.message : "Notifiche non attivate.");
+      setMessage(humanError(error, "Notifiche non attivate. Riprova da Chrome o dall'app installata."));
     }
   }
 

@@ -9,9 +9,9 @@ const sections: LegalSection[] = [
     ],
   },
   {
-    title: "Verifica identita",
+    title: "Verifica identità",
     body: [
-      "Per proteggere l'account, la richiesta deve arrivare dalla stessa email usata per registrarsi. Se servono verifiche aggiuntive, ti verra chiesto solo il minimo necessario.",
+      "Per proteggere l'account, la richiesta deve arrivare dalla stessa email usata per registrarsi. Se servono verifiche aggiuntive, ti verrà chiesto solo il minimo necessario.",
     ],
   },
   {
@@ -24,13 +24,13 @@ const sections: LegalSection[] = [
   {
     title: "Tempi",
     body: [
-      "La richiesta viene presa in carico il prima possibile e normalmente entro 30 giorni, salvo necessita tecniche, richieste particolarmente complesse o obblighi di legge.",
+      "La richiesta viene presa in carico il prima possibile e normalmente entro 30 giorni, salvo necessità tecniche, richieste particolarmente complesse o obblighi di legge.",
     ],
   },
   {
     title: "Cosa succede dopo",
     body: [
-      "Dopo la cancellazione potresti non poter piu accedere alle leghe, alle chat, alle formazioni e allo storico personale. Alcuni dati aggregati della competizione possono restare visibili senza riferimento diretto all'account cancellato.",
+      "Dopo la cancellazione potresti non poter più accedere alle leghe, alle chat, alle formazioni e allo storico personale. Alcuni dati aggregati della competizione possono restare visibili senza riferimento diretto all'account cancellato.",
     ],
   },
   {

@@ -6,6 +6,7 @@ import BottomNav from "../../components/BottomNav";
 import CompetitionBadge from "../../components/CompetitionBadge";
 import { useRequireLeagueAdmin } from "../../hooks/useRequireApp";
 import { supabase } from "../../../lib/supabaseClient";
+import { humanError } from "../../../lib/humanError";
 
 type Matchday = {
   id: string;
@@ -73,7 +74,7 @@ export default function AdminFormazioniPage() {
     setLoading(false);
 
     if (error) {
-      setErr(error.message);
+      setErr(humanError(error));
       return;
     }
 
@@ -107,7 +108,7 @@ export default function AdminFormazioniPage() {
     setBusy(null);
 
     if (error) {
-      setErr(error.message);
+      setErr(humanError(error));
       return;
     }
 
@@ -132,7 +133,7 @@ export default function AdminFormazioniPage() {
     setBusy(null);
 
     if (error) {
-      setErr(error.message);
+      setErr(humanError(error));
       return;
     }
 

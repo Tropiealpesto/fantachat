@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 import LogoMark from "../components/LogoMark";
+import { humanError } from "../../lib/humanError";
 
 type Mode = "login" | "signup";
 
@@ -34,10 +35,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
 
     if (error) {
-      const lower = (error.message || "").toLowerCase();
-      setErr(lower.includes("invalid login credentials")
-        ? "Email non registrata o password non corretta."
-        : error.message);
+      setErr(humanError(error));
       setBusy(false);
       return;
     }
@@ -58,10 +56,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signUp({ email: cleanEmail, password });
 
     if (error) {
-      const lower = (error.message || "").toLowerCase();
-      setErr(lower.includes("already registered") || lower.includes("already been registered")
-        ? "Email già registrata."
-        : error.message);
+      setErr(humanError(error));
       setBusy(false);
       return;
     }
@@ -93,7 +88,7 @@ export default function LoginPage() {
     });
 
     setBusy(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(humanError(error));
     setMsg("Ti abbiamo inviato una mail per reimpostare la password.");
   }
 

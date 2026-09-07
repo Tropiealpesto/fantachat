@@ -258,8 +258,8 @@ const isAdmin =
       activeLeagueId: row.active_league_id,
       activeLeagueCompetitionId: row.active_league_competition_id,
 
-      leagueName: row.league_name ?? "â€”",
-      teamName: row.team_name ?? "â€”",
+      leagueName: row.league_name ?? "—",
+      teamName: row.team_name ?? "—",
       role: row.role,
 
       competitionId: row.competition_id,

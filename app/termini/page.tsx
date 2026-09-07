@@ -4,14 +4,14 @@ const sections: LegalSection[] = [
   {
     title: "Oggetto del servizio",
     body: [
-      "FantaChat e' una fantasy/social app calcistica che permette agli utenti di creare o partecipare a leghe, scegliere giocatori, inviare formazioni, consultare punteggi, classifiche e comunicare nella chat di lega.",
-      "Il servizio e' pensato per intrattenimento, organizzazione e gestione privata delle competizioni tra utenti. Non e' una piattaforma di scommesse e non gestisce denaro o premi in denaro.",
+      "FantaChat è una fantasy/social app calcistica che permette agli utenti di creare o partecipare a leghe, scegliere giocatori, inviare formazioni, consultare punteggi, classifiche e comunicare nella chat di lega.",
+      "Il servizio è pensato per intrattenimento, organizzazione e gestione privata delle competizioni tra utenti. Non è una piattaforma di scommesse e non gestisce denaro o premi in denaro.",
     ],
   },
   {
     title: "Account",
     body: [
-      "Per usare FantaChat devi creare un account con email e password o accedere tramite i metodi disponibili. Sei responsabile della sicurezza delle credenziali e delle attivita svolte dal tuo account.",
+      "Per usare FantaChat devi creare un account con email e password o accedere tramite i metodi disponibili. Sei responsabile della sicurezza delle credenziali e delle attività svolte dal tuo account.",
       "Puoi chiedere la cancellazione dell'account seguendo la procedura indicata nella pagina dedicata.",
     ],
   },
@@ -20,43 +20,43 @@ const sections: LegalSection[] = [
     body: [
       "Le regole di ogni competizione possono dipendere dalla configurazione scelta dall'amministratore di lega: ruoli, giornate, vincoli di formazione, punteggi e bonus.",
       "Gli amministratori di lega devono usare gli strumenti disponibili in modo corretto e trasparente verso gli altri partecipanti.",
-      "Le competizioni create dagli utenti sono responsabilita degli utenti che le amministrano. FantaChat puo intervenire in caso di abuso tecnico, uso scorretto o violazione di questi termini.",
+      "Le competizioni create dagli utenti sono responsabilità degli utenti che le amministrano. FantaChat può intervenire in caso di abuso tecnico, uso scorretto o violazione di questi termini.",
     ],
   },
   {
     title: "Chat e contenuti",
     body: [
       "La chat serve alla comunicazione interna della lega. Non sono ammessi contenuti offensivi, discriminatori, illegali, minacciosi, spam o contenuti che violino diritti di terzi.",
-      "FantaChat puo rimuovere contenuti o limitare account in caso di uso scorretto, abuso tecnico o violazione di questi termini.",
+      "FantaChat può rimuovere contenuti o limitare account in caso di uso scorretto, abuso tecnico o violazione di questi termini.",
     ],
   },
   {
     title: "Punteggi e dati sportivi",
     body: [
       "Punteggi, statistiche e risultati dipendono dalle fonti dati, dalle regole configurate e dai calcoli applicativi. Possono essere corretti in caso di errori, aggiornamenti o rettifiche della fonte.",
-      "L'app puo mostrare dati provvisori durante una giornata e dati finali dopo ricalcolo o chiusura amministrativa.",
+      "L'app può mostrare dati provvisori durante una giornata e dati finali dopo ricalcolo o chiusura amministrativa.",
     ],
   },
   {
-    title: "Disponibilita del servizio",
+    title: "Disponibilità del servizio",
     body: [
-      "Facciamo il possibile per mantenere FantaChat stabile e accessibile, ma il servizio puo subire interruzioni, manutenzioni, bug o limitazioni tecniche.",
-      "Funzioni, grafica e regole possono evolvere nel tempo per migliorare qualita, sicurezza e prestazioni.",
+      "Facciamo il possibile per mantenere FantaChat stabile e accessibile, ma il servizio può subire interruzioni, manutenzioni, bug o limitazioni tecniche.",
+      "Funzioni, grafica e regole possono evolvere nel tempo per migliorare qualità, sicurezza e prestazioni.",
     ],
   },
   {
-    title: "Responsabilita",
+    title: "Responsabilità",
     body: [
-      "FantaChat non e' responsabile per accordi privati, premi o decisioni economiche prese dagli utenti fuori dall'app.",
-      "L'app viene fornita per finalita di intrattenimento e gestione sportiva fantasy. Nei limiti consentiti dalla legge, FantaChat non risponde di danni indiretti, perdita di dati dovuta a cause esterne, interruzioni temporanee o decisioni prese dagli utenti sulla base di dati provvisori.",
+      "FantaChat non è responsabile per accordi privati, premi o decisioni economiche prese dagli utenti fuori dall'app.",
+      "L'app viene fornita per finalità di intrattenimento e gestione sportiva fantasy. Nei limiti consentiti dalla legge, FantaChat non risponde di danni indiretti, perdita di dati dovuta a cause esterne, interruzioni temporanee o decisioni prese dagli utenti sulla base di dati provvisori.",
       "Nulla in questi termini limita i diritti inderogabili riconosciuti agli utenti dalla normativa applicabile.",
     ],
   },
   {
     title: "Sospensione e chiusura account",
     body: [
-      "FantaChat puo sospendere o limitare l'accesso in caso di violazione dei termini, abuso tecnico, tentativi di accesso non autorizzato, spam, contenuti illeciti o comportamenti che danneggiano altri utenti.",
-      "L'utente puo chiedere la cancellazione dell'account seguendo la procedura indicata nella pagina dedicata.",
+      "FantaChat può sospendere o limitare l'accesso in caso di violazione dei termini, abuso tecnico, tentativi di accesso non autorizzato, spam, contenuti illeciti o comportamenti che danneggiano altri utenti.",
+      "L'utente può chiedere la cancellazione dell'account seguendo la procedura indicata nella pagina dedicata.",
     ],
   },
   {

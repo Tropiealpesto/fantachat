@@ -8,6 +8,7 @@ import LoadingScreen from "../components/LoadingScreen";
 import CompetitionBadge from "../components/CompetitionBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 type Player = {
   id: string;
@@ -264,7 +265,7 @@ export default function RosaPage() {
             // Le immagini sono un arricchimento visivo: la rosa deve restare usabile anche senza.
           });
       } catch (e: any) {
-        if (!off) setErr(e?.message ?? String(e));
+        if (!off) setErr(humanError(e));
       } finally {
         if (!off) setLoading(false);
       }
@@ -412,7 +413,7 @@ export default function RosaPage() {
       setSaved(true);
       setMsg("Rosa inviata");
     } catch (e: any) {
-      setErr(e?.message ?? String(e));
+      setErr(humanError(e));
     } finally {
       setSaving(false);
     }
@@ -464,7 +465,7 @@ export default function RosaPage() {
       }));
       setMsg("Bozza salvata. Se sarà valida alla fine del tuo slot, verrà inviata automaticamente.");
     } catch (e: any) {
-      setErr(e?.message ?? String(e));
+      setErr(humanError(e));
     } finally {
       setSavingDraft(false);
     }

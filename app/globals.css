@@ -237,6 +237,10 @@ textarea:focus-visible {
   -webkit-backdrop-filter: blur(18px) saturate(1.16);
 }
 
+.fc-bottom-nav.is-flush {
+  bottom: calc(-1 * var(--nav-safe-bottom));
+}
+
 .fc-bottom-tab {
   position: relative;
   border: 0;

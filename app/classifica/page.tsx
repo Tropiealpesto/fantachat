@@ -9,6 +9,7 @@ import TeamBadge, { type BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt } from "../../lib/rpc";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 type Row = {
   user_id: string;
@@ -87,7 +88,7 @@ export default function Classifica() {
       } catch (e: any) {
         if (!cancelled) {
           setRows([]);
-          setErr(e?.message ?? String(e));
+          setErr(humanError(e));
         }
       } finally {
         if (!cancelled) {

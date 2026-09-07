@@ -9,8 +9,10 @@ import TeamBadge, { type BadgePattern } from "../components/TeamBadge";
 import { useRequireApp } from "../hooks/useRequireApp";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 type LivePlayer = {
+  real_player_id?: string | null;
   role: string;
   name: string;
   team: string;
@@ -178,7 +180,7 @@ export default function LivePage() {
     async function loadImages() {
       const { data: players } = await supabase
         .from("real_players")
-        .select("name,role,team,image_url,real_team_id")
+        .select("id,name,role,team,image_url,real_team_id")
         .eq("competition_id", app.competitionId)
         .eq("active", true);
 
@@ -198,6 +200,7 @@ export default function LivePage() {
 
       for (const player of players ?? []) {
         const image = player.image_url ?? logos.get(player.real_team_id ?? "") ?? null;
+        images[String(player.id)] = image;
         images[playerKey(player.role, player.name, player.team)] = image;
         if (player.role === "P") images[playerKey(player.role, player.team, player.team)] = image;
       }
@@ -229,7 +232,7 @@ export default function LivePage() {
           setErr(null);
         }
       } catch (e: any) {
-        if (!off) setErr(e.message);
+        if (!off) setErr(humanError(e));
       } finally {
         if (!off) setLoading(false);
       }
@@ -405,6 +408,7 @@ export default function LivePage() {
                           ...p,
                           image_url:
                             p.image_url ??
+                            (p.real_player_id ? playerImages[p.real_player_id] : null) ??
                             playerImages[playerKey(p.role, p.name, p.team)] ??
                             playerImages[playerKey(p.role, p.team, p.team)] ??
                             null,
@@ -451,7 +455,7 @@ export default function LivePage() {
         </p>
       </main>
 
-      <BottomNav withSpacer={false} />
+      <BottomNav withSpacer={false} flush />
     </>
   );
 }
@@ -460,7 +464,7 @@ const s: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: 520,
     margin: "0 auto",
-    padding: "10px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px)",
+    padding: "10px 12px calc(var(--nav-h) + 12px)",
     display: "grid",
     gap: 8,
   },

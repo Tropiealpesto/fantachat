@@ -21,5 +21,16 @@ export async function POST(request: NextRequest) {
     { eventKey: `push-test:${user.id}:${Date.now()}` }
   );
 
+  if (result.sent === 0) {
+    return Response.json(
+      {
+        ok: false,
+        error: "Notifica di test non inviata. Controlla configurazione VAPID e permessi del dispositivo.",
+        result,
+      },
+      { status: 500 }
+    );
+  }
+
   return Response.json({ ok: true, result });
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 export default function CreaLega() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function CreaLega() {
 
     setBusy(false);
 
-    if (error) return setErr(error.message);
+    if (error) return setErr(humanError(error));
 
     const result = Array.isArray(data) ? data[0] : data;
 

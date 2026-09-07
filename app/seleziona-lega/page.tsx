@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 type Row = {
   league_id: string;
@@ -35,7 +36,7 @@ export default function SelezionaLega() {
     setLoading(true);
     const { data, error } = await supabase.rpc("get_my_leagues");
     setLoading(false);
-    if (error) { setRows([]); setErr(error.message); return; }
+    if (error) { setRows([]); setErr(humanError(error)); return; }
     setRows((data ?? []) as Row[]);
   }, []);
 
@@ -48,7 +49,7 @@ export default function SelezionaLega() {
   async function select(id: string) {
     setErr(null); setMsg(null);
     const { error } = await supabase.rpc("set_active_league", { p_league_id: id });
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(humanError(error)); return; }
     await app.refresh();
     router.replace("/");
   }
@@ -63,7 +64,7 @@ export default function SelezionaLega() {
       p_team_name: team.trim(),
     });
     setJoining(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(humanError(error));
     setMsg("Sei entrato nella lega ✅");
     setCode(""); setTeam("");
     await app.refresh();
