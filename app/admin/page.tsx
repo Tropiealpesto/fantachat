@@ -51,8 +51,8 @@ export default function AdminHome() {
             <a key={link.href} href={link.href} style={s.link}>
               <span style={s.icon}>{link.icon}</span>
               <span style={s.linkText}>
-                <b>{link.title}</b>
-                <small>{link.desc}</small>
+                <b style={s.linkTitle}>{link.title}</b>
+                <small style={s.linkDesc}>{link.desc}</small>
               </span>
               <span style={s.chev}>›</span>
             </a>
@@ -67,11 +67,14 @@ export default function AdminHome() {
 
 const s: Record<string, React.CSSProperties> = {
   container: {
+    width: "100%",
     maxWidth: 520,
     margin: "0 auto",
     padding: "12px 14px calc(72px + env(safe-area-inset-bottom, 0px) + 18px)",
     display: "grid",
     gap: 10,
+    boxSizing: "border-box",
+    overflowX: "hidden",
   },
   hero: {
     background: "white",
@@ -96,18 +99,25 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 750,
   },
   grid: {
+    width: "100%",
+    minWidth: 0,
     display: "grid",
     gap: 8,
   },
   link: {
+    width: "100%",
+    maxWidth: "100%",
+    minWidth: 0,
     display: "grid",
-    gridTemplateColumns: "34px 1fr auto",
+    gridTemplateColumns: "34px minmax(0, 1fr) 18px",
     alignItems: "center",
     gap: 10,
     background: "white",
     border: "1px solid rgba(226,232,240,.92)",
     borderRadius: 11,
     padding: 12,
+    boxSizing: "border-box",
+    overflow: "hidden",
     boxShadow: "0 2px 10px rgba(15,23,42,.03)",
   },
   icon: {
@@ -123,10 +133,32 @@ const s: Record<string, React.CSSProperties> = {
   },
   linkText: {
     minWidth: 0,
+    maxWidth: "100%",
     display: "grid",
     gap: 2,
+    overflow: "hidden",
+  },
+  linkTitle: {
+    minWidth: 0,
+    color: "#0f172a",
+    fontSize: 14,
+    lineHeight: 1.12,
+    fontWeight: 900,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  linkDesc: {
+    minWidth: 0,
+    color: "#64748b",
+    fontSize: 12,
+    lineHeight: 1.28,
+    fontWeight: 750,
+    overflowWrap: "anywhere",
   },
   chev: {
+    width: 18,
+    justifySelf: "end",
     color: "#94a3b8",
     fontSize: 24,
     lineHeight: 1,
