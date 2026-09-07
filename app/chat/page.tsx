@@ -59,7 +59,7 @@ export default function Chat() {
         }
       />
 
-      <div className="fc-chat-page-frame" style={s.page}>
+      <main className="fc-chat-page-frame" style={s.page}>
         <ChatPage
           leagueId={app.activeLeagueId}
           currentUserId={app.userId}
@@ -67,19 +67,18 @@ export default function Chat() {
           activeLeagueCompetitionId={app.activeLeagueCompetitionId}
           competitions={competitions}
         />
-      </div>
-      <BottomNav withSpacer={false} />
+      </main>
+      <BottomNav />
     </>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    position: "fixed",
-    top: "calc(var(--appbar-h) + var(--appbar-safe-top))",
-    left: 0,
-    right: 0,
-    bottom: "calc(var(--nav-h) + var(--nav-safe-bottom))",
+    maxWidth: 520,
+    margin: "0 auto",
+    height: "calc(100dvh - var(--appbar-h) - var(--appbar-safe-top) - var(--nav-h) - var(--nav-safe-bottom))",
+    minHeight: 0,
     background: "#f4f7f4",
     overflow: "hidden",
   },
