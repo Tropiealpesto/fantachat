@@ -45,6 +45,7 @@ export default function PushNotificationPrompt() {
   const app = useApp();
   const [status, setStatus] = useState<Status>("checking");
   const [message, setMessage] = useState<string | null>(null);
+  const [unsupportedReason, setUnsupportedReason] = useState("Questo browser non permette le notifiche web.");
 
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -56,8 +57,30 @@ export default function PushNotificationPrompt() {
         if (active) setStatus(next);
       });
     };
+    const deferUnsupportedReason = (next: string) => {
+      queueMicrotask(() => {
+        if (active) setUnsupportedReason(next);
+      });
+    };
 
-    if (!publicKey || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+    if (!publicKey) {
+      deferUnsupportedReason("Notifiche non configurate sul server.");
+      deferStatus("unsupported");
+      return () => {
+        active = false;
+      };
+    }
+
+    if (!window.isSecureContext) {
+      deferUnsupportedReason("Le notifiche funzionano solo su connessione sicura.");
+      deferStatus("unsupported");
+      return () => {
+        active = false;
+      };
+    }
+
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      deferUnsupportedReason("Apri FantaChat da Chrome o installala sul telefono per attivare le notifiche.");
       deferStatus("unsupported");
       return () => {
         active = false;
@@ -128,8 +151,20 @@ export default function PushNotificationPrompt() {
     }
   }
 
-  if (!app.ready || !app.userId || status === "checking" || status === "hidden" || status === "unsupported") {
+  if (!app.ready || !app.userId || status === "checking" || status === "hidden" || status === "active") {
     return null;
+  }
+
+  if (status === "unsupported") {
+    return (
+      <section style={s.card}>
+        <div style={s.icon}>i</div>
+        <div>
+          <h2 style={s.title}>Notifiche non disponibili</h2>
+          <p style={s.text}>{unsupportedReason}</p>
+        </div>
+      </section>
+    );
   }
 
   if (status === "denied") {
@@ -139,19 +174,6 @@ export default function PushNotificationPrompt() {
         <div>
           <h2 style={s.title}>Notifiche bloccate</h2>
           <p style={s.text}>Puoi riattivarle dalle impostazioni del browser o dell'app.</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (status === "active") {
-    return (
-      <section style={s.card}>
-        <div style={s.icon}>✓</div>
-        <div>
-          <h2 style={s.title}>Notifiche attive</h2>
-          <p style={s.text}>Ti avvisiamo per chat, slot, bozze e aggiornamenti punteggi.</p>
-          {message && <p style={s.ok}>{message}</p>}
         </div>
       </section>
     );
