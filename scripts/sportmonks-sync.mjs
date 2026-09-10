@@ -125,6 +125,73 @@ async function upsertByLookup(table, lookup, values, columns = "*") {
   return insertOne(table, { ...lookup, ...values }, columns);
 }
 
+async function selectAll(table, lookup, columns = "*") {
+  let from = 0;
+  const pageSize = 1000;
+  const rows = [];
+
+  while (true) {
+    let query = supabase.from(table).select(columns).range(from, from + pageSize - 1);
+    for (const [key, value] of Object.entries(lookup)) query = query.eq(key, value);
+
+    const { data, error } = await query;
+    if (error) throw new Error(`${table} select: ${error.message}`);
+
+    rows.push(...(data ?? []));
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return rows;
+}
+
+function chunks(values, size = 100) {
+  const result = [];
+  for (let index = 0; index < values.length; index += size) {
+    result.push(values.slice(index, index + size));
+  }
+  return result;
+}
+
+async function updateRowsByIds(table, ids, values) {
+  if (!ids.length) return 0;
+
+  let count = 0;
+  for (const batch of chunks(ids)) {
+    const { data, error } = await supabase.from(table).update(values).in("id", batch).select("id");
+    if (error) throw new Error(`${table} update: ${error.message}`);
+    count += data?.length ?? 0;
+  }
+
+  return count;
+}
+
+async function updateRowsByColumn(table, column, valuesToMatch, values, extraLookup = {}) {
+  if (!valuesToMatch.length) return 0;
+
+  let count = 0;
+  for (const batch of chunks(valuesToMatch)) {
+    let query = supabase.from(table).update(values).in(column, batch).select("id");
+    for (const [key, value] of Object.entries(extraLookup)) query = query.eq(key, value);
+
+    const { data, error } = await query;
+    if (error) throw new Error(`${table} update: ${error.message}`);
+    count += data?.length ?? 0;
+  }
+
+  return count;
+}
+
+async function optionalUpdateRowsByColumn(table, column, valuesToMatch, values, extraLookup = {}) {
+  try {
+    return await updateRowsByColumn(table, column, valuesToMatch, values, extraLookup);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("schema cache") || message.includes("does not exist")) return 0;
+    throw error;
+  }
+}
+
 function flattenFixtures(scheduleRows) {
   const fixtures = [];
 
@@ -315,12 +382,18 @@ async function importTeamsPlayersAndCoaches(competition, season) {
     per_page: "50",
   });
 
+  const currentSportmonksTeamIds = new Set();
+  const currentSportmonksPlayerIds = new Set();
+  const currentSportmonksCoachIds = new Set();
+
   let teamCount = 0;
   let playerCount = 0;
   let keeperCount = 0;
   let coachCount = 0;
 
   for (const team of teams ?? []) {
+    if (team.id) currentSportmonksTeamIds.add(Number(team.id));
+
     const realTeam = await upsertByLookup(
       "real_teams",
       { competition_id: competition.id, sportmonks_id: team.id },
@@ -371,6 +444,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
       const name = displayName(player);
 
       if (!role || !player?.id || !name) continue;
+      currentSportmonksPlayerIds.add(Number(player.id));
 
       const realPlayer = await upsertByLookup(
         "real_players",
@@ -405,6 +479,7 @@ async function importTeamsPlayersAndCoaches(competition, season) {
     const coachName = displayName(coach);
 
     if (coach?.id && coachName) {
+      currentSportmonksCoachIds.add(Number(coach.id));
       await upsertByLookup(
         "real_coaches",
         { competition_id: competition.id, real_team_id: realTeam.id },
@@ -421,7 +496,73 @@ async function importTeamsPlayersAndCoaches(competition, season) {
     }
   }
 
-  return { teamCount, playerCount, keeperCount, coachCount };
+  const deactivated = await deactivateMissingCatalogRows(competition, {
+    sportmonksTeamIds: currentSportmonksTeamIds,
+    sportmonksPlayerIds: currentSportmonksPlayerIds,
+    sportmonksCoachIds: currentSportmonksCoachIds,
+  });
+
+  return { teamCount, playerCount, keeperCount, coachCount, deactivated };
+}
+
+async function deactivateMissingCatalogRows(competition, current) {
+  const activeTeams = await selectAll(
+    "real_teams",
+    { competition_id: competition.id, active: true },
+    "id,sportmonks_id"
+  );
+  const inactiveTeamIds = activeTeams
+    .filter((team) => team.sportmonks_id && !current.sportmonksTeamIds.has(Number(team.sportmonks_id)))
+    .map((team) => team.id);
+
+  const activePlayers = await selectAll(
+    "real_players",
+    { competition_id: competition.id, source: "sportmonks_player", active: true },
+    "id,sportmonks_id"
+  );
+  const inactivePlayerIds = activePlayers
+    .filter((player) => player.sportmonks_id && !current.sportmonksPlayerIds.has(Number(player.sportmonks_id)))
+    .map((player) => player.id);
+
+  const activeKeepers = await selectAll(
+    "real_players",
+    { competition_id: competition.id, source: "sportmonks_team_keeper", active: true },
+    "id,sportmonks_team_id"
+  );
+  const inactiveKeeperIds = activeKeepers
+    .filter((keeper) => keeper.sportmonks_team_id && !current.sportmonksTeamIds.has(Number(keeper.sportmonks_team_id)))
+    .map((keeper) => keeper.id);
+
+  const activeCoaches = await selectAll(
+    "real_coaches",
+    { competition_id: competition.id, active: true },
+    "id,sportmonks_id"
+  );
+  const inactiveCoachIds = activeCoaches
+    .filter((coach) => coach.sportmonks_id && !current.sportmonksCoachIds.has(Number(coach.sportmonks_id)))
+    .map((coach) => coach.id);
+
+  const realPlayers = await updateRowsByIds("real_players", [...inactivePlayerIds, ...inactiveKeeperIds], {
+    active: false,
+  });
+  const competitionPlayers = await optionalUpdateRowsByColumn(
+    "competition_players",
+    "real_player_id",
+    [...inactivePlayerIds, ...inactiveKeeperIds],
+    { active: false },
+    { competition_id: competition.id }
+  );
+  const realTeams = await updateRowsByIds("real_teams", inactiveTeamIds, { active: false });
+  const competitionTeams = await optionalUpdateRowsByColumn(
+    "competition_real_teams",
+    "real_team_id",
+    inactiveTeamIds,
+    { active: false },
+    { competition_id: competition.id }
+  );
+  const realCoaches = await updateRowsByIds("real_coaches", inactiveCoachIds, { active: false });
+
+  return { realPlayers, competitionPlayers, realTeams, competitionTeams, realCoaches };
 }
 
 async function getOrCreateMatchday(seasonId, number) {

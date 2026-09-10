@@ -138,7 +138,7 @@ export default function SuperadminPage() {
     await loadCompetitions();
   }
 
-  async function syncSportmonks() {
+  async function syncSportmonks(mode: "recent" | "catalog") {
     setMsg(null);
     setErr(null);
     setSyncingSportmonks(true);
@@ -157,7 +157,7 @@ export default function SuperadminPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ mode: "recent" }),
+        body: JSON.stringify({ mode }),
       });
 
       const payload = await response.json().catch(() => ({}));
@@ -167,9 +167,13 @@ export default function SuperadminPage() {
       }
 
       const seconds = Math.max(1, Math.round(Number(payload.duration_ms ?? 0) / 1000));
-      setMsg(`Dati Sportmonks aggiornati ✅ (${seconds}s).`);
+      setMsg(
+        mode === "catalog"
+          ? `Catalogo Sportmonks aggiornato ✅ (${seconds}s).`
+          : `Dati Sportmonks aggiornati ✅ (${seconds}s).`
+      );
 
-      if (selectedCompetition?.active_season_id) {
+      if (mode === "recent" && selectedCompetition?.active_season_id) {
         fetch("/api/notifications/process", {
           method: "POST",
           headers: {
@@ -217,21 +221,36 @@ export default function SuperadminPage() {
       <section style={s.syncCard}>
         <div>
           <h2 style={s.syncTitle}>Dati Sportmonks</h2>
-          <p style={s.syncText}>Aggiorna solo statistiche, risultati e punteggi live. Catalogo, mercato e calendario si aggiornano da PC quando serve.</p>
+          <p style={s.syncText}>Aggiorna i live durante le partite. Usa mercato solo dopo trasferimenti, nuove foto o cambi rosa.</p>
         </div>
 
-        <button
-          type="button"
-          onClick={syncSportmonks}
-          disabled={syncingSportmonks}
-          style={{
-            ...s.syncBtn,
-            opacity: syncingSportmonks ? 0.65 : 1,
-            cursor: syncingSportmonks ? "default" : "pointer",
-          }}
-        >
-          {syncingSportmonks ? "Aggiorno..." : "Aggiorna dati live"}
-        </button>
+        <div style={s.syncActions}>
+          <button
+            type="button"
+            onClick={() => syncSportmonks("recent")}
+            disabled={syncingSportmonks}
+            style={{
+              ...s.syncBtn,
+              opacity: syncingSportmonks ? 0.65 : 1,
+              cursor: syncingSportmonks ? "default" : "pointer",
+            }}
+          >
+            {syncingSportmonks ? "Aggiorno..." : "Aggiorna live"}
+          </button>
+          <button
+            type="button"
+            onClick={() => syncSportmonks("catalog")}
+            disabled={syncingSportmonks}
+            style={{
+              ...s.syncBtn,
+              ...s.syncBtnSecondary,
+              opacity: syncingSportmonks ? 0.65 : 1,
+              cursor: syncingSportmonks ? "default" : "pointer",
+            }}
+          >
+            Mercato
+          </button>
+        </div>
       </section>
 
       {err && <div style={s.err}>{err}</div>}
@@ -1185,6 +1204,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   syncTitle: { margin: 0, color: "#0f172a", fontSize: 16, fontWeight: 1000 },
   syncText: { margin: "4px 0 0", color: "#64748b", fontSize: 12.5, fontWeight: 750, lineHeight: 1.35 },
+  syncActions: { display: "grid", gap: 8, minWidth: 116 },
   syncBtn: {
     border: "1px solid #d97706",
     borderRadius: 13,
@@ -1194,6 +1214,12 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 1000,
     fontFamily: "inherit",
     boxShadow: "0 8px 18px rgba(224,123,26,.18)",
+  },
+  syncBtnSecondary: {
+    borderColor: "#bbf7d0",
+    background: "#f0fdf4",
+    color: "#15803d",
+    boxShadow: "none",
   },
   tabs: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
   tab: { padding: 11, borderRadius: 12, border: "1px solid #e5e7eb", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },

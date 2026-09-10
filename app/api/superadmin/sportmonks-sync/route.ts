@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       mode === "catalog"
         ? {
             catalog: true,
-            fixtures: true,
+            fixtures: false,
             stats: false,
             expectedLineups: false,
             matchday: matchday > 0 ? matchday : undefined,
