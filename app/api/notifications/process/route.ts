@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 type Summary = {
   slotStarted: Awaited<ReturnType<typeof notifyUsers>>;
   slotEnding: Awaited<ReturnType<typeof notifyUsers>>;
+  slotEnded: Awaited<ReturnType<typeof notifyUsers>>;
   drafts: Awaited<ReturnType<typeof notifyUsers>>;
   scores: Awaited<ReturnType<typeof notifyUsers>>;
 };
@@ -39,26 +40,57 @@ async function processNotifications(request: NextRequest, body: any) {
     return Response.json({ ok: false, error: "Solo superadmin." }, { status: 403 });
   }
 
-  const [slotStarted, slotEnding, drafts, scores] = await Promise.all([
+  const summary = await processNotificationJobs(body);
+  return Response.json({ ok: true, summary });
+}
+
+export async function processNotificationJobs(body: any = {}) {
+  await processExpiredDrafts();
+
+  const [slotStarted, slotEnding, slotEnded, drafts, scores] = await Promise.all([
     notifySlotStarted(),
     notifySlotEndingSoon(),
+    notifySlotEnded(),
     notifyDraftResults(),
     notifyScoresUpdated(body),
   ]);
 
-  const summary: Summary = { slotStarted, slotEnding, drafts, scores };
-  return Response.json({ ok: true, summary });
+  const summary: Summary = { slotStarted, slotEnding, slotEnded, drafts, scores };
+  return summary;
+}
+
+async function processExpiredDrafts() {
+  const now = new Date();
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+  const { data: slots } = await supabaseServer
+    .from("lineup_slots")
+    .select("league_competition_id,matchday_id")
+    .lte("ends_at", now.toISOString())
+    .gte("ends_at", twoHoursAgo.toISOString());
+
+  const keys = new Set<string>();
+
+  for (const slot of slots ?? []) {
+    const key = `${slot.league_competition_id}:${slot.matchday_id}`;
+    if (keys.has(key)) continue;
+    keys.add(key);
+
+    await supabaseServer.rpc("process_expired_lineup_drafts", {
+      p_league_competition_id: slot.league_competition_id,
+      p_matchday_id: slot.matchday_id,
+    });
+  }
 }
 
 async function notifySlotStarted() {
   const now = new Date();
-  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
   const { data: slots } = await supabaseServer
     .from("lineup_slots")
     .select("id,user_id,matchday_id,starts_at,ends_at")
     .lte("starts_at", now.toISOString())
-    .gte("starts_at", fiveMinutesAgo.toISOString());
+    .gt("ends_at", now.toISOString());
 
   let result = { sent: 0, skipped: 0, failed: 0 };
 
@@ -67,11 +99,40 @@ async function notifySlotStarted() {
       [slot.user_id],
       {
         title: "E il tuo turno",
-        body: "Puoi salvare la formazione ufficiale.",
+        body: "Il tuo slot e aperto: puoi salvare la formazione ufficiale.",
         url: "/rosa",
         tag: `slot:${slot.id}`,
       },
       { eventKey: `slot-start:${slot.id}` }
+    );
+    result = addResult(result, partial);
+  }
+
+  return result;
+}
+
+async function notifySlotEnded() {
+  const now = new Date();
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+  const { data: slots } = await supabaseServer
+    .from("lineup_slots")
+    .select("id,user_id,league_competition_id,matchday_id,ends_at")
+    .lte("ends_at", now.toISOString())
+    .gte("ends_at", twoHoursAgo.toISOString());
+
+  let result = { sent: 0, skipped: 0, failed: 0 };
+
+  for (const slot of slots ?? []) {
+    const partial = await notifyUsers(
+      [slot.user_id],
+      {
+        title: "Slot terminato",
+        body: "Il tuo slot formazione e terminato. Controlla se la bozza e stata salvata.",
+        url: "/rosa",
+        tag: `slot:${slot.id}:ended`,
+      },
+      { eventKey: `slot-ended:${slot.id}` }
     );
     result = addResult(result, partial);
   }

@@ -659,7 +659,7 @@ function GiornateTab(props: {
     <section style={s.card}>
       <h2 style={s.cardTitle}>Gestione giornata</h2>
       <p style={s.muted}>
-        Apertura e chiusura sono globali per la competizione. Inserisci l'orario della prima partita: gli slot vengono generati a ritroso e l'ultimo slot termina un'ora prima del calcio d'inizio.
+        Apertura e chiusura sono globali per la competizione. Inserisci l'orario della prima partita: gli slot vengono generati a ritroso e terminano un'ora prima, mentre la formazione si puo salvare fino al calcio d'inizio.
       </p>
 
       <div style={s.infoStrip}>

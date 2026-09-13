@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { processNotificationJobs } from "../../notifications/process/route";
 
 type SyncOptions = {
   catalog?: boolean;
@@ -31,12 +32,14 @@ export async function runSportmonksCron(
   try {
     const syncModule = (await import("../../../../scripts/sportmonks-sync.mjs")) as SyncModule;
     const summary = await syncModule.runSportmonksSync(options);
+    const notifications = await processNotificationJobs();
 
     return Response.json({
       ok: true,
       mode,
       duration_ms: Date.now() - startedAt,
       summary,
+      notifications,
     });
   } catch (error) {
     return Response.json(

@@ -32,6 +32,7 @@ type Matchday = {
   status: string;
   slot_start?: string | null;
   slot_end?: string | null;
+  deadline_end_at?: string | null;
 };
 
 type LineupSlot = {
@@ -475,8 +476,11 @@ export default function RosaPage() {
 
   const accent = app.competitionTheme.primary;
   const slotOpen = Boolean(form.slot?.is_open);
+  const deadlinePassed = form.matchday?.deadline_end_at
+    ? Date.now() >= new Date(form.matchday.deadline_end_at).getTime()
+    : false;
   const canEdit = !saved && form.is_participant && Boolean(form.matchday) && Boolean(form.slot);
-  const canSubmitOfficial = canEdit && slotOpen;
+  const canSubmitOfficial = canEdit && slotOpen && !deadlinePassed;
   const locked = !canEdit;
   const hasDraft = Boolean(form.draft?.id || form.draft?.players?.length);
 
