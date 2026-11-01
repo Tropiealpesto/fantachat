@@ -102,7 +102,9 @@ async function sportmonks(path, params = {}) {
 
 async function selectOne(table, lookup, columns = "*") {
   let query = supabase.from(table).select(columns).limit(1);
-  for (const [key, value] of Object.entries(lookup)) query = query.eq(key, value);
+  for (const [key, value] of Object.entries(lookup)) {
+    query = value === null ? query.is(key, null) : query.eq(key, value);
+  }
 
   const { data, error } = await query.maybeSingle();
   if (error) throw new Error(`${table} select: ${error.message}`);
@@ -668,14 +670,17 @@ async function importFixtures(competition, season, options = {}) {
 }
 
 async function findTeamBySportmonks(competitionId, sportmonksTeamId) {
+  if (sportmonksTeamId == null) return null;
   return selectOne("real_teams", { competition_id: competitionId, sportmonks_id: sportmonksTeamId }, "id,name");
 }
 
 async function findPlayerBySportmonks(competitionId, sportmonksPlayerId) {
+  if (sportmonksPlayerId == null) return null;
   return selectOne("real_players", { competition_id: competitionId, sportmonks_id: sportmonksPlayerId }, "id,role,real_team_id");
 }
 
 async function findKeeperByTeam(competitionId, realTeamId) {
+  if (realTeamId == null) return null;
   return selectOne(
     "real_players",
     { competition_id: competitionId, real_team_id: realTeamId, role: "P", source: "sportmonks_team_keeper" },
@@ -704,6 +709,7 @@ async function importStatsForFixture(competition, season, fixture) {
   let coachStats = 0;
 
   for (const lineup of detail.lineups ?? []) {
+    if (lineup?.player_id == null) continue;
     const realPlayer = await findPlayerBySportmonks(competition.id, lineup.player_id);
     if (!realPlayer?.id || realPlayer.role === "P") continue;
 
