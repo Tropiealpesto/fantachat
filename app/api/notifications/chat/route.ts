@@ -14,21 +14,38 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const leagueId = String(body?.leagueId ?? "");
   const messageId = String(body?.messageId ?? "");
-  const content = String(body?.content ?? "");
 
-  if (!leagueId || !messageId || !content.trim()) {
+  if (!leagueId || !messageId) {
     return Response.json({ ok: false, error: "Dati messaggio mancanti." }, { status: 400 });
   }
 
-  const { data: sender } = await supabaseServer
+  const { data: sender, error: senderError } = await supabaseServer
     .from("league_members")
     .select("team_name")
     .eq("league_id", leagueId)
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!sender) {
+  if (senderError || !sender) {
     return Response.json({ ok: false, error: "Accesso negato." }, { status: 403 });
+  }
+
+  // The message content must come from the database, never from the browser.
+  const { data: message, error: messageError } = await supabaseServer
+    .from("messages")
+    .select("id,content")
+    .eq("id", messageId)
+    .eq("league_id", leagueId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (messageError) {
+    return Response.json({ ok: false, error: "Non è stato possibile preparare la notifica." }, { status: 500 });
+  }
+
+  const content = String(message?.content ?? "");
+  if (!message || !content.trim()) {
+    return Response.json({ ok: false, error: "Messaggio non disponibile." }, { status: 404 });
   }
 
   const { data: members, error } = await supabaseServer
@@ -38,7 +55,7 @@ export async function POST(request: NextRequest) {
     .neq("user_id", user.id);
 
   if (error) {
-    return Response.json({ ok: false, error: error.message }, { status: 500 });
+    return Response.json({ ok: false, error: "Non è stato possibile caricare i destinatari della notifica." }, { status: 500 });
   }
 
   const result = await notifyUsers(

@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15803d"/>
+      <stop offset=".55" stop-color="#7a7b1d"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16a34a"/>
+      <stop offset=".52" stop-color="#8c861d"/>
+      <stop offset="1" stop-color="#f08a13"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f5f2d"/>
+      <stop offset=".58" stop-color="#6f761d"/>
+      <stop offset="1" stop-color="#d96f0f"/>
+    </linearGradient>
+    <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset=".48" stop-color="#6fa52e"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2=".8">
+      <stop offset="0" stop-color="rgba(255,255,255,.24)"/>
+      <stop offset=".42" stop-color="rgba(255,255,255,.05)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 52px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 23px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:900 23px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .desc { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fcA { font:500 72px 'Inter','DM Sans',Arial,sans-serif; letter-spacing:-4px; }
+      .fcB { font:700 72px 'Inter','DM Sans',Arial,sans-serif; letter-spacing:-5px; }
+      .fcC { font:800 70px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-5px; }
+      .fcD { font:600 75px 'Arial','Inter',sans-serif; letter-spacing:-6px; }
+      .fcE { font:900 70px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-6px; }
+      .fcF { font:500 76px 'Helvetica Neue','Inter',Arial,sans-serif; letter-spacing:-7px; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1000"/>
+  <text x="80" y="88" class="title">FantaChat — icona gradient FC</text>
+  <text x="80" y="128" class="sub">Direzione minimale: gradient verde/arancione, FC bianco grande, pochi dettagli.</text>
+
+  <!-- 1 -->
+  <g transform="translate(80 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g1)"/>
+      <text x="90" y="112" text-anchor="middle" class="fcA" fill="#fff">FC</text>
+    </g>
+    <text x="28" y="260" class="label">1. Minimal</text>
+    <text x="28" y="289" class="desc">Più vicina al tuo riferimento.</text>
+  </g>
+
+  <!-- 2 -->
+  <g transform="translate(460 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g2)"/>
+      <rect width="180" height="180" rx="42" fill="url(#shine)" opacity=".9"/>
+      <text x="90" y="113" text-anchor="middle" class="fcB" fill="#fff">FC</text>
+    </g>
+    <text x="28" y="260" class="label">2. Premium glow</text>
+    <text x="28" y="289" class="desc">Più luminosità, ma resta pulita.</text>
+  </g>
+
+  <!-- 3 -->
+  <g transform="translate(840 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g3)"/>
+      <text x="90" y="113" text-anchor="middle" class="fcC" fill="#fff">FC</text>
+      <rect x="17" y="17" width="146" height="146" rx="32" fill="none" stroke="rgba(255,255,255,.20)" stroke-width="2"/>
+    </g>
+    <text x="28" y="260" class="label">3. Framed</text>
+    <text x="28" y="289" class="desc">Leggero bordo interno, più iOS.</text>
+  </g>
+
+  <!-- 4 -->
+  <g transform="translate(1220 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g4)"/>
+      <text x="90" y="113" text-anchor="middle" class="fcD" fill="#fff">FC</text>
+      <circle cx="138" cy="48" r="8" fill="rgba(255,255,255,.65)"/>
+    </g>
+    <text x="28" y="260" class="label">4. Dot</text>
+    <text x="28" y="289" class="desc">Piccolo dettaglio vivo, senza sporcare.</text>
+  </g>
+
+  <!-- 5 -->
+  <g transform="translate(270 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g1)"/>
+      <text x="90" y="113" text-anchor="middle" class="fcE" fill="#fff">FC</text>
+      <path d="M40 132h100" stroke="rgba(255,255,255,.22)" stroke-width="7" stroke-linecap="round"/>
+    </g>
+    <text x="28" y="260" class="label">5. Bold sport</text>
+    <text x="28" y="289" class="desc">Più forte e visibile da lontano.</text>
+  </g>
+
+  <!-- 6 -->
+  <g transform="translate(650 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g2)"/>
+      <path d="M0 180C44 116 89 78 180 42v138z" fill="rgba(0,0,0,.08)"/>
+      <text x="90" y="114" text-anchor="middle" class="fcF" fill="#fff">FC</text>
+    </g>
+    <text x="28" y="260" class="label">6. Diagonal depth</text>
+    <text x="28" y="289" class="desc">Più profondità, ancora minimal.</text>
+  </g>
+
+  <!-- 7 -->
+  <g transform="translate(1030 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#g3)"/>
+      <text x="90" y="113" text-anchor="middle" class="fcA" fill="#fff">FC</text>
+      <path d="M35 40c34-17 71-24 110-20" stroke="rgba(255,255,255,.20)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M145 140c-34 17-71 24-110 20" stroke="rgba(255,255,255,.16)" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <text x="28" y="260" class="label">7. Signature lines</text>
+    <text x="28" y="289" class="desc">Richiama le curve, ma molto sobrio.</text>
+  </g>
+</svg>

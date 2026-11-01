@@ -330,7 +330,7 @@ export default function LivePage() {
 
         {err && <div style={s.err}>{err}</div>}
 
-        <section style={s.list}>
+        <section style={s.list} data-tutorial-target="live-list">
           {data.rows.map((r) => {
             const own = r.user_id === app.userId;
             const isOpen = !!open[r.user_id];
@@ -339,6 +339,7 @@ export default function LivePage() {
             return (
               <article
                 key={r.user_id}
+                data-tutorial-target={data.rows[0]?.user_id === r.user_id ? "live-row" : undefined}
                 style={{
                   ...s.teamCard,
                   ...(own ? { borderColor: accent, background: "#f3fbf5" } : {}),

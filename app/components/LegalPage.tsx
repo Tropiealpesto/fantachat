@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import TutorialHelp from "./TutorialHelp";
 
 export type LegalSection = {
   title: string;
@@ -12,9 +14,10 @@ type Props = {
   intro: string;
   sections: LegalSection[];
   note?: string;
+  actions?: ReactNode;
 };
 
-export default function LegalPage({ eyebrow, title, updated, intro, sections, note }: Props) {
+export default function LegalPage({ eyebrow, title, updated, intro, sections, note, actions }: Props) {
   return (
     <main className="legal-page">
       <div className="legal-shell">
@@ -28,6 +31,7 @@ export default function LegalPage({ eyebrow, title, updated, intro, sections, no
             <Link href="/termini">Termini</Link>
             <Link href="/cancellazione-account">Account</Link>
           </nav>
+          <TutorialHelp compact />
         </header>
 
         <section className="legal-hero">
@@ -40,6 +44,8 @@ export default function LegalPage({ eyebrow, title, updated, intro, sections, no
           <p>{intro}</p>
           {note && <div className="legal-note">{note}</div>}
         </section>
+
+        {actions}
 
         {sections.map((section) => (
           <section key={section.title} className="legal-card">

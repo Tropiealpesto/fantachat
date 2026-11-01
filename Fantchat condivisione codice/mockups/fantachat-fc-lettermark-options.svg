@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="orangeBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffad55"/>
+      <stop offset=".5" stop-color="#e07b1a"/>
+      <stop offset="1" stop-color="#c9650f"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#0f7a3a"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 52px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 23px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:900 23px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .desc { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fc { font:1000 104px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-11px; }
+      .fc2 { font:1000 116px 'Arial Rounded MT Bold','DM Sans','Inter',Arial,sans-serif; letter-spacing:-14px; }
+      .mono { font:1000 92px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-7px; }
+      .curve { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1000"/>
+  <text x="80" y="88" class="title">FantaChat — icona arancione con F/C</text>
+  <text x="80" y="128" class="sub">Direzioni molto semplici: fondo arancione, lettere grandi, verde + bianco.</text>
+
+  <!-- 1 -->
+  <g transform="translate(80 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <text x="88" y="117" text-anchor="middle" class="fc">
+        <tspan fill="#fff">F</tspan><tspan fill="#15803d">C</tspan>
+      </text>
+      <path d="M48 133h80" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+      <circle cx="137" cy="132" r="10" fill="#15803d"/>
+    </g>
+    <text x="28" y="260" class="label">1. FC classico forte</text>
+    <text x="28" y="289" class="desc">Molto leggibile, semplice e app-like.</text>
+  </g>
+
+  <!-- 2 -->
+  <g transform="translate(460 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <path d="M55 42h70c29 0 50 21 50 50v0c0 29-21 50-50 50H91l-35 28v-28h-1c-29 0-50-21-50-50v0c0-29 21-50 50-50z" fill="#fff"/>
+      <text x="90" y="122" text-anchor="middle" class="fc2">
+        <tspan fill="#15803d">F</tspan><tspan fill="#e07b1a">C</tspan>
+      </text>
+    </g>
+    <text x="28" y="260" class="label">2. FC dentro bubble</text>
+    <text x="28" y="289" class="desc">Più FantaChat, ma ancora un solo segno.</text>
+  </g>
+
+  <!-- 3 -->
+  <g transform="translate(840 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <path d="M43 126V48h78" class="curve" stroke="#fff" stroke-width="24"/>
+      <path d="M126 51c-37 0-64 27-64 60s27 60 64 60c17 0 31-5 43-14" class="curve" stroke="#15803d" stroke-width="24"/>
+      <circle cx="126" cy="111" r="9" fill="#fff"/>
+    </g>
+    <text x="28" y="260" class="label">3. Incastro lineare</text>
+    <text x="28" y="289" class="desc">Lettere disegnate, più proprietarie.</text>
+  </g>
+
+  <!-- 4 -->
+  <g transform="translate(1220 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <rect x="14" y="14" width="152" height="152" rx="33" fill="url(#orangeBg)"/>
+      <text x="90" y="121" text-anchor="middle" class="fc2">
+        <tspan fill="#fff">F</tspan><tspan fill="#15803d">C</tspan>
+      </text>
+      <path d="M52 139h76" stroke="#15803d" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <text x="28" y="260" class="label">4. Arancio in cornice</text>
+    <text x="28" y="289" class="desc">Più premium, meno “pieno”.</text>
+  </g>
+
+  <!-- 5 -->
+  <g transform="translate(80 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <path d="M48 137V45h74" class="curve" stroke="#fff" stroke-width="22"/>
+      <path d="M48 90h58" class="curve" stroke="#fff" stroke-width="22"/>
+      <path d="M134 47c-32 7-54 31-54 64s22 57 54 64" class="curve" stroke="#15803d" stroke-width="22"/>
+      <path d="M134 47c20 4 34 13 44 25" class="curve" stroke="#fff" stroke-width="12"/>
+      <path d="M134 175c20-4 34-13 44-25" class="curve" stroke="#fff" stroke-width="12"/>
+    </g>
+    <text x="28" y="260" class="label">5. FC sportivo</text>
+    <text x="28" y="289" class="desc">Più aggressivo, adatto a fantasy/lega.</text>
+  </g>
+
+  <!-- 6 -->
+  <g transform="translate(460 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <path d="M90 28l60 27v43c0 43-25 68-60 84-35-16-60-41-60-84V55z" fill="#fff"/>
+      <text x="90" y="127" text-anchor="middle" class="mono">
+        <tspan fill="#15803d">F</tspan><tspan fill="#e07b1a">C</tspan>
+      </text>
+    </g>
+    <text x="28" y="260" class="label">6. Scudo FC</text>
+    <text x="28" y="289" class="desc">Più fantasy sport, molto pulita.</text>
+  </g>
+
+  <!-- 7 -->
+  <g transform="translate(840 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <path d="M41 133V48h83" class="curve" stroke="#fff" stroke-width="20"/>
+      <path d="M42 91h61" class="curve" stroke="#fff" stroke-width="20"/>
+      <path d="M136 50c-33 0-59 26-59 59s26 59 59 59" class="curve" stroke="#15803d" stroke-width="21"/>
+      <path d="M136 78c17 0 31 14 31 31s-14 31-31 31" class="curve" stroke="#fff" stroke-width="13"/>
+    </g>
+    <text x="28" y="260" class="label">7. C doppia</text>
+    <text x="28" y="289" class="desc">Molto particolare ma resta leggibile.</text>
+  </g>
+
+  <!-- 8 -->
+  <g transform="translate(1220 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeBg)"/>
+      <text x="90" y="118" text-anchor="middle" class="fc2">
+        <tspan fill="#fff">F</tspan><tspan fill="#fff">C</tspan>
+      </text>
+      <path d="M111 46c34 13 55 37 55 67 0 28-19 51-50 65" class="curve" stroke="#15803d" stroke-width="10"/>
+      <circle cx="139" cy="113" r="9" fill="#15803d"/>
+    </g>
+    <text x="28" y="260" class="label">8. FC + segno verde</text>
+    <text x="28" y="289" class="desc">La più minimale con accento dinamico.</text>
+  </g>
+</svg>

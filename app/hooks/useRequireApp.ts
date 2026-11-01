@@ -11,6 +11,8 @@ export function useRequireApp(requireCompetition = false) {
   useEffect(() => {
     if (!app.ready) return;
 
+    if (app.contextError) return;
+
     if (!app.userId) {
       router.replace("/login");
       return;
@@ -29,6 +31,7 @@ export function useRequireApp(requireCompetition = false) {
     }
   }, [
     app.ready,
+    app.contextError,
     app.userId,
     app.activeLeagueId,
     app.activeLeagueCompetitionId,
@@ -45,6 +48,7 @@ export function useRequireLeagueAdmin() {
 
   useEffect(() => {
     if (!app.ready) return;
+    if (app.contextError) return;
     if (!app.userId) return;
     if (!app.activeLeagueId) return;
 
@@ -54,6 +58,7 @@ export function useRequireLeagueAdmin() {
     }
   }, [
     app.ready,
+    app.contextError,
     app.userId,
     app.activeLeagueId,
     app.isAdmin,
@@ -69,6 +74,7 @@ export function useRequireSuperAdmin() {
 
   useEffect(() => {
     if (!app.ready) return;
+    if (app.contextError) return;
 
     if (!app.userId) {
       router.replace("/login");
@@ -81,6 +87,7 @@ export function useRequireSuperAdmin() {
     }
   }, [
     app.ready,
+    app.contextError,
     app.userId,
     app.isSuperAdmin,
     router,

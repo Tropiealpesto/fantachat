@@ -407,6 +407,40 @@ textarea:focus-visible {
   line-height: 1.45;
 }
 
+.legal-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #b42318;
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.legal-action-button:disabled {
+  cursor: wait;
+  opacity: .58;
+}
+
+.legal-action-link {
+  background: var(--primary-dark);
+}
+
+.legal-error {
+  margin-top: 12px !important;
+  color: #b42318 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
 .fc-bottom-tab.is-active[data-tab-path="/chat"] {
   color: var(--brand-orange);
   background: color-mix(in srgb, var(--brand-orange) 12%, white);

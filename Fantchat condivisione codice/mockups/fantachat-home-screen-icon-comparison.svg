@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+  <defs>
+    <filter id="phoneShadow" x="-30%" y="-20%" width="160%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#0f172a" flood-opacity=".26"/>
+    </filter>
+    <filter id="iconShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#020617" flood-opacity=".18"/>
+    </filter>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172033"/>
+      <stop offset=".42" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#07110b"/>
+    </linearGradient>
+    <linearGradient id="ig" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset=".45" stop-color="#ec4899"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="maps" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset=".45" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="gmail" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="g3Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#20b855"/>
+      <stop offset=".54" stop-color="#9b9124"/>
+      <stop offset="1" stop-color="#f08a13"/>
+    </linearGradient>
+    <linearGradient id="g5Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset=".55" stop-color="#9a9425"/>
+      <stop offset="1" stop-color="#f18b18"/>
+    </linearGradient>
+    <linearGradient id="g6Light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25c961"/>
+      <stop offset=".48" stop-color="#94a22e"/>
+      <stop offset="1" stop-color="#ee8516"/>
+    </linearGradient>
+    <linearGradient id="g4Dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f5f2d"/>
+      <stop offset=".52" stop-color="#6b6819"/>
+      <stop offset="1" stop-color="#b85c0a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2=".8">
+      <stop offset="0" stop-color="rgba(255,255,255,.22)"/>
+      <stop offset=".45" stop-color="rgba(255,255,255,.06)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <style>
+      .page { fill:#f4f7f4; }
+      .title { font:900 50px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 22px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:750 15px 'DM Sans','Inter',Arial,sans-serif; fill:#eef2ff; }
+      .dockLabel { font:750 14px 'DM Sans','Inter',Arial,sans-serif; fill:#334155; }
+      .note { font:800 20px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .small { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fc { font:1000 39px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-4px; }
+      .soft { font:800 39px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-3px; }
+      .appIcon { filter:url(#iconShadow); }
+    </style>
+  </defs>
+
+  <rect class="page" width="1600" height="1200"/>
+  <text x="90" y="88" class="title">FantaChat icon test — in una home piena di app</text>
+  <text x="90" y="126" class="sub">Stesso contesto, candidate diverse. Qui conta leggibilità immediata più che dettaglio.</text>
+
+  <!-- phone -->
+  <g transform="translate(210 170)" filter="url(#phoneShadow)">
+    <rect x="0" y="0" width="520" height="970" rx="82" fill="#0b1020"/>
+    <rect x="18" y="18" width="484" height="934" rx="64" fill="url(#wall)"/>
+    <rect x="176" y="36" width="168" height="34" rx="17" fill="#030712"/>
+    <text x="58" y="106" fill="#fff" font-family="DM Sans, Inter, Arial" font-size="26" font-weight="900">9:41</text>
+    <text x="362" y="106" fill="#fff" font-family="DM Sans, Inter, Arial" font-size="18" font-weight="800">5G</text>
+
+    <!-- helper: grid icons 82x82 -->
+    <!-- row 1 -->
+    <g transform="translate(48 150)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#ig)"/>
+        <circle cx="41" cy="41" r="22" fill="none" stroke="#fff" stroke-width="5"/>
+        <circle cx="60" cy="22" r="5" fill="#fff"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Instagram</text>
+    </g>
+    <g transform="translate(160 150)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#050505"/>
+        <path d="M25 18h13l20 46H45z" fill="#ef4444"/>
+        <path d="M25 18h13v46H25z" fill="#b91c1c"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Netflix</text>
+    </g>
+    <g transform="translate(272 150)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#maps)"/>
+        <path d="M41 14c15 0 27 12 27 27 0 20-27 41-27 41S14 61 14 41c0-15 12-27 27-27z" fill="#fff"/>
+        <circle cx="41" cy="41" r="10" fill="#ef4444"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Maps</text>
+    </g>
+    <g transform="translate(384 150)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#22c55e"/>
+        <path d="M41 17c14 0 25 10 25 24S55 65 41 65c-5 0-10-1-14-4l-10 3 3-10c-3-4-4-8-4-13 0-14 11-24 25-24z" fill="#fff"/>
+        <path d="M33 32c7 13 13 17 22 20" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">WhatsApp</text>
+    </g>
+
+    <!-- row 2 -->
+    <g transform="translate(48 290)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#16a34a"/>
+        <path d="M22 33c17-5 33-4 48 4M25 45c13-4 26-3 39 3M29 56c9-3 19-2 28 2" fill="none" stroke="#052e16" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Spotify</text>
+    </g>
+    <g transform="translate(160 290)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#ef4444"/>
+        <path d="M34 25l25 16-25 16z" fill="#fff"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">YouTube</text>
+    </g>
+    <g transform="translate(272 290)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#030712"/>
+        <path d="M42 20v31c0 11-7 18-18 18" fill="none" stroke="#22d3ee" stroke-width="7"/>
+        <path d="M49 25c5 7 11 11 19 12" fill="none" stroke="#fb7185" stroke-width="7"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">TikTok</text>
+    </g>
+    <g transform="translate(384 290)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#gmail)" stroke="#e5e7eb"/>
+        <path d="M18 26h46v32H18z" fill="#fff" stroke="#d1d5db" stroke-width="4"/>
+        <path d="M18 28l23 19 23-19" fill="none" stroke="#ef4444" stroke-width="6"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Gmail</text>
+    </g>
+
+    <!-- row 3 with candidates -->
+    <g transform="translate(48 430)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#g3Light)"/>
+        <text x="41" y="52" text-anchor="middle" class="soft" fill="#fff">FC</text>
+        <rect x="8" y="8" width="66" height="66" rx="16" fill="none" stroke="rgba(255,255,255,.24)" stroke-width="1.5"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">FC 3</text>
+    </g>
+    <g transform="translate(160 430)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#g5Light)"/>
+        <text x="41" y="52" text-anchor="middle" class="fc" fill="#fff">FC</text>
+        <path d="M20 61h44" stroke="rgba(255,255,255,.24)" stroke-width="3.5" stroke-linecap="round"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">FC 5</text>
+    </g>
+    <g transform="translate(272 430)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#g6Light)"/>
+        <path d="M0 82C20 53 41 35 82 19v63z" fill="rgba(0,0,0,.055)"/>
+        <text x="41" y="52" text-anchor="middle" class="fc" fill="#fff">FC</text>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">FC 6</text>
+    </g>
+    <g transform="translate(384 430)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="url(#g4Dark)"/>
+        <rect width="82" height="82" rx="22" fill="url(#shine)" opacity=".55"/>
+        <text x="41" y="52" text-anchor="middle" class="fc" fill="#fff">FC</text>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">FC 4</text>
+    </g>
+
+    <!-- row 4 normal apps -->
+    <g transform="translate(48 570)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#2563eb"/>
+        <circle cx="41" cy="41" r="25" fill="#fff"/>
+        <path d="M41 18v46M18 41h46" stroke="#2563eb" stroke-width="5"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Safari</text>
+    </g>
+    <g transform="translate(160 570)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#fff"/>
+        <rect x="13" y="20" width="56" height="48" rx="8" fill="#f8fafc" stroke="#e5e7eb"/>
+        <rect x="13" y="20" width="56" height="15" rx="8" fill="#ef4444"/>
+        <text x="41" y="58" text-anchor="middle" font-family="DM Sans, Inter, Arial" font-size="24" font-weight="900" fill="#0f172a">1</text>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Calendar</text>
+    </g>
+    <g transform="translate(272 570)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#0f172a"/>
+        <circle cx="41" cy="41" r="23" fill="none" stroke="#94a3b8" stroke-width="8"/>
+        <circle cx="41" cy="41" r="8" fill="#94a3b8"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Settings</text>
+    </g>
+    <g transform="translate(384 570)">
+      <g class="appIcon">
+        <rect width="82" height="82" rx="22" fill="#fff"/>
+        <text x="41" y="54" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="900" fill="#111827">a</text>
+        <path d="M23 61c13 9 27 10 43 1" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <text x="41" y="108" text-anchor="middle" class="label">Amazon</text>
+    </g>
+
+    <!-- dock -->
+    <rect x="42" y="792" width="436" height="108" rx="34" fill="rgba(255,255,255,.78)"/>
+    <g transform="translate(70 805)">
+      <rect width="70" height="70" rx="20" fill="#22c55e"/>
+      <path d="M22 38c8-18 18-27 31-27" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+      <text x="35" y="95" text-anchor="middle" class="dockLabel">Phone</text>
+    </g>
+    <g transform="translate(170 805)">
+      <rect width="70" height="70" rx="20" fill="#0ea5e9"/>
+      <circle cx="35" cy="35" r="21" fill="#fff"/>
+      <text x="35" y="95" text-anchor="middle" class="dockLabel">Mail</text>
+    </g>
+    <g transform="translate(270 805)">
+      <rect width="70" height="70" rx="20" fill="#fff"/>
+      <circle cx="35" cy="35" r="20" fill="none" stroke="#16a34a" stroke-width="7"/>
+      <text x="35" y="95" text-anchor="middle" class="dockLabel">Chat</text>
+    </g>
+    <g transform="translate(370 805)">
+      <rect width="70" height="70" rx="20" fill="#111827"/>
+      <circle cx="35" cy="35" r="20" fill="none" stroke="#fff" stroke-width="6"/>
+      <text x="35" y="95" text-anchor="middle" class="dockLabel">Camera</text>
+    </g>
+  </g>
+
+  <!-- analysis notes -->
+  <g transform="translate(800 240)">
+    <rect width="610" height="560" rx="32" fill="#fff" stroke="#e5e7eb"/>
+    <text x="34" y="58" class="note">Lettura veloce</text>
+    <text x="34" y="100" class="small">Nel contesto reale, secondo me succede questo:</text>
+    <text x="34" y="158" class="note">FC 3</text>
+    <text x="120" y="158" class="small">molto pulita, ma un filo meno “presente”.</text>
+    <text x="34" y="218" class="note">FC 5</text>
+    <text x="120" y="218" class="small">si vede forte, però è più sportiva/aggressiva.</text>
+    <text x="34" y="278" class="note">FC 6</text>
+    <text x="120" y="278" class="small">equilibrio migliore: chiara, moderna, riconoscibile.</text>
+    <text x="34" y="338" class="note">FC 4</text>
+    <text x="120" y="338" class="small">molto elegante, ma più seria e meno luminosa.</text>
+    <rect x="34" y="398" width="542" height="112" rx="24" fill="#f4f7f4" stroke="#dfe8e2"/>
+    <text x="62" y="442" class="note">Mia scelta</text>
+    <text x="62" y="482" class="small">Io andrei su <tspan font-weight="900" fill="#0f172a">FC 6 chiara bold</tspan>. È quella che sembra più app moderna e rimane leggibile tra icone forti.</text>
+  </g>
+</svg>

@@ -254,7 +254,7 @@ export default function Classifica() {
 
         {err && <div style={s.err}>Errore: {err}</div>}
 
-        <section className="fc-classifica-card" style={s.card}>
+        <section className="fc-classifica-card" style={s.card} data-tutorial-target="classifica-table">
           <div style={s.sectionHeader}>
             <h2 style={s.sectionTitle}>Generale</h2>
 
@@ -272,6 +272,7 @@ export default function Classifica() {
               return (
                 <article
                   key={`${r.user_id ?? "user"}-${r.rank ?? index}-${index}`}
+                  data-tutorial-target={index === 0 ? "classifica-row" : undefined}
                   style={{
                     ...s.row,
                     background: isMine ? `${theme.primary}10` : "white",

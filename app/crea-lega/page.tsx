@@ -106,6 +106,7 @@ export default function CreaLega() {
             La lega è la community. Le competizioni interne si aggiungono dopo.
           </p>
 
+          <div data-tutorial-target="create-fields">
           <label style={s.label}>Nome lega</label>
           <input
             value={name}
@@ -123,15 +124,16 @@ export default function CreaLega() {
             disabled={!!inviteCode}
             placeholder="Es. La mia squadra"
           />
+          </div>
 
           {!inviteCode && (
-            <button onClick={create} disabled={busy} style={s.btn}>
+            <button onClick={create} disabled={busy} style={s.btn} data-tutorial-target="create-submit">
               {busy ? "Creazione..." : "Crea lega"}
             </button>
           )}
 
           {inviteCode && (
-            <div style={s.inviteBox}>
+            <div style={s.inviteBox} data-tutorial-target="invite-code">
               <div style={s.inviteTitle}>Codice invito</div>
               <div style={s.inviteCode}>{inviteCode}</div>
               <div style={s.inviteHint}>

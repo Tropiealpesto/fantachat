@@ -518,7 +518,7 @@ export default function RosaPage() {
       />
 
       <main style={s.container}>
-        <section style={s.headerCard}>
+        <section style={s.headerCard} data-tutorial-target="rosa-rules">
           <div style={s.headerTop}>
             <CompetitionBadge
               name={app.competitionName}
@@ -602,7 +602,7 @@ export default function RosaPage() {
           {err && <div className="fc-dark-neon-error" style={s.err}>{err}</div>}
         </section>
 
-        <section style={s.card}>
+        <section style={s.card} data-tutorial-target="rosa-field">
           <div style={s.sectionHeader}>
             <h2 style={s.sectionTitle}>Il tuo schieramento</h2>
 
@@ -640,6 +640,7 @@ export default function RosaPage() {
                 type="button"
                 onClick={save}
                 disabled={saving || !canSubmitOfficial}
+                data-tutorial-target="rosa-submit"
                 style={{
                   ...s.btn,
                   background: canSubmitOfficial ? accent : "#d1d5db",
@@ -651,7 +652,7 @@ export default function RosaPage() {
           )}
         </section>
 
-        <div style={s.contextGrid}>
+        <div style={s.contextGrid} data-tutorial-target="rosa-context">
           <TopTeamsPanel rows={top} />
           <FixturesPanel
             rows={fixtures}

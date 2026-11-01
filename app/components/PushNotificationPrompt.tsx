@@ -5,7 +5,11 @@ import { supabase } from "../../lib/supabaseClient";
 import { useApp } from "./AppContext";
 import { humanError } from "../../lib/humanError";
 
-type Status = "checking" | "unsupported" | "hidden" | "ready" | "denied" | "active" | "busy";
+type Status = "checking" | "hidden" | "ready" | "active" | "busy";
+
+function decisionKey(userId: string) {
+  return `fantachat:notifications-decision:${userId}`;
+}
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -72,8 +76,6 @@ export default function PushNotificationPrompt() {
   const app = useApp();
   const [status, setStatus] = useState<Status>("checking");
   const [message, setMessage] = useState<string | null>(null);
-  const [unsupportedReason, setUnsupportedReason] = useState("Questo browser non permette le notifiche web.");
-
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   useEffect(() => {
@@ -84,38 +86,38 @@ export default function PushNotificationPrompt() {
         if (active) setStatus(next);
       });
     };
-    const deferUnsupportedReason = (next: string) => {
-      queueMicrotask(() => {
-        if (active) setUnsupportedReason(next);
-      });
-    };
+    try {
+      if (window.localStorage.getItem(decisionKey(app.userId)) === "done") {
+        deferStatus("hidden");
+        return () => {
+          active = false;
+        };
+      }
+    } catch {}
 
     if (!publicKey) {
-      deferUnsupportedReason("Notifiche non configurate sul server.");
-      deferStatus("unsupported");
+      deferStatus("hidden");
       return () => {
         active = false;
       };
     }
 
     if (!window.isSecureContext) {
-      deferUnsupportedReason("Le notifiche funzionano solo su connessione sicura.");
-      deferStatus("unsupported");
+      deferStatus("hidden");
       return () => {
         active = false;
       };
     }
 
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
-      deferUnsupportedReason("Apri FantaChat da Chrome o installala sul telefono per attivare le notifiche.");
-      deferStatus("unsupported");
+      deferStatus("hidden");
       return () => {
         active = false;
       };
     }
 
     if (Notification.permission === "denied") {
-      deferStatus("denied");
+      deferStatus("hidden");
       return () => {
         active = false;
       };
@@ -143,13 +145,14 @@ export default function PushNotificationPrompt() {
   async function activate() {
     if (!publicKey) return;
 
+    markDecision();
     setStatus("busy");
     setMessage(null);
 
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setStatus(permission === "denied" ? "denied" : "ready");
+        setStatus("hidden");
         return;
       }
 
@@ -157,92 +160,103 @@ export default function PushNotificationPrompt() {
       await postWithSession("/api/push/test", {});
 
       setStatus("active");
-      setMessage("Notifiche attive.");
     } catch (error) {
       setStatus("ready");
       setMessage(humanError(error, "Notifiche non attivate. Riprova da Chrome o dall'app installata."));
     }
   }
 
+  function markDecision() {
+    try {
+      if (app.userId) window.localStorage.setItem(decisionKey(app.userId), "done");
+    } catch {}
+  }
+
+  function dismiss() {
+    markDecision();
+    setStatus("hidden");
+  }
+
   if (!app.ready || !app.userId || status === "checking" || status === "hidden" || status === "active") {
     return null;
   }
 
-  if (status === "unsupported") {
-    return (
-      <section style={s.card}>
-        <div style={s.icon}>i</div>
-        <div>
-          <h2 style={s.title}>Notifiche non disponibili</h2>
-          <p style={s.text}>{unsupportedReason}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (status === "denied") {
-    return (
-      <section style={s.card}>
-        <div style={s.icon}>!</div>
-        <div>
-          <h2 style={s.title}>Notifiche bloccate</h2>
-          <p style={s.text}>Puoi riattivarle dalle impostazioni del browser o dell'app.</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section style={s.card}>
-      <div style={s.icon}>•</div>
-      <div style={{ minWidth: 0 }}>
-        <h2 style={s.title}>Attiva notifiche</h2>
+    <div style={s.backdrop} role="presentation">
+      <section style={s.modal} role="dialog" aria-modal="true" aria-labelledby="notification-prompt-title">
+        <div style={s.icon}>•</div>
+        <h2 id="notification-prompt-title" style={s.title}>Vuoi ricevere notifiche?</h2>
         <p style={s.text}>Ricevi avvisi per chat, slot formazione, bozze e punteggi live.</p>
         {message && <p style={s.error}>{message}</p>}
-      </div>
-      <button type="button" style={s.button} onClick={activate} disabled={status === "busy"}>
-        {status === "busy" ? "Attivo..." : "Attiva"}
-      </button>
-    </section>
+        <div style={s.actions}>
+          <button type="button" style={s.dismiss} onClick={dismiss} disabled={status === "busy"}>Non ora</button>
+          <button type="button" style={s.button} onClick={activate} disabled={status === "busy"}>
+            {status === "busy" ? "Attivazione..." : "Attiva"}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
-  card: {
+  backdrop: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 250,
     display: "grid",
-    gridTemplateColumns: "34px 1fr auto",
-    gap: 10,
-    alignItems: "center",
+    placeItems: "center",
+    padding: 20,
+    background: "rgba(15, 23, 42, .42)",
+    backdropFilter: "blur(4px)",
+  },
+  modal: {
+    width: "min(100%, 360px)",
     background: "white",
     border: "1px solid #e5e7eb",
-    borderRadius: 16,
-    padding: 12,
-    boxShadow: "0 5px 18px rgba(15,23,42,.05)",
+    borderRadius: 20,
+    padding: 22,
+    boxShadow: "0 24px 70px rgba(15,23,42,.24)",
+    textAlign: "center",
   },
   icon: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    margin: "0 auto 12px",
+    borderRadius: 14,
     display: "grid",
     placeItems: "center",
     background: "#f0fdf4",
     color: "#15803d",
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 1000,
   },
-  title: { margin: 0, color: "#0f172a", fontSize: 14, fontWeight: 1000 },
-  text: { margin: "3px 0 0", color: "#64748b", fontSize: 11.5, lineHeight: 1.3, fontWeight: 800 },
-  ok: { margin: "5px 0 0", color: "#15803d", fontSize: 11.5, fontWeight: 900 },
-  error: { margin: "5px 0 0", color: "#dc2626", fontSize: 11.5, fontWeight: 900 },
+  title: { margin: 0, color: "#0f172a", fontSize: 18, fontWeight: 1000 },
+  text: { margin: "8px 0 0", color: "#64748b", fontSize: 13, lineHeight: 1.4, fontWeight: 700 },
+  error: { margin: "8px 0 0", color: "#dc2626", fontSize: 12, fontWeight: 900 },
   button: {
+    flex: 1,
     border: 0,
     borderRadius: 12,
     background: "#15803d",
     color: "white",
-    padding: "10px 12px",
+    padding: "11px 12px",
     fontFamily: "inherit",
     fontSize: 12,
     fontWeight: 1000,
+    cursor: "pointer",
+  },
+  actions: { display: "flex", alignItems: "center", gap: 8, marginTop: 18 },
+  dismiss: {
+    flex: 1,
+    border: "1px solid #d1d5db",
+    borderRadius: 12,
+    background: "white",
+    color: "#64748b",
+    padding: "11px 9px",
+    fontFamily: "inherit",
+    fontSize: 12,
+    fontWeight: 900,
     cursor: "pointer",
   },
 };

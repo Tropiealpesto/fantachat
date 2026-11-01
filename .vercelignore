@@ -1,0 +1,7 @@
+.vercel
+.env*.local
+output/
+tmp/
+mockups/
+Fantchat condivisione codice/
+Fantchat condivisione codice.zip

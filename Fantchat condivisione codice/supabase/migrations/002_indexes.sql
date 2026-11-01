@@ -1,0 +1,16 @@
+create index if not exists league_members_user_league_idx on league_members(user_id, league_id);
+create index if not exists league_members_league_role_idx on league_members(league_id, role);
+create index if not exists league_competitions_league_status_idx on league_competitions(league_id, status);
+create index if not exists matchdays_lc_number_status_idx on matchdays(league_competition_id, number, status);
+create unique index if not exists lineups_lc_matchday_user_key on lineups(league_competition_id, matchday_id, user_id);
+create index if not exists lineup_players_lineup_idx on lineup_players(lineup_id);
+create index if not exists scores_lc_matchday_user_idx on scores(league_competition_id, matchday_id, user_id);
+create index if not exists matchday_team_scores_lc_matchday_rank_idx on matchday_team_scores(league_competition_id, matchday_id, rank);
+create index if not exists competition_standings_lc_league_rank_idx on competition_standings(league_competition_id, league_id, rank);
+create index if not exists messages_league_created_idx on messages(league_id, created_at desc);
+create index if not exists messages_league_comp_created_idx on messages(league_competition_id, created_at desc);
+create index if not exists player_votes_lookup_idx on player_votes(competition_id, season_id, matchday_number, real_player_id);
+create index if not exists fixtures_lookup_idx on fixtures(competition_id, season_id, matchday_number);
+create index if not exists top_n_lookup_idx on top_n(competition_id, season_id, matchday_number);
+create index if not exists competition_players_comp_idx on competition_players(competition_id, active);
+create index if not exists competition_real_teams_comp_idx on competition_real_teams(competition_id, active);

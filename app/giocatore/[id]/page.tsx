@@ -13,6 +13,8 @@ import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
 type PlayerHistory = {
   matchday_number: number;
   points: number;
+  base_points?: number | null;
+  extra_points?: number | null;
   goals?: number | null;
   assists?: number | null;
   yellow?: number | null;
@@ -104,13 +106,21 @@ function num(value: number | null | undefined) {
   return Number(value ?? 0);
 }
 
-function round3(value: number) {
-  return Math.round(value * 1000) / 1000;
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
-function fmt3(value: number | null | undefined) {
+function fmt2(value: number | null | undefined) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  return String(round3(Number(value))).replace(".", ",");
+  const rounded = round2(Number(value));
+  return String(Object.is(rounded, -0) ? 0 : rounded).replace(".", ",");
+}
+
+function signedFmt2(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  const rounded = round2(Number(value));
+  const normalized = Object.is(rounded, -0) ? 0 : rounded;
+  return `${normalized > 0 ? "+" : ""}${String(normalized).replace(".", ",")}`;
 }
 
 function normalizePct(value: number | null | undefined) {
@@ -135,11 +145,21 @@ function buildBreakdown(data: NonNullable<PlayerDetail>, h: PlayerHistory): Brea
     if (!points) return;
     lines.push({
       label,
-      value: typeof raw === "boolean" ? (raw ? "Si" : "No") : fmt3(Number(raw ?? 0)),
+      value: typeof raw === "boolean" ? (raw ? "Si" : "No") : fmt2(Number(raw ?? 0)),
       formula,
-      points: round3(points),
+      points: round2(points),
     });
   }
+
+  const baseDetail =
+    num(h.goals) * 3
+    + num(h.assists)
+    + num(h.yellow) * -0.5
+    + num(h.red) * -1
+    + num(h.pen_missed) * -3
+    + num(h.pen_saved) * 3
+    + ((role === "P" || role === "D") && h.clean_sheet ? 1 : 0)
+    + (role === "P" ? num(h.goals_conceded) * -1 : 0);
 
   add("Gol segnati", h.goals, `${num(h.goals)} x 3`, num(h.goals) * 3);
   add("Assist", h.assists, `${num(h.assists)} x 1`, num(h.assists));
@@ -156,19 +176,24 @@ function buildBreakdown(data: NonNullable<PlayerDetail>, h: PlayerHistory): Brea
     add("Gol subiti", h.goals_conceded, `${num(h.goals_conceded)} x -1`, num(h.goals_conceded) * -1);
   }
 
+  const baseResidual = h.base_points == null ? 0 : round2(num(h.base_points) - baseDetail);
+  if (Math.abs(baseResidual) >= 0.001) {
+    add("Voce base non mappata", baseResidual, "differenza rispetto al motore ufficiale", baseResidual);
+  }
+
   const kind = rulesetKind(data.scoring_ruleset);
   if (kind === "statistico") {
     add("Passaggi riusciti", h.passes_completed, `${num(h.passes_completed)} x 0,005`, num(h.passes_completed) * 0.005);
 
     const passAccuracy = normalizePct(h.pass_accuracy);
     if (num(h.passes_completed) >= 20 && num(passAccuracy) > 85) {
-      add("Precisione passaggi", passAccuracy, `${fmt3(passAccuracy)}% e almeno 20 passaggi`, 0.3);
+      add("Precisione passaggi", passAccuracy, `${fmt2(passAccuracy)}% e almeno 20 passaggi`, 0.3);
     }
 
     add("Tackle", h.tackles, `${num(h.tackles)} x 0,10`, num(h.tackles) * 0.1);
     add("Intercetti", h.interceptions, `${num(h.interceptions)} x 0,10`, num(h.interceptions) * 0.1);
-    add("npxG", h.npxg ?? h.xg, `${fmt3(h.npxg ?? h.xg)} x 1`, num(h.npxg ?? h.xg));
-    add("xA", h.xa, `${fmt3(h.xa)} x 1`, num(h.xa));
+    add("npxG", h.npxg ?? h.xg, `${fmt2(h.npxg ?? h.xg)} x 1`, num(h.npxg ?? h.xg));
+    add("xA", h.xa, `${fmt2(h.xa)} x 1`, num(h.xa));
 
     if (role === "P") {
       const savePct = normalizePct(h.save_pct) ?? (
@@ -177,14 +202,14 @@ function buildBreakdown(data: NonNullable<PlayerDetail>, h: PlayerHistory): Brea
           : null
       );
 
-      if (num(savePct) > 80) add("% parate", savePct, `${fmt3(savePct)}% > 80%`, 0.5);
-      if (num(savePct) > 80 && num(h.saves) >= 5) add("% parate rafforzato", savePct, `${fmt3(savePct)}% e almeno 5 parate`, 1);
+      if (num(savePct) > 80) add("% parate", savePct, `${fmt2(savePct)}% > 80%`, 0.5);
+      if (num(savePct) > 80 && num(h.saves) >= 5) add("% parate rafforzato", savePct, `${fmt2(savePct)}% e almeno 5 parate`, 1);
     }
   }
 
   if (kind === "pro") {
-    add("xG", h.xg, `${fmt3(h.xg)} x bonus`, num(h.xg));
-    add("xA", h.xa, `${fmt3(h.xa)} x bonus`, num(h.xa));
+    const advanced = h.extra_points == null ? num(h.xg) + num(h.xa) : num(h.extra_points);
+    add("Bonus avanzati", advanced, "regola Pro ufficiale", advanced);
   }
 
   return lines;
@@ -262,7 +287,7 @@ export default function Giocatore() {
           <div className="fc-player-card" style={s.card}>Giocatore non trovato.</div>
         ) : (
           <>
-            <section className="fc-player-hero" style={s.hero}>
+            <section className="fc-player-hero" style={s.hero} data-tutorial-target="player-summary">
               <CompetitionBadge name={app.competitionName} type={app.competitionType} />
 
               <div style={s.identity}>
@@ -283,7 +308,7 @@ export default function Giocatore() {
               </div>
             </section>
 
-            <section className="fc-player-card" style={s.card}>
+            <section className="fc-player-card" style={s.card} data-tutorial-target="player-history">
               <div style={s.sectionHead}>
                 <div>
                   <h2 style={s.sectionTitle}>Storico voti</h2>
@@ -297,8 +322,8 @@ export default function Giocatore() {
                   const points = Number(h.points);
                   const open = openMatchday === h.matchday_number;
                   const breakdown = buildBreakdown(data, h);
-                  const debugTotal = round3(breakdown.reduce((sum, line) => sum + line.points, 0));
-                  const delta = round3(points - debugTotal);
+                  const debugTotal = round2(breakdown.reduce((sum, line) => sum + line.points, 0));
+                  const delta = round2(points - debugTotal);
 
                   return (
                     <div key={h.matchday_number} style={s.histWrap}>
@@ -318,10 +343,10 @@ export default function Giocatore() {
                       </button>
 
                       {open && (
-                        <div style={s.breakdown}>
+                          <div style={s.breakdown} data-tutorial-target="player-breakdown">
                           <div style={s.breakdownHead}>
                             <span>Dettaglio punteggio</span>
-                            <b>{signedFmt(points)}</b>
+                            <b>{signedFmt2(points)}</b>
                           </div>
 
                           {breakdown.map((line) => (
@@ -332,7 +357,7 @@ export default function Giocatore() {
                               </div>
                               <span style={s.breakdownValue}>{line.value}</span>
                               <b style={{ ...s.breakdownPoints, color: line.points > 0 ? "var(--fc-primary)" : line.points < 0 ? "#dc2626" : "#64748b" }}>
-                                {signedFmt(line.points)}
+                                {signedFmt2(line.points)}
                               </b>
                             </div>
                           ))}
@@ -343,12 +368,12 @@ export default function Giocatore() {
 
                           <div style={s.debugTotal}>
                             <span>Totale voci mostrate</span>
-                            <b>{signedFmt(debugTotal)}</b>
+                            <b>{signedFmt2(debugTotal)}</b>
                           </div>
 
                           {Math.abs(delta) >= 0.01 && (
                             <div style={s.deltaWarn}>
-                              Differenza con totale ufficiale: {signedFmt(delta)}. Qui c'e probabilmente una voce non mappata o un dato importato da controllare.
+                              Differenza con totale ufficiale: {signedFmt2(delta)}. Il totale ufficiale include una voce non mostrata in questo dettaglio.
                             </div>
                           )}
                         </div>

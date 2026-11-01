@@ -49,6 +49,14 @@ export default function SideDrawerWrapper() {
     app.closeDrawer();
   }
 
+  function openNotificationSettings() {
+    try {
+      if (app.userId) window.localStorage.removeItem(`fantachat:notifications-decision:${app.userId}`);
+    } catch {}
+    app.closeDrawer();
+    window.location.assign("/");
+  }
+
   return (
     <SideDrawer
       isOpen={app.drawerOpen}
@@ -65,6 +73,7 @@ export default function SideDrawerWrapper() {
       teamPattern={colors.pattern}
       uiTheme={app.uiTheme}
       onThemeChange={app.setUiTheme}
+      onNotificationSettings={openNotificationSettings}
     />
   );
 }

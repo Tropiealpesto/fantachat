@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".16"/>
+    </filter>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff9d44"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 52px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 23px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:900 23px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .desc { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fc { font:1000 118px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-18px; }
+      .fc2 { font:1000 124px 'Arial Rounded MT Bold','DM Sans','Inter',Arial,sans-serif; letter-spacing:-19px; }
+      .curve { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1000"/>
+  <text x="80" y="88" class="title">FantaChat — icona premium su bianco</text>
+  <text x="80" y="128" class="sub">Sfondo bianco, F verde e C arancione. Elegante, moderna, di impatto.</text>
+
+  <!-- 1 -->
+  <g transform="translate(80 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <rect x="13" y="13" width="154" height="154" rx="34" fill="#fff" stroke="#eef2f0" stroke-width="3"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+    </g>
+    <text x="28" y="260" class="label">1. Minimal premium</text>
+    <text x="28" y="289" class="desc">Pulita, molto leggibile, niente rumore.</text>
+  </g>
+
+  <!-- 2 -->
+  <g transform="translate(460 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="88" y="122" text-anchor="middle" class="fc2">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M45 138h89" stroke="#15803d" stroke-width="8" stroke-linecap="round" opacity=".14"/>
+    </g>
+    <text x="28" y="260" class="label">2. Rounded bold</text>
+    <text x="28" y="289" class="desc">Più morbida, moderna, forte in home.</text>
+  </g>
+
+  <!-- 3 -->
+  <g transform="translate(840 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <path d="M48 135V45h78" class="curve" stroke="url(#green)" stroke-width="25"/>
+      <path d="M48 91h60" class="curve" stroke="url(#green)" stroke-width="25"/>
+      <path d="M137 47c-38 0-65 27-65 63s27 63 65 63c18 0 33-5 46-15" class="curve" stroke="url(#orange)" stroke-width="25"/>
+    </g>
+    <text x="28" y="260" class="label">3. Custom line</text>
+    <text x="28" y="289" class="desc">Disegnata, più proprietaria e distintiva.</text>
+  </g>
+
+  <!-- 4 -->
+  <g transform="translate(1220 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <circle cx="91" cy="90" r="64" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+      <text x="88" y="122" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+    </g>
+    <text x="28" y="260" class="label">4. Orbita soft</text>
+    <text x="28" y="289" class="desc">Elegante, leggermente più iconica.</text>
+  </g>
+
+  <!-- 5 -->
+  <g transform="translate(80 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <path d="M46 134V45h76" class="curve" stroke="url(#green)" stroke-width="24"/>
+      <path d="M46 91h58" class="curve" stroke="url(#green)" stroke-width="24"/>
+      <path d="M133 47c-34 4-57 30-57 63s23 59 57 63" class="curve" stroke="url(#orange)" stroke-width="24"/>
+      <path d="M133 75c17 0 30 14 30 35s-13 35-30 35" class="curve" stroke="url(#orange)" stroke-width="13" opacity=".7"/>
+    </g>
+    <text x="28" y="260" class="label">5. Sport premium</text>
+    <text x="28" y="289" class="desc">Più energia, ma ancora molto pulita.</text>
+  </g>
+
+  <!-- 6 -->
+  <g transform="translate(460 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <path d="M90 28l61 27v43c0 44-25 68-61 85-36-17-61-41-61-85V55z" fill="#f8fafc" stroke="#e5e7eb" stroke-width="3"/>
+      <text x="90" y="124" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+    </g>
+    <text x="28" y="260" class="label">6. Scudo leggero</text>
+    <text x="28" y="289" class="desc">Più fantasy/lega, ma sobria.</text>
+  </g>
+
+  <!-- 7 -->
+  <g transform="translate(840 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc2">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M51 46c27-14 52-21 76-20" stroke="#15803d" stroke-width="7" stroke-linecap="round" opacity=".16"/>
+      <path d="M130 151c-27 14-52 21-76 20" stroke="#e07b1a" stroke-width="7" stroke-linecap="round" opacity=".18"/>
+    </g>
+    <text x="28" y="260" class="label">7. Signature</text>
+    <text x="28" y="289" class="desc">Molto app premium, con micro-movimento.</text>
+  </g>
+
+  <!-- 8 -->
+  <g transform="translate(1220 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <path d="M44 42h89c-29 18-43 41-43 69 0 26 14 48 43 67H44z" fill="url(#green)"/>
+      <path d="M133 42c-31 13-50 38-50 69s19 56 50 67c28 0 51-11 67-31l-27-20c-10 10-22 16-36 16-18 0-31-13-31-32s13-32 31-32c14 0 26 6 36 16l27-20c-16-20-39-33-67-33z" fill="url(#orange)"/>
+    </g>
+    <text x="28" y="260" class="label">8. Monogramma pieno</text>
+    <text x="28" y="289" class="desc">Di impatto, meno testuale, molto brand.</text>
+  </g>
+</svg>

@@ -19,6 +19,12 @@ const ADMIN_LINKS = [
     icon: "F",
   },
   {
+    href: "/admin/moderazione",
+    title: "Moderazione chat",
+    desc: "Esamina le segnalazioni e nascondi i messaggi non conformi.",
+    icon: "!",
+  },
+  {
     href: "/admin/competizione/nuova",
     title: "Aggiungi competizione",
     desc: "Scegli una competizione globale per la tua lega.",
@@ -46,7 +52,7 @@ export default function AdminHome() {
           </p>
         </section>
 
-        <section style={s.grid}>
+        <section style={s.grid} data-tutorial-target="admin-grid">
           {ADMIN_LINKS.map((link) => (
             <a key={link.href} href={link.href} style={s.link}>
               <span style={s.icon}>{link.icon}</span>

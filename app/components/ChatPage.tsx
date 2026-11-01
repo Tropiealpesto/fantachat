@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { themeFromType } from "@/lib/competitionThemes";
+import { humanError } from "@/lib/humanError";
 import TeamBadge, { type BadgePattern } from "./TeamBadge";
 
 type Mention = { user_id: string; team_name: string };
@@ -140,6 +141,9 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   const [playerImages, setPlayerImages] = useState<Record<string, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionMessageId, setActionMessageId] = useState<string | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
 
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -152,7 +156,11 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   const accent = theme.primary;
 
   const loadMessages = useCallback(async () => {
-    const { data } = await supabase.rpc("get_chat_messages", { p_league_id: leagueId, p_limit: 200 });
+    const { data, error } = await supabase.rpc("get_chat_messages", { p_league_id: leagueId, p_limit: 200 });
+    if (error) {
+      setNotice(humanError(error, "Non è stato possibile caricare la chat."));
+      return;
+    }
     setMessages((data ?? []) as Message[]);
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 50);
   }, [leagueId]);
@@ -161,11 +169,16 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     let off = false;
     (async () => {
       setLoading(true);
-      const [{ data: msgs }, { data: mem }] = await Promise.all([
+      const [{ data: msgs, error: messagesError }, { data: mem, error: membersError }] = await Promise.all([
         supabase.rpc("get_chat_messages", { p_league_id: leagueId, p_limit: 200 }),
         supabase.rpc("get_league_members", { p_league_id: leagueId }),
       ]);
       if (off) return;
+      if (messagesError || membersError) {
+        setNotice(humanError(messagesError ?? membersError, "Non è stato possibile caricare la chat."));
+        setLoading(false);
+        return;
+      }
       setMessages((msgs ?? []) as Message[]);
       setMembers((mem ?? []) as Member[]);
       setLoading(false);
@@ -315,7 +328,11 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
       p_league_id: leagueId, p_league_competition_id: activeLeagueCompetitionId ?? null,
       p_matchday_id: null, p_content: text, p_kind: "text", p_meta: meta,
     });
-    if (!error) {
+    if (error) {
+      setInput(text);
+      setNotice(humanError(error, "Non è stato possibile inviare il messaggio."));
+    } else {
+      setNotice(null);
       supabase.auth.getSession().then(({ data }) => {
         const accessToken = data.session?.access_token;
         if (!accessToken) return;
@@ -326,12 +343,47 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ leagueId, messageId, content: text }),
+          body: JSON.stringify({ leagueId, messageId }),
         }).catch(() => {});
       });
     }
     await loadMessages();
     setSending(false);
+  }
+
+  async function reportMessage(message: Message) {
+    if (actionBusy) return;
+    const reason = window.prompt("Perché vuoi segnalare questo messaggio?", "Contenuto inappropriato");
+    if (reason === null) return;
+
+    setActionBusy(true);
+    const { error } = await supabase.rpc("report_chat_message", {
+      p_message_id: message.id,
+      p_reason: reason.trim() || "Altro",
+    });
+    setActionBusy(false);
+    setActionMessageId(null);
+    setNotice(error ? humanError(error, "Segnalazione non riuscita.") : "Segnalazione inviata agli admin della lega.");
+  }
+
+  async function blockUser(message: Message) {
+    if (!message.user_id || actionBusy) return;
+    const confirmed = window.confirm(`Vuoi bloccare ${message.team_name || "questa squadra"}? Non vedrai più i suoi messaggi nella chat.`);
+    if (!confirmed) return;
+
+    setActionBusy(true);
+    const { error } = await supabase.rpc("block_chat_user", {
+      p_league_id: leagueId,
+      p_blocked_user_id: message.user_id,
+    });
+    setActionBusy(false);
+    setActionMessageId(null);
+    if (error) {
+      setNotice(humanError(error, "Blocco non riuscito."));
+      return;
+    }
+    setNotice("Utente bloccato. I suoi messaggi non verranno più mostrati.");
+    await loadMessages();
   }
 
   function ptsTag(id: string) {
@@ -362,7 +414,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
   return (
     <div className="fc-chat-shell" style={s.wrap}>
       <div style={s.stripe} />
-      <div className="fc-chat-header" style={s.header}>
+      <div className="fc-chat-header" style={s.header} data-tutorial-target="chat-header">
         <div>
           <div style={s.hTitle}>Chat lega</div>
           <div style={s.hSub}>{members.length} partecipanti</div>
@@ -373,6 +425,13 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
           </div>
         )}
       </div>
+
+      {notice && (
+        <div role="status" style={s.notice}>
+          <span>{notice}</span>
+          <button type="button" onClick={() => setNotice(null)} aria-label="Chiudi messaggio" style={s.noticeClose}>×</button>
+        </div>
+      )}
 
       <div className="fc-chat-messages" style={s.messages}>
         {loading ? (
@@ -453,6 +512,19 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                       </span>
                     ))}
                   </div>
+                  {!own && m.user_id && (
+                    <div style={s.actions}>
+                      {actionMessageId === m.id ? (
+                        <>
+                          <button type="button" disabled={actionBusy} onClick={() => reportMessage(m)} style={s.action}>Segnala</button>
+                          <button type="button" disabled={actionBusy} onClick={() => blockUser(m)} style={s.action}>Blocca</button>
+                          <button type="button" onClick={() => setActionMessageId(null)} style={s.actionMuted}>Chiudi</button>
+                        </>
+                      ) : (
+                        <button type="button" onClick={() => setActionMessageId(m.id)} style={s.moreAction} aria-label="Azioni messaggio" title="Azioni messaggio">•••</button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -504,6 +576,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
           ref={taRef} value={input} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder="Scrivi un messaggio..." className="fc-chat-input" style={s.textarea} rows={1}
+          data-tutorial-target="chat-input"
         />
         <button type="button" onClick={send} disabled={sending || !input.trim()} style={{ ...s.send, background: accent, opacity: sending || !input.trim() ? 0.5 : 1 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 11l18-8-8 18-2-7-8-3z" /></svg>
@@ -521,6 +594,8 @@ const s: Record<string, React.CSSProperties> = {
   hSub: { fontSize: 11, color: "#64748b", fontWeight: 700 },
   livePill: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, borderRadius: 8, padding: "5px 9px", fontSize: 10.5, fontWeight: 850 },
   liveDot: { width: 6, height: 6, borderRadius: "50%" },
+  notice: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", background: "#fff7ed", borderBottom: "1px solid #fed7aa", color: "#9a3412", fontSize: 11.5, fontWeight: 750, lineHeight: 1.3 },
+  noticeClose: { border: 0, background: "transparent", color: "#9a3412", fontSize: 18, cursor: "pointer", padding: 0 },
   messages: { flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 },
   center: { margin: "auto", color: "#9ca3af", fontWeight: 800, textAlign: "center" },
   event: { alignSelf: "center", width: "100%", maxWidth: 330, background: "white", border: "1px solid #e5e7eb", borderLeft: "3px solid #15803d", borderRight: "2px solid #f4c99d", borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 2px 10px rgba(15,23,42,.035)" },
@@ -540,6 +615,10 @@ const s: Record<string, React.CSSProperties> = {
   whoName: { fontSize: 11.5, fontWeight: 950, color: "#0f172a" },
   whoTime: { fontSize: 10, color: "#94a3b8", fontWeight: 700 },
   bubble: { padding: "9px 11px", borderRadius: 14, fontSize: 13.5, fontWeight: 650, lineHeight: 1.35, display: "flex", flexDirection: "column", gap: 5, boxShadow: "0 6px 18px rgba(15,23,42,.055)" },
+  actions: { display: "flex", alignItems: "center", gap: 4, padding: "0 2px" },
+  moreAction: { border: 0, background: "transparent", color: "#94a3b8", fontSize: 14, lineHeight: 1, cursor: "pointer", padding: "2px 4px", letterSpacing: 1 },
+  action: { border: "1px solid #fecaca", background: "#fff1f2", color: "#b91c1c", borderRadius: 6, padding: "3px 7px", fontSize: 10.5, fontWeight: 850, cursor: "pointer" },
+  actionMuted: { border: 0, background: "transparent", color: "#94a3b8", borderRadius: 6, padding: "3px 5px", fontSize: 10.5, fontWeight: 800, cursor: "pointer" },
   mention: { fontWeight: 1000, borderRadius: 5, padding: "0 3px" },
   pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #f4c99d", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
   pinfo: { display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 },

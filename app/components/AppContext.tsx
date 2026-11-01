@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { DEFAULT_THEME, themeFromType, type CompetitionTheme } from "../../lib/competitionThemes";
+import { humanError } from "../../lib/humanError";
 
 type AppRole = "player" | "admin" | "super_admin";
 type UiTheme = "light" | "dark";
@@ -24,6 +25,7 @@ type AppContextRow = {
 
 type AppCtxValue = {
   ready: boolean;
+  contextError: string | null;
   userId: string | null;
   userEmail: string | null;
 
@@ -91,6 +93,7 @@ function normalizeRpcRow(data: unknown): Partial<AppContextRow> | null {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [contextError, setContextError] = useState<string | null>(null);
   const [row, setRow] = useState<AppContextRow>(emptyCtx);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [uiTheme, setUiThemeState] = useState<UiTheme>("light");
@@ -104,12 +107,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     setReady(false);
+    setContextError(null);
 
     try {
       const { data: auth } = await supabase.auth.getUser();
 
       if (!auth.user) {
         setRow(emptyCtx);
+        setContextError(null);
         setReady(true);
         return;
       }
@@ -132,6 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           user_id: rpcRow.user_id ?? auth.user.id,
           user_email: rpcRow.user_email ?? auth.user.email ?? null,
         });
+        setContextError(null);
         setReady(true);
         return;
       }
@@ -140,7 +146,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.warn("get_app_context fallback:", error.message);
       }
 
-      setRow(fallback);
+      setRow((current) => current.user_id === auth.user.id ? current : fallback);
+      setContextError("Non riesco a caricare il contesto dell'app. Riprova tra poco.");
       setReady(true);
     } catch (e) {
       console.error("AppContext refresh error:", e);
@@ -161,6 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setRow(emptyCtx);
       }
 
+      setContextError("Connessione temporaneamente non disponibile. Riprova tra poco.");
       setReady(true);
     }
   }, []);
@@ -172,6 +180,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error("set_active_league error:", error.message);
+      setContextError(humanError(error, "Non è stato possibile cambiare lega."));
     }
 
     await refresh();
@@ -184,6 +193,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
       console.error("set_active_competition error:", error.message);
+      setContextError(humanError(error, "Non è stato possibile cambiare competizione."));
     }
 
     await refresh();
@@ -213,9 +223,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refresh]);
 
-const isSuperAdmin =
-  row.role === "super_admin" ||
-  row.user_email?.toLowerCase() === "pietrparod@gmail.com";
+const isSuperAdmin = row.role === "super_admin";
 
 const isAdmin =
   row.role === "admin" ||
@@ -252,6 +260,7 @@ const isAdmin =
   const value = useMemo<AppCtxValue>(
     () => ({
       ready,
+      contextError,
       userId: row.user_id,
       userEmail: row.user_email,
 
@@ -285,6 +294,7 @@ const isAdmin =
     }),
     [
       ready,
+      contextError,
       row,
       competitionTheme,
       isAdmin,
@@ -298,5 +308,47 @@ const isAdmin =
     ]
   );
   
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      {contextError && (
+        <div role="alert" style={contextErrorStyle}>
+          <span>{contextError}</span>
+          <button type="button" onClick={() => void refresh()} style={contextRetryStyle}>Riprova</button>
+        </div>
+      )}
+      {children}
+    </Ctx.Provider>
+  );
 }
+
+const contextErrorStyle: React.CSSProperties = {
+  position: "fixed",
+  top: "calc(var(--appbar-safe-top, 0px) + 8px)",
+  left: 12,
+  right: 12,
+  zIndex: 300,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "10px 12px",
+  border: "1px solid #fed7aa",
+  borderRadius: 12,
+  background: "#fff7ed",
+  color: "#9a3412",
+  boxShadow: "0 8px 24px rgba(15,23,42,.12)",
+  fontSize: 12,
+  fontWeight: 800,
+};
+
+const contextRetryStyle: React.CSSProperties = {
+  border: "1px solid #fdba74",
+  borderRadius: 8,
+  background: "#ffffff",
+  color: "#9a3412",
+  padding: "6px 9px",
+  font: "inherit",
+  fontWeight: 900,
+  cursor: "pointer",
+  flexShrink: 0,
+};

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     .eq("status", "active");
 
   if (lcError) {
-    return Response.json({ ok: false, error: lcError.message }, { status: 500 });
+    return Response.json({ ok: false, error: "Non è stato possibile preparare le notifiche della giornata." }, { status: 500 });
   }
 
   const lcIds = (leagueCompetitions ?? []).map((row) => row.id);
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     .in("league_competition_id", lcIds);
 
   if (membersError) {
-    return Response.json({ ok: false, error: membersError.message }, { status: 500 });
+    return Response.json({ ok: false, error: "Non è stato possibile caricare i destinatari delle notifiche." }, { status: 500 });
   }
 
   const result = await notifyUsers(

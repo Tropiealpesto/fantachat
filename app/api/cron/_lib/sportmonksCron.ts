@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { processNotificationJobs } from "../../notifications/process/route";
+import { processNotificationJobs } from "../../../../lib/notificationJobs";
 
 type SyncOptions = {
   catalog?: boolean;
@@ -42,12 +42,13 @@ export async function runSportmonksCron(
       notifications,
     });
   } catch (error) {
+    console.error(`Sportmonks cron failed: ${mode}`, error);
     return Response.json(
       {
         ok: false,
         mode,
         duration_ms: Date.now() - startedAt,
-        error: error instanceof Error ? error.message : String(error),
+        error: "Aggiornamento dati sportivi non riuscito.",
       },
       { status: 500 }
     );

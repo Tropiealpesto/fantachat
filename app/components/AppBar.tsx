@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useApp } from "./AppContext";
+import TutorialHelp from "./TutorialHelp";
 
 export default function AppBar(props: {
   league: string;
@@ -18,6 +19,7 @@ export default function AppBar(props: {
           onClick={handleMenu}
           aria-label="Apri menu"
           className="appbar-menu"
+          data-tutorial-target="appbar-menu"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -39,7 +41,8 @@ export default function AppBar(props: {
           </div>
         </div>
 
-        <div className="appbar-right">
+        <div className="appbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <TutorialHelp />
           {props.right}
         </div>
       </div>

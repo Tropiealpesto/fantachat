@@ -6,6 +6,7 @@ import BottomNav from "../components/BottomNav";
 import CompetitionBadge from "../components/CompetitionBadge";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
+import { humanError } from "../../lib/humanError";
 
 type Tab = "competizioni" | "giornate" | "statistiche" | "top" | "partite";
 
@@ -90,7 +91,7 @@ export default function SuperadminPage() {
   const loadCompetitions = useCallback(async () => {
     setErr(null);
     const { data, error } = await supabase.rpc("superadmin_get_competitions");
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(humanError(error, "Non è stato possibile caricare le competizioni.")); return; }
     const list = ((data ?? []) as Competition[]).filter((c) => {
       const status = c.visibility_status ?? "active";
       return status !== "archived" && c.active !== false;
@@ -133,7 +134,7 @@ export default function SuperadminPage() {
       p_visibility_status: status,
       p_active: status !== "archived",
     });
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr(humanError(error, "Non è stato possibile aggiornare la competizione.")); return; }
     setMsg("Stato competizione aggiornato ✅");
     await loadCompetitions();
   }
@@ -190,7 +191,7 @@ export default function SuperadminPage() {
 
       await loadCompetitions();
     } catch (error) {
-      setErr(error instanceof Error ? error.message : String(error));
+      setErr(humanError(error, "Non è stato possibile aggiornare i dati sportivi."));
     } finally {
       setSyncingSportmonks(false);
     }
@@ -308,7 +309,7 @@ function Shell(props: { app: ReturnType<typeof useApp>; children: React.ReactNod
   return (
     <>
       <AppBar league="FantaChat" team="SUPERADMIN" onMenuOpen={props.app.openDrawer} />
-      <main style={s.container}>{props.children}</main>
+      <main style={s.container} data-tutorial-target="superadmin-main">{props.children}</main>
       <BottomNav />
     </>
   );
@@ -468,7 +469,7 @@ function CompetizioniTab(props: {
       p_rules_summary: rulesSummary.trim() || null,
     });
     setCreating(false);
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile creare la competizione.")); return; }
     props.setMsg("Competizione globale creata ✅");
     setName(""); setSlug(""); setType("coppa"); setThemeKey("coppe");
     setMatchdays(7); setTopN(6); setScope("club"); setDescription(""); setRulesSummary("");
@@ -604,7 +605,7 @@ function GiornateTab(props: {
     setBusy(null);
 
     if (error) {
-      props.setErr(error.message);
+      props.setErr(humanError(error, "Non è stato possibile aprire la giornata."));
       return;
     }
 
@@ -648,7 +649,7 @@ function GiornateTab(props: {
     setBusy(null);
 
     if (error) {
-      props.setErr(error.message);
+      props.setErr(humanError(error, "Non è stato possibile chiudere la giornata."));
       return;
     }
 
@@ -725,7 +726,7 @@ function StatisticheTab(props: {
       p_matchday_number: props.matchday,
       p_real_player_id: p.id,
     });
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile caricare i dati del giocatore.")); return; }
 
     setStats({
       goals: Number(data?.goals ?? 0),
@@ -783,7 +784,7 @@ function StatisticheTab(props: {
       p_save_pct: stats.save_pct,
     });
     setSaving(false);
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile salvare le statistiche.")); return; }
     props.setMsg(`Statistiche salvate ✅ Totale: ${data?.total_points_base ?? 0}`);
   }
 
@@ -836,7 +837,7 @@ function StatisticheTab(props: {
               p_competition_id: props.competition.id,
               p_query: q,
             });
-            if (error) { props.setErr(error.message); return []; }
+            if (error) { props.setErr(humanError(error, "Non è stato possibile cercare i giocatori.")); return []; }
             return (data ?? []) as Player[];
           }}
           renderItem={(p) => (
@@ -914,7 +915,7 @@ function StatisticheTab(props: {
               p_competition_id: props.competition.id,
               p_query: q,
             });
-            if (error) { props.setErr(error.message); return []; }
+            if (error) { props.setErr(humanError(error, "Non è stato possibile cercare le squadre.")); return []; }
             return (data ?? []) as Team[];
           }}
           renderItem={(t) => (
@@ -992,7 +993,7 @@ function TopSquadreTab(props: {
       p_real_team_id: team.id,
       p_rank: rank,
     });
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile salvare la squadra in evidenza.")); return; }
     props.setMsg(`Top #${rank} salvata: ${team.name} ✅`);
     setRank(rank + 1);
     await loadTop();
@@ -1005,7 +1006,7 @@ function TopSquadreTab(props: {
       p_season_id: props.competition.active_season_id,
       p_matchday_number: props.matchday,
     });
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile rimuovere la squadra in evidenza.")); return; }
     setRank(1);
     props.setMsg("Top squadre svuotata ✅");
     await loadTop();
@@ -1025,7 +1026,7 @@ function TopSquadreTab(props: {
             p_competition_id: props.competition.id,
             p_query: q,
           });
-          if (error) { props.setErr(error.message); return []; }
+          if (error) { props.setErr(humanError(error, "Non è stato possibile cercare le squadre.")); return []; }
           return (data ?? []) as Team[];
         }}
         renderItem={(t) => (
@@ -1083,7 +1084,7 @@ function PartiteTab(props: {
       p_competition_id: props.competition.id,
       p_query: q,
     });
-    if (error) { props.setErr(error.message); return []; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile cercare le squadre.")); return []; }
     return (data ?? []) as Team[];
   };
 
@@ -1101,7 +1102,7 @@ function PartiteTab(props: {
       p_starts_at: null,
       p_status: "scheduled",
     });
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile salvare la partita.")); return; }
     props.setMsg("Partita salvata ✅");
     setHome(null);
     setAway(null);
@@ -1110,7 +1111,7 @@ function PartiteTab(props: {
 
   async function deleteFixture(id: string) {
     const { error } = await supabase.rpc("superadmin_delete_fixture", { p_fixture_id: id });
-    if (error) { props.setErr(error.message); return; }
+    if (error) { props.setErr(humanError(error, "Non è stato possibile eliminare la partita.")); return; }
     props.setMsg("Partita eliminata ✅");
     await loadFixtures();
   }

@@ -6,7 +6,6 @@ import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
 import { useRequireApp } from "../hooks/useRequireApp";
-import { supabase } from "../../lib/supabaseClient";
 import { rpcJson, fmt, signedFmt } from "../../lib/rpc";
 
 type Row = {
@@ -51,7 +50,7 @@ const ROLES = [
 const METRICS: { key: MetricKey; label: string }[] = [
   { key: "avg", label: "Media" },
   { key: "total", label: "Totale" },
-  { key: "played", label: "Partite" },
+  { key: "played", label: "Giornate" },
   { key: "best", label: "Best" },
   { key: "worst", label: "Worst" },
 ];
@@ -70,6 +69,14 @@ function playerLabel(r: Row) {
 function playerSub(r: Row) {
   const role = ROLE_META[r.role]?.label ?? r.role;
   return r.team_name ? `${role} - ${r.team_name}` : role;
+}
+
+function matchdayStatusLabel(status: string | null | undefined) {
+  if (status === "open") return "aperta";
+  if (status === "completed") return "conclusa";
+  if (status === "locked") return "bloccata";
+  if (status === "closed") return "chiusa";
+  return "disponibile";
 }
 
 function metricValue(r: Row, key: MetricKey) {
@@ -117,38 +124,6 @@ function PlayerAvatar({ row, size = 30 }: { row: Row; size?: number }) {
   return <RoleBadge role={row.role} />;
 }
 
-async function withCatalogImages(rows: Row[]) {
-  const ids = rows.map((row) => row.player_id).filter(Boolean);
-  if (ids.length === 0) return rows;
-
-  const { data: players } = await supabase
-    .from("real_players")
-    .select("id,image_url,real_team_id")
-    .in("id", ids);
-
-  const playerImages = new Map<string, string | null>();
-  const teamIds = Array.from(new Set((players ?? []).map((p) => p.real_team_id).filter(Boolean))) as string[];
-
-  let teamImages = new Map<string, string | null>();
-  if (teamIds.length > 0) {
-    const { data: teams } = await supabase
-      .from("real_teams")
-      .select("id,logo_url")
-      .in("id", teamIds);
-
-    teamImages = new Map((teams ?? []).map((team) => [team.id, team.logo_url ?? null]));
-  }
-
-  for (const player of players ?? []) {
-    playerImages.set(player.id, player.image_url ?? teamImages.get(player.real_team_id ?? "") ?? null);
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    image_url: row.image_url ?? playerImages.get(row.player_id) ?? null,
-  }));
-}
-
 export default function Statistiche() {
   const app = useRequireApp(true);
   const router = useRouter();
@@ -158,6 +133,11 @@ export default function Statistiche() {
   const [selectedMatchday, setSelectedMatchday] = useState<number | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [loading, setLoading] = useState(true);
+  const [matchdayLoading, setMatchdayLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [matchdayError, setMatchdayError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [matchdayReloadKey, setMatchdayReloadKey] = useState(0);
   const [section, setSection] = useState<Section>("overview");
   const [q, setQ] = useState("");
   const [role, setRole] = useState("ALL");
@@ -169,73 +149,100 @@ export default function Statistiche() {
   const [coverHistory, setCoverHistory] = useState<PlayerHistoryPoint[]>([]);
 
   useEffect(() => {
-    if (!app.ready || !app.activeLeagueCompetitionId) return;
+    if (!app.ready) return;
+
+    setLoading(true);
+    setStatsError(null);
+    setMatchdayError(null);
+    setMatchdayLoading(false);
+    setOverallRows([]);
+    setMatchdayRows([]);
+    setMatchdays([]);
+    setSelectedMatchday(null);
+    setCoverHistory([]);
+
+    if (!app.activeLeagueCompetitionId) {
+      setStatsError("Seleziona una competizione per vedere le statistiche.");
+      setLoading(false);
+      return;
+    }
+
     let off = false;
-    Promise.all([
-      rpcJson<Row[]>("get_player_stats", { p_league_competition_id: app.activeLeagueCompetitionId }, [])
-        .then((r) => withCatalogImages(r ?? [])),
-      rpcJson<MatchdayOption[]>(
-        "get_player_stats_matchdays",
-        { p_league_competition_id: app.activeLeagueCompetitionId },
-        []
-      ).catch(() => []),
-    ])
-      .then(([stats, dayRows]) => {
+    const load = async () => {
+      try {
+        const [stats, dayRows] = await Promise.all([
+          rpcJson<Row[]>("get_player_stats", { p_league_competition_id: app.activeLeagueCompetitionId }),
+          rpcJson<MatchdayOption[]>("get_player_stats_matchdays", {
+            p_league_competition_id: app.activeLeagueCompetitionId,
+          }),
+        ]);
+
         if (off) return;
-        setOverallRows(stats);
+        setOverallRows(stats ?? []);
         setMatchdayRows([]);
         setMatchdays([...(dayRows ?? [])].sort((a, b) => a.matchday_number - b.matchday_number));
-      })
-      .finally(() => {
+      } catch (error) {
+        console.warn("[statistics] load failed", error);
+        if (!off) setStatsError("Non riesco a caricare le statistiche. Riprova tra poco.");
+      } finally {
         if (!off) setLoading(false);
-      });
+      }
+    };
+
+    void load();
     return () => {
       off = true;
     };
-  }, [app.ready, app.activeLeagueCompetitionId]);
+  }, [app.ready, app.activeLeagueCompetitionId, reloadKey]);
 
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId || loading) return;
     if (selectedMatchday == null) return;
 
     let off = false;
-    rpcJson<Row[]>(
-      "get_player_stats_by_matchday",
-      {
-        p_league_competition_id: app.activeLeagueCompetitionId,
-        p_matchday_number: selectedMatchday,
-      },
-      []
-    )
-      .then((r) => withCatalogImages(r ?? []))
-      .then((r) => {
-        if (!off) setMatchdayRows(r);
-      })
-      .catch(() => {
-        if (!off) setMatchdayRows([]);
-      });
+    setMatchdayLoading(true);
+    setMatchdayError(null);
+    setMatchdayRows([]);
+
+    const load = async () => {
+      try {
+        const rows = await rpcJson<Row[]>("get_player_stats_by_matchday", {
+          p_league_competition_id: app.activeLeagueCompetitionId,
+          p_matchday_number: selectedMatchday,
+        });
+        if (!off) setMatchdayRows(rows ?? []);
+      } catch (error) {
+        console.warn("[statistics] matchday load failed", error);
+        if (!off) setMatchdayError("Non riesco a caricare questa giornata. Riprova.");
+      } finally {
+        if (!off) setMatchdayLoading(false);
+      }
+    };
+
+    void load();
 
     return () => {
       off = true;
     };
-  }, [app.ready, app.activeLeagueCompetitionId, loading, selectedMatchday]);
+  }, [app.ready, app.activeLeagueCompetitionId, loading, selectedMatchday, matchdayReloadKey]);
 
   const rows = selectedMatchday == null ? overallRows : matchdayRows;
+  const scoredRows = useMemo(() => rows.filter((row) => Number(row.played_count) > 0), [rows]);
 
   const topThree = useMemo(
     () =>
-      [...rows]
+      [...scoredRows]
         .sort((a, b) => Number(b.avg_points) - Number(a.avg_points) || playerLabel(a).localeCompare(playerLabel(b)))
         .slice(0, 3),
-    [rows]
+    [scoredRows]
   );
 
   const flopThree = useMemo(
     () =>
-      [...rows]
+      [...scoredRows]
         .sort((a, b) => Number(a.avg_points) - Number(b.avg_points) || playerLabel(a).localeCompare(playerLabel(b)))
         .slice(0, 3),
-    [rows]
+    [scoredRows]
   );
 
   const roleCounts = useMemo(() => {
@@ -293,13 +300,19 @@ export default function Statistiche() {
       item.count += 1;
       grouped.set(row.team_name, item);
     }
-    return [...grouped.values()].sort((a, b) => b.total - a.total || b.count - a.count)[0];
+    return [...grouped.values()]
+      .map((item) => ({ ...item, average: item.count > 0 ? item.total / item.count : 0 }))
+      .sort((a, b) => b.average - a.average || b.total - a.total)[0];
   }, [rows]);
   const coverGraph = useMemo(() => {
     if (coverHistory.length > 0) return coverHistory.slice(-6);
     if (!coverPlayer) return [];
     return [{ matchday_number: selectedMatchday ?? matchdays[0]?.matchday_number ?? 1, points: Number(coverPlayer.avg_points) || 0 }];
   }, [coverHistory, coverPlayer, matchdays, selectedMatchday]);
+  const selectedMatchdayOption = matchdays.find((day) => day.matchday_number === selectedMatchday);
+  const heroStatus = selectedMatchday == null
+    ? "Dati competizione"
+    : `G${selectedMatchday} · ${matchdayStatusLabel(selectedMatchdayOption?.status)}`;
   const accent = app.competitionTheme.primary;
 
   const openPlayer = useCallback((id: string) => router.push(`/giocatore/${id}`), [router]);
@@ -307,13 +320,13 @@ export default function Statistiche() {
   useEffect(() => {
     if (!app.ready || !app.activeLeagueCompetitionId || !coverPlayer?.player_id) return;
     let off = false;
+    setCoverHistory([]);
     rpcJson<PlayerDetail | null>(
       "get_player_detail",
       {
         p_real_player_id: coverPlayer.player_id,
         p_league_competition_id: app.activeLeagueCompetitionId,
       },
-      null
     )
       .then((detail) => {
         if (off) return;
@@ -343,7 +356,7 @@ export default function Statistiche() {
         <section className="fc-stats-hero" style={s.hero}>
           <div style={s.heroTop}>
             <span style={s.heroBadge}><span style={s.heroDot} />{app.competitionName}</span>
-            <span className="fc-stats-status" style={s.status}>Dati live</span>
+            <span className="fc-stats-status" style={s.status}>{heroStatus}</span>
           </div>
 
           <div style={s.heroCopy}>
@@ -353,19 +366,19 @@ export default function Statistiche() {
 
           <div style={s.heroKpis}>
             <Kpi label="Top media" value={fmt(bestAverage)} tone="good" />
-            <Kpi label="Giornate" value={String(matchdays.length)} />
+            <Kpi label="Giornate disponibili" value={String(matchdays.length)} />
             <Kpi label="Punteggio record" value={fmt(recordPoints)} tone="warn" />
           </div>
         </section>
 
-        <nav className="fc-stats-tabs" style={s.tabs} aria-label="Sezioni statistiche">
+        <nav className="fc-stats-tabs" style={s.tabs} aria-label="Sezioni statistiche" data-tutorial-target="stats-tabs">
           <Tab active={section === "overview"} onClick={() => setSection("overview")} label="Panoramica" />
           <Tab active={section === "players"} onClick={() => setSection("players")} label="Giocatori" />
           <Tab active={section === "compare"} onClick={() => setSection("compare")} label="Confronto" />
         </nav>
 
         {section !== "compare" && (
-          <section className="fc-stats-controls" style={s.scopeControls}>
+          <section className="fc-stats-controls" style={s.scopeControls} data-tutorial-target="stats-controls">
             <div style={s.dayFilters}>
               <button
                 type="button"
@@ -373,6 +386,9 @@ export default function Statistiche() {
                 style={{ ...s.dayBtn, ...(selectedMatchday == null ? s.dayBtnActive : {}) }}
                 onClick={() => {
                   setSelectedMatchday(null);
+                  setMatchdayError(null);
+                  setMatchdayLoading(false);
+                  setMatchdayRows([]);
                   setShowAll(false);
                 }}
               >
@@ -389,7 +405,8 @@ export default function Statistiche() {
                     setShowAll(false);
                   }}
                 >
-                  G{md.matchday_number}
+                  <span>G{md.matchday_number}</span>
+                  <small style={s.dayBtnStatus}>{matchdayStatusLabel(md.status)}</small>
                 </button>
               ))}
             </div>
@@ -405,14 +422,26 @@ export default function Statistiche() {
           </section>
         )}
 
-        {section === "overview" && (
+        {(statsError || matchdayError) && (
+          <StatsNotice
+            message={statsError ?? matchdayError ?? "Errore nel caricamento."}
+            onRetry={() => {
+              if (statsError) setReloadKey((value) => value + 1);
+              else setMatchdayReloadKey((value) => value + 1);
+            }}
+          />
+        )}
+
+        {matchdayLoading && <StatsNotice message={`Caricamento statistiche della G${selectedMatchday}...`} />}
+
+        {!statsError && !matchdayError && !matchdayLoading && section === "overview" && (
           <>
             {coverPlayer && (
               <section className="fc-stats-card fc-stats-cover" style={s.coverCard}>
                 <div style={s.sectionHead}>
                   <div>
                     <h2 style={s.sectionTitle}>Uomo copertina</h2>
-                    <p style={s.sectionSub}>Rendimento giornata per giornata.</p>
+                    <p style={s.sectionSub}>Andamento complessivo per giornata.</p>
                   </div>
                   <button type="button" style={s.linkBtn} onClick={() => openPlayer(coverPlayer.player_id)}>Scheda</button>
                 </div>
@@ -442,12 +471,12 @@ export default function Statistiche() {
                 <div className="fc-stats-card" style={{ ...s.insightTile, ...s.insightOrange }}>
                   <small style={s.insightLabel}>Squadra hot</small>
                   <strong style={s.insightTitle}>{teamHot.team}</strong>
-                  <span style={s.insightText}>{fmt(teamHot.total)} punti dai giocatori con statistiche</span>
+                  <span style={s.insightText}>Media: {fmt(teamHot.average)} punti per giocatore</span>
                 </div>
               )}
             </section>
 
-            <section className="fc-stats-card" style={s.card}>
+            <section className="fc-stats-card" style={s.card} data-tutorial-target="stats-player-row">
               <div style={s.sectionHead}>
                 <div>
                   <h2 style={s.sectionTitle}>Top e flop</h2>
@@ -468,7 +497,7 @@ export default function Statistiche() {
                     <strong style={{ ...s.compactScore, color: "var(--fc-primary)" }}>{fmt(r.avg_points)}</strong>
                   </button>
                 ))}
-                {flopThree[0] && (
+                {flopThree[0] && flopThree[0].player_id !== topThree[0]?.player_id && (
                   <button type="button" className="fc-stats-board-row" style={s.boardRow} onClick={() => openPlayer(flopThree[0].player_id)}>
                     <span style={{ ...s.boardRank, ...s.boardRankBad }}>F</span>
                     <PlayerAvatar row={flopThree[0]} />
@@ -479,7 +508,7 @@ export default function Statistiche() {
                     <strong style={{ ...s.compactScore, color: "#dc2626" }}>{fmt(flopThree[0].avg_points)}</strong>
                   </button>
                 )}
-                {topThree.length === 0 && <div className="fc-stats-empty" style={s.empty}>Nessun giocatore disponibile.</div>}
+                {topThree.length === 0 && <div className="fc-stats-empty" style={s.empty}>Statistiche non ancora disponibili per questa selezione.</div>}
               </div>
             </section>
 
@@ -505,7 +534,7 @@ export default function Statistiche() {
                     <strong style={s.suggestionVs}>VS</strong>
                   </button>
                 )}
-                {topThree[0] && flopThree[0] && (
+                {topThree[0] && flopThree[0] && flopThree[0].player_id !== topThree[0].player_id && (
                   <button type="button" style={s.suggestionRow} onClick={() => {
                     setCompareA(topThree[0].player_id);
                     setCompareB(flopThree[0].player_id);
@@ -523,7 +552,7 @@ export default function Statistiche() {
           </>
         )}
 
-        {section === "players" && (
+        {!statsError && !matchdayError && !matchdayLoading && section === "players" && (
           <section className="fc-stats-card" style={s.card}>
             <div style={s.sectionHead}>
               <div>
@@ -591,7 +620,7 @@ export default function Statistiche() {
                 const value = metricValue(r, metric);
                 const width = Math.max(4, Math.min(100, (Math.abs(value) / maxMetric) * 100));
                 return (
-                  <button key={r.player_id} type="button" className="fc-stats-player-row" style={s.playerRow} onClick={() => openPlayer(r.player_id)}>
+                  <button key={r.player_id} type="button" className="fc-stats-player-row" style={s.playerRow} onClick={() => openPlayer(r.player_id)} data-tutorial-target={r.player_id === visibleRows[0]?.player_id ? "stats-player-row" : undefined}>
                     <div style={s.playerMain}>
                       <span style={s.listRank}>{r.rank}</span>
                       <PlayerAvatar row={r} />
@@ -618,7 +647,7 @@ export default function Statistiche() {
           </section>
         )}
 
-        {section === "compare" && (
+        {!statsError && !matchdayError && !matchdayLoading && section === "compare" && (
           <section className="fc-stats-card" style={s.card}>
             <div style={s.sectionHead}>
               <div>
@@ -640,7 +669,7 @@ export default function Statistiche() {
                 </div>
 
                 <div style={s.compareStats}>
-                  <CompareMetric label="Partite giocate" a={metricValue(playerA, "played")} b={metricValue(playerB, "played")} />
+                  <CompareMetric label="Giornate con dati" a={metricValue(playerA, "played")} b={metricValue(playerB, "played")} />
                   <CompareMetric label="Media punti" a={metricValue(playerA, "avg")} b={metricValue(playerB, "avg")} />
                   <CompareMetric label="Punti totali" a={metricValue(playerA, "total")} b={metricValue(playerB, "total")} />
                   <CompareMetric label="Miglior giornata" a={metricValue(playerA, "best")} b={metricValue(playerB, "best")} signed />
@@ -686,6 +715,19 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: "goo
     <div className="fc-stats-kpi" style={s.kpi}>
       <small>{label}</small>
       <b style={{ color: tone === "warn" ? "#fed7aa" : "white" }}>{value}</b>
+    </div>
+  );
+}
+
+function StatsNotice({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="fc-stats-notice" style={s.notice} role={onRetry ? "alert" : "status"}>
+      <span>{message}</span>
+      {onRetry && (
+        <button type="button" style={s.noticeButton} onClick={onRetry}>
+          Riprova
+        </button>
+      )}
     </div>
   );
 }
@@ -858,7 +900,8 @@ const s: Record<string, React.CSSProperties> = {
   tabActive: { background: "#0f172a", color: "white" },
   scopeControls: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 8, background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 8, boxShadow: "0 4px 14px rgba(15,23,42,.045)" },
   dayFilters: { display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" },
-  dayBtn: { flex: "0 0 auto", border: "1px solid #e5e7eb", background: "#f8fafc", color: "#64748b", borderRadius: 999, padding: "8px 10px", fontSize: 11.5, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
+  dayBtn: { flex: "0 0 auto", display: "inline-grid", gridTemplateColumns: "auto auto", alignItems: "center", gap: 4, border: "1px solid #e5e7eb", background: "#f8fafc", color: "#64748b", borderRadius: 999, padding: "7px 10px", fontSize: 11.5, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
+  dayBtnStatus: { fontSize: 9, fontWeight: 850, opacity: .78 },
   dayBtnActive: { background: "#0f172a", color: "white", borderColor: "#0f172a" },
   sortBtn: { border: "1px solid rgba(224,123,26,.30)", background: "#fff7ed", color: "#c45f0a", borderRadius: 999, padding: "8px 10px", fontSize: 11.5, fontWeight: 1000, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
   card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 14, boxShadow: "0 8px 22px rgba(15,23,42,.055)" },
@@ -883,6 +926,8 @@ const s: Record<string, React.CSSProperties> = {
   insightLabel: { color: "#64748b", fontSize: 10.5, fontWeight: 1000, textTransform: "uppercase", letterSpacing: 0 },
   insightTitle: { color: "#0f172a", fontSize: 19, lineHeight: 1.05, fontWeight: 1000 },
   insightText: { color: "#64748b", fontSize: 11.5, lineHeight: 1.25, fontWeight: 800 },
+  notice: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, border: "1px solid #fed7aa", background: "#fff7ed", color: "#9a3412", borderRadius: 14, padding: "11px 12px", fontSize: 12.5, lineHeight: 1.25, fontWeight: 850 },
+  noticeButton: { flex: "0 0 auto", border: "1px solid #fdba74", background: "white", color: "#c2410c", borderRadius: 9, padding: "6px 9px", fontSize: 11.5, fontWeight: 950, fontFamily: "inherit", cursor: "pointer" },
   boardList: { display: "grid", gap: 2 },
   boardRow: { display: "grid", gridTemplateColumns: "26px 30px minmax(0,1fr) auto", alignItems: "center", gap: 9, border: 0, borderTop: "1px solid #f1f5f9", background: "white", padding: "9px 0", textAlign: "left", fontFamily: "inherit", cursor: "pointer" },
   boardRank: { width: 26, height: 26, borderRadius: 9, background: "#eaf8ef", color: "#15803d", display: "grid", placeItems: "center", fontSize: 11.5, fontWeight: 1000 },

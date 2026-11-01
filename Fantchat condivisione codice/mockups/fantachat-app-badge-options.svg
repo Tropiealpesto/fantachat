@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200">
+  <defs>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+    <filter id="neonGreen" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff9d44"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <linearGradient id="darkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#030712"/>
+      <stop offset=".54" stop-color="#06101f"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="pitchGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14532d"/>
+      <stop offset="1" stop-color="#0f3d27"/>
+    </linearGradient>
+    <radialGradient id="neonBg" cx=".34" cy=".18" r=".9">
+      <stop offset="0" stop-color="#12391f"/>
+      <stop offset=".42" stop-color="#04101b"/>
+      <stop offset="1" stop-color="#00030a"/>
+    </radialGradient>
+    <pattern id="pitchLines" width="44" height="44" patternUnits="userSpaceOnUse">
+      <rect width="44" height="44" fill="#14532d"/>
+      <rect y="0" width="44" height="22" fill="#176239" opacity=".72"/>
+    </pattern>
+    <style>
+      .bg { fill: #f4f7f4; }
+      .title { font: 900 54px 'DM Sans', 'Inter', Arial, sans-serif; fill: #0f172a; letter-spacing: -1px; }
+      .sub { font: 700 24px 'DM Sans', 'Inter', Arial, sans-serif; fill: #64748b; }
+      .label { font: 900 24px 'DM Sans', 'Inter', Arial, sans-serif; fill: #0f172a; }
+      .desc { font: 700 16px 'DM Sans', 'Inter', Arial, sans-serif; fill: #64748b; }
+      .iconFrame { filter: url(#softShadow); }
+      .mark { font: 1000 72px 'DM Sans', 'Inter', Arial, sans-serif; letter-spacing: -3px; }
+      .smallText { font: 900 26px 'DM Sans', 'Inter', Arial, sans-serif; }
+      .micro { font: 900 18px 'DM Sans', 'Inter', Arial, sans-serif; letter-spacing: .5px; }
+      .strokeRound { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1200"/>
+  <text x="80" y="92" class="title">FantaChat — proposte badge home</text>
+  <text x="80" y="132" class="sub">Da icone sobrie e premium a soluzioni più memorabili/neon. Tutte pensate per iOS/Android.</text>
+
+  <!-- Card 1 -->
+  <g transform="translate(80 190)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="url(#brandGrad)"/>
+      <circle cx="90" cy="90" r="60" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.28)" stroke-width="3"/>
+      <text x="90" y="113" text-anchor="middle" class="mark" fill="#fff">FC</text>
+      <circle cx="137" cy="48" r="13" fill="#e07b1a"/>
+    </g>
+    <text x="28" y="244" class="label">1. Monogramma</text>
+    <text x="28" y="272" class="desc">Pulita, forte, leggibile anche piccola.</text>
+  </g>
+
+  <!-- Card 2 -->
+  <g transform="translate(460 190)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="#ffffff"/>
+      <rect x="12" y="12" width="156" height="156" rx="34" fill="#f7faf8" stroke="#dbe7df" stroke-width="3"/>
+      <path d="M59 96c0-24 14-39 35-39 13 0 24 6 31 17" class="strokeRound" stroke="#16a34a" stroke-width="15"/>
+      <path d="M121 84c0 24-14 39-35 39-13 0-24-6-31-17" class="strokeRound" stroke="#e07b1a" stroke-width="15"/>
+      <circle cx="90" cy="90" r="10" fill="#0f172a"/>
+    </g>
+    <text x="28" y="244" class="label">2. Nodo chat</text>
+    <text x="28" y="272" class="desc">Sobria, social, meno “fantacalcio classico”.</text>
+  </g>
+
+  <!-- Card 3 -->
+  <g transform="translate(840 190)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="url(#pitchGrad)"/>
+      <path d="M90 23l54 22v42c0 41-24 62-54 76-30-14-54-35-54-76V45z" fill="#f8fafc" stroke="#dbe7df" stroke-width="4"/>
+      <path d="M90 36l41 17v33c0 31-18 48-41 59-23-11-41-28-41-59V53z" fill="#14532d"/>
+      <circle cx="90" cy="84" r="25" fill="#fff"/>
+      <path d="M90 59l10 18h20l-15 13 6 20-21-12-21 12 6-20-15-13h20z" fill="#0f172a"/>
+      <path d="M64 119h52" stroke="#e07b1a" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <text x="28" y="244" class="label">3. Scudetto</text>
+    <text x="28" y="272" class="desc">Più sportiva e “lega ufficiale”.</text>
+  </g>
+
+  <!-- Card 4 -->
+  <g transform="translate(1220 190)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="url(#neonBg)"/>
+      <circle cx="90" cy="90" r="56" fill="none" stroke="#22e26f" stroke-width="5" filter="url(#neonGreen)"/>
+      <path d="M64 98l36-54-8 39h26l-38 55 9-40z" fill="#58ff94" filter="url(#neonGreen)"/>
+      <circle cx="137" cy="44" r="10" fill="#ff8a26"/>
+    </g>
+    <text x="28" y="244" class="label">4. Neon bolt</text>
+    <text x="28" y="272" class="desc">Esotica, giovane, molto riconoscibile.</text>
+  </g>
+
+  <!-- Card 5 -->
+  <g transform="translate(80 540)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="url(#pitchLines)"/>
+      <rect x="28" y="28" width="124" height="124" rx="18" fill="none" stroke="rgba(255,255,255,.52)" stroke-width="4"/>
+      <line x1="90" y1="28" x2="90" y2="152" stroke="rgba(255,255,255,.36)" stroke-width="4"/>
+      <circle cx="90" cy="90" r="25" fill="none" stroke="rgba(255,255,255,.36)" stroke-width="4"/>
+      <text x="90" y="104" text-anchor="middle" class="smallText" fill="#fff">FC</text>
+      <circle cx="90" cy="90" r="48" fill="none" stroke="#e07b1a" stroke-width="5" stroke-dasharray="12 10"/>
+    </g>
+    <text x="28" y="244" class="label">5. Campo FC</text>
+    <text x="28" y="272" class="desc">Fantasy calcistica, chiara e non infantile.</text>
+  </g>
+
+  <!-- Card 6 -->
+  <g transform="translate(460 540)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="#07120c"/>
+      <path d="M44 45h92c16 0 28 12 28 28v38c0 16-12 28-28 28H82l-32 24v-24h-6c-16 0-28-12-28-28V73c0-16 12-28 28-28z" fill="rgba(34,226,111,.10)" stroke="#22e26f" stroke-width="5"/>
+      <path d="M67 101h45M67 78h70" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="131" cy="104" r="12" fill="#ff8a26"/>
+    </g>
+    <text x="28" y="244" class="label">6. Chat pitch</text>
+    <text x="28" y="272" class="desc">Comunica subito community/chat.</text>
+  </g>
+
+  <!-- Card 7 -->
+  <g transform="translate(840 540)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="#0f172a"/>
+      <circle cx="90" cy="90" r="66" fill="none" stroke="#22e26f" stroke-width="7"/>
+      <circle cx="90" cy="90" r="44" fill="none" stroke="#ff8a26" stroke-width="5"/>
+      <path d="M90 41c19 18 28 35 28 49s-9 31-28 49c-19-18-28-35-28-49s9-31 28-49z" fill="none" stroke="#e5eefc" stroke-width="5"/>
+      <text x="90" y="98" text-anchor="middle" class="micro" fill="#fff">LIVE</text>
+    </g>
+    <text x="28" y="244" class="label">7. Orbita live</text>
+    <text x="28" y="272" class="desc">Tech/statistica, molto app moderna.</text>
+  </g>
+
+  <!-- Card 8 -->
+  <g transform="translate(1220 540)">
+    <rect x="0" y="0" width="320" height="300" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(70 34)">
+      <rect width="180" height="180" rx="42" fill="url(#orangeGrad)"/>
+      <path d="M42 125c16-44 34-68 48-72 14 4 32 28 48 72" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round"/>
+      <circle cx="90" cy="70" r="20" fill="#14532d"/>
+      <path d="M61 128h58" stroke="#14532d" stroke-width="12" stroke-linecap="round"/>
+      <text x="90" y="154" text-anchor="middle" class="micro" fill="#fff">FANTA</text>
+    </g>
+    <text x="28" y="244" class="label">8. Trophy pop</text>
+    <text x="28" y="272" class="desc">Più particolare, arancio protagonista.</text>
+  </g>
+
+  <!-- Card 9 -->
+  <g transform="translate(80 890)">
+    <rect x="0" y="0" width="320" height="250" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(82 24) scale(.86)">
+      <rect width="180" height="180" rx="42" fill="#ffffff"/>
+      <path d="M0 0h180v180H0z" rx="42" fill="#fff"/>
+      <path d="M0 180L180 0v180z" fill="#16a34a"/>
+      <path d="M0 180L180 0" stroke="#e07b1a" stroke-width="18"/>
+      <text x="65" y="74" text-anchor="middle" class="smallText" fill="#15803d">F</text>
+      <text x="116" y="126" text-anchor="middle" class="smallText" fill="#fff">C</text>
+    </g>
+    <text x="28" y="204" class="label">9. Diagonale premium</text>
+    <text x="28" y="230" class="desc">Molto semplice, più “brand system”.</text>
+  </g>
+
+  <!-- Card 10 -->
+  <g transform="translate(460 890)">
+    <rect x="0" y="0" width="320" height="250" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(82 24) scale(.86)">
+      <rect width="180" height="180" rx="42" fill="#07120c"/>
+      <path d="M48 57h84v66H48z" fill="none" stroke="#22e26f" stroke-width="7"/>
+      <path d="M48 90h84M90 57v66" stroke="#22e26f" stroke-width="5" opacity=".7"/>
+      <path d="M56 132l20-18h28l20 18" fill="none" stroke="#ff8a26" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="90" cy="90" r="7" fill="#fff"/>
+    </g>
+    <text x="28" y="204" class="label">10. Tactical neon</text>
+    <text x="28" y="230" class="desc">Memorabile, perfetta col tema scuro.</text>
+  </g>
+
+  <!-- Card 11 -->
+  <g transform="translate(840 890)">
+    <rect x="0" y="0" width="320" height="250" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(82 24) scale(.86)">
+      <rect width="180" height="180" rx="42" fill="#f8fafc"/>
+      <circle cx="90" cy="90" r="58" fill="#15803d"/>
+      <circle cx="90" cy="90" r="44" fill="#fff"/>
+      <path d="M90 54l12 24 26 4-19 18 5 26-24-13-24 13 5-26-19-18 26-4z" fill="#0f172a"/>
+      <circle cx="132" cy="51" r="15" fill="#e07b1a"/>
+    </g>
+    <text x="28" y="204" class="label">11. Pallone serio</text>
+    <text x="28" y="230" class="desc">Classica ma più solida dell’attuale.</text>
+  </g>
+
+  <!-- Card 12 -->
+  <g transform="translate(1220 890)">
+    <rect x="0" y="0" width="320" height="250" rx="30" fill="#ffffff" stroke="#e5e7eb"/>
+    <g class="iconFrame" transform="translate(82 24) scale(.86)">
+      <rect width="180" height="180" rx="42" fill="#00030a"/>
+      <path d="M45 122V58c0-12 9-21 21-21h48c12 0 21 9 21 21v64" fill="none" stroke="#58ff94" stroke-width="9"/>
+      <path d="M60 68h60M60 91h60" stroke="#ff8a26" stroke-width="9" stroke-linecap="round"/>
+      <path d="M70 144h40" stroke="#58ff94" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="137" cy="44" r="9" fill="#ff5bbf"/>
+    </g>
+    <text x="28" y="204" class="label">12. Signal mark</text>
+    <text x="28" y="230" class="desc">Astratta, tech, resta impressa.</text>
+  </g>
+</svg>

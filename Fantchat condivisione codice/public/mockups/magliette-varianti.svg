@@ -1,0 +1,108 @@
+<svg width="1400" height="920" viewBox="0 0 1400 920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1400" height="920" fill="#f4f7f4"/>
+  <rect x="44" y="42" width="1312" height="836" rx="28" fill="#ffffff" stroke="#e5e7eb"/>
+  <text x="86" y="104" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">Varianti magliette Rosa</text>
+  <text x="86" y="140" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">Cinque direzioni visive, dalla piu minimal alla piu realistica. La mia preferita e la 2.</text>
+
+  <defs>
+    <linearGradient id="greenCard" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#137335"/>
+      <stop offset="1" stop-color="#0f5f2c"/>
+    </linearGradient>
+    <linearGradient id="shirtRedBlack" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#c91f28"/>
+      <stop offset=".32" stop-color="#c91f28"/>
+      <stop offset=".32" stop-color="#111827"/>
+      <stop offset=".66" stop-color="#111827"/>
+      <stop offset=".66" stop-color="#c91f28"/>
+    </linearGradient>
+    <linearGradient id="shirtBlueBlack" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#0f4da2"/>
+      <stop offset=".28" stop-color="#0f4da2"/>
+      <stop offset=".28" stop-color="#0f172a"/>
+      <stop offset=".58" stop-color="#0f172a"/>
+      <stop offset=".58" stop-color="#0f4da2"/>
+    </linearGradient>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0f172a" flood-opacity=".12"/>
+    </filter>
+  </defs>
+
+  <!-- Cards -->
+  <g transform="translate(86 188)">
+    <rect width="228" height="570" rx="20" fill="#f8fafc" stroke="#e5e7eb"/>
+    <text x="24" y="42" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">1. Minimal flat</text>
+    <text x="24" y="72" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Pulita, semplice, poco gioco.</text>
+    <rect x="24" y="108" width="180" height="280" rx="12" fill="url(#greenCard)"/>
+    <path d="M60 134 h108 l25 38 -29 22 -12 -16 v134 h-76 v-134 l-12 16 -29 -22 25 -38z" fill="#cf202f"/>
+    <path d="M96 134 h36 v178 h-36z" fill="#111827" opacity=".95"/>
+    <path d="M106 134 h16 q0 14 -8 18 q-8 -4 -8 -18z" fill="#f8fafc" opacity=".9"/>
+    <text x="114" y="430" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800">Flat</text>
+    <text x="114" y="456" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">La piu sobria</text>
+  </g>
+
+  <g transform="translate(334 188)">
+    <rect width="228" height="570" rx="20" fill="#ffffff" stroke="#16a34a" stroke-width="2"/>
+    <text x="24" y="42" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">2. Premium</text>
+    <text x="24" y="72" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Seria ma riconoscibile.</text>
+    <rect x="24" y="108" width="180" height="280" rx="12" fill="url(#greenCard)"/>
+    <g filter="url(#softShadow)">
+      <path d="M59 138 h110 l22 36 -28 19 -12 -15 v132 h-74 v-132 l-12 15 -28 -19 22 -36z" fill="url(#shirtBlueBlack)" stroke="rgba(255,255,255,.7)" stroke-width="2"/>
+      <path d="M90 139 h48 v171 h-48z" fill="#0f172a" opacity=".22"/>
+      <path d="M104 138 h20 q-2 15 -10 20 q-8 -5 -10 -20z" fill="#f8fafc" opacity=".92"/>
+      <path d="M75 210 h78" stroke="#ffffff" stroke-opacity=".18" stroke-width="2"/>
+      <path d="M75 256 h78" stroke="#ffffff" stroke-opacity=".14" stroke-width="2"/>
+    </g>
+    <rect x="82" y="398" width="64" height="28" rx="8" fill="#ecfdf5" stroke="#bbf7d0"/>
+    <text x="114" y="417" text-anchor="middle" fill="#15803d" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">scelta</text>
+    <text x="114" y="456" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Miglior equilibrio</text>
+  </g>
+
+  <g transform="translate(582 188)">
+    <rect width="228" height="570" rx="20" fill="#f8fafc" stroke="#e5e7eb"/>
+    <text x="24" y="42" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">3. Hybrid</text>
+    <text x="24" y="72" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Tra badge e maglia.</text>
+    <rect x="24" y="108" width="180" height="280" rx="12" fill="url(#greenCard)"/>
+    <g filter="url(#softShadow)">
+      <path d="M114 137 l64 28 v78 c0 48 -26 78 -64 96 c-38 -18 -64 -48 -64 -96 v-78 l64 -28z" fill="#f8fafc" stroke="#d1d5db" stroke-width="2"/>
+      <path d="M66 176 h96 v66 c0 35 -19 56 -48 72 c-29 -16 -48 -37 -48 -72 v-66z" fill="url(#shirtRedBlack)"/>
+      <path d="M93 176 h42 v138 h-42z" fill="#111827" opacity=".25"/>
+      <circle cx="114" cy="214" r="18" fill="#ffffff" opacity=".88"/>
+      <text x="114" y="221" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="900">FC</text>
+    </g>
+    <text x="114" y="430" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800">Compatta</text>
+    <text x="114" y="456" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Meno campo occupato</text>
+  </g>
+
+  <g transform="translate(830 188)">
+    <rect width="228" height="570" rx="20" fill="#f8fafc" stroke="#e5e7eb"/>
+    <text x="24" y="42" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">4. Outline</text>
+    <text x="24" y="72" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Leggera e molto elegante.</text>
+    <rect x="24" y="108" width="180" height="280" rx="12" fill="url(#greenCard)"/>
+    <path d="M59 138 h110 l22 36 -28 19 -12 -15 v132 h-74 v-132 l-12 15 -28 -19 22 -36z" fill="rgba(255,255,255,.16)" stroke="#f8fafc" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M90 139 h48 v171 h-48z" fill="#f8fafc" opacity=".18"/>
+    <path d="M104 138 h20 q-2 15 -10 20 q-8 -5 -10 -20z" fill="#f8fafc" opacity=".9"/>
+    <text x="114" y="430" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800">Outline</text>
+    <text x="114" y="456" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Molto poco invasiva</text>
+  </g>
+
+  <g transform="translate(1078 188)">
+    <rect width="228" height="570" rx="20" fill="#f8fafc" stroke="#e5e7eb"/>
+    <text x="24" y="42" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800">5. Realistica</text>
+    <text x="24" y="72" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600">Piu ricca, piu rischiosa.</text>
+    <rect x="24" y="108" width="180" height="280" rx="12" fill="url(#greenCard)"/>
+    <g filter="url(#softShadow)">
+      <path d="M58 136 h112 l25 39 -31 22 -13 -17 v130 h-74 v-130 l-13 17 -31 -22 25 -39z" fill="url(#shirtRedBlack)" stroke="rgba(255,255,255,.78)" stroke-width="2"/>
+      <path d="M78 150 c18 20 54 20 72 0" stroke="#ffffff" stroke-opacity=".28" stroke-width="3"/>
+      <path d="M75 206 h78 M75 248 h78 M75 290 h78" stroke="#ffffff" stroke-opacity=".14" stroke-width="2"/>
+      <path d="M104 136 h20 q-2 17 -10 24 q-8 -7 -10 -24z" fill="#f8fafc" opacity=".92"/>
+      <circle cx="114" cy="213" r="13" fill="#ffffff" opacity=".88"/>
+    </g>
+    <text x="114" y="430" text-anchor="middle" fill="#0f172a" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800">Dettagliata</text>
+    <text x="114" y="456" text-anchor="middle" fill="#64748b" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="600">Bella ma meno minimal</text>
+  </g>
+
+  <rect x="86" y="790" width="1228" height="50" rx="14" fill="#f8fafc" stroke="#e5e7eb"/>
+  <circle cx="116" cy="815" r="6" fill="#ea580c"/>
+  <text x="136" y="821" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Consiglio: sceglierei la 2. Tiene il feeling fantasy calcio, ma senza sembrare cartoon o gioco vecchio stile.</text>
+</svg>

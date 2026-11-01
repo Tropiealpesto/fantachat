@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#0f172a" flood-opacity=".16"/>
+    </filter>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff9d44"/>
+      <stop offset="1" stop-color="#e07b1a"/>
+    </linearGradient>
+    <style>
+      .bg { fill:#f4f7f4; }
+      .title { font:900 52px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; letter-spacing:-1px; }
+      .sub { font:700 23px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .label { font:900 23px 'DM Sans','Inter',Arial,sans-serif; fill:#0f172a; }
+      .desc { font:700 16px 'DM Sans','Inter',Arial,sans-serif; fill:#64748b; }
+      .fc { font:1000 124px 'Arial Rounded MT Bold','DM Sans','Inter',Arial,sans-serif; letter-spacing:-19px; }
+      .fc2 { font:1000 118px 'DM Sans','Inter',Arial,sans-serif; letter-spacing:-18px; }
+      .curve { fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1600" height="1000"/>
+  <text x="80" y="88" class="title">FantaChat — varianti Signature FC</text>
+  <text x="80" y="128" class="sub">Partono dalla 7: sfondo bianco, F verde, C arancione, micro-movimento elegante.</text>
+
+  <!-- 7A -->
+  <g transform="translate(80 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M51 46c27-14 52-21 76-20" stroke="#15803d" stroke-width="7" stroke-linecap="round" opacity=".16"/>
+      <path d="M130 151c-27 14-52 21-76 20" stroke="#e07b1a" stroke-width="7" stroke-linecap="round" opacity=".18"/>
+    </g>
+    <text x="28" y="260" class="label">7A. Original refined</text>
+    <text x="28" y="289" class="desc">La 7 più pulita, quasi invariata.</text>
+  </g>
+
+  <!-- 7B -->
+  <g transform="translate(460 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M39 56c36-22 73-32 110-29" stroke="#15803d" stroke-width="8" stroke-linecap="round" opacity=".18"/>
+      <path d="M142 142c-36 22-73 32-110 29" stroke="#e07b1a" stroke-width="8" stroke-linecap="round" opacity=".2"/>
+    </g>
+    <text x="28" y="260" class="label">7B. Wider motion</text>
+    <text x="28" y="289" class="desc">Più movimento, sempre premium.</text>
+  </g>
+
+  <!-- 7C -->
+  <g transform="translate(840 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M48 48c28-18 58-25 90-20" stroke="#15803d" stroke-width="7" stroke-linecap="round" opacity=".16"/>
+      <path d="M134 149c-28 18-58 25-90 20" stroke="#e07b1a" stroke-width="7" stroke-linecap="round" opacity=".2"/>
+      <circle cx="139" cy="51" r="7" fill="#e07b1a" opacity=".9"/>
+    </g>
+    <text x="28" y="260" class="label">7C. Dot accent</text>
+    <text x="28" y="289" class="desc">Piccolo accento social/notifica.</text>
+  </g>
+
+  <!-- 7D -->
+  <g transform="translate(1220 190)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M45 44c30-17 62-23 97-18" stroke="#15803d" stroke-width="6" stroke-linecap="round" opacity=".16"/>
+      <path d="M135 152c-30 17-62 23-97 18" stroke="#e07b1a" stroke-width="6" stroke-linecap="round" opacity=".2"/>
+      <path d="M47 139h80" stroke="#15803d" stroke-width="6" stroke-linecap="round" opacity=".10"/>
+    </g>
+    <text x="28" y="260" class="label">7D. Underline soft</text>
+    <text x="28" y="289" class="desc">Più stabile, meno “svolazzo”.</text>
+  </g>
+
+  <!-- 7E -->
+  <g transform="translate(80 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc2">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M47 43c27-14 56-19 87-16" stroke="#15803d" stroke-width="7" stroke-linecap="round" opacity=".15"/>
+      <path d="M133 153c-27 14-56 19-87 16" stroke="#e07b1a" stroke-width="7" stroke-linecap="round" opacity=".18"/>
+    </g>
+    <text x="28" y="260" class="label">7E. Sharper letters</text>
+    <text x="28" y="289" class="desc">Meno rounded, più elegante/business.</text>
+  </g>
+
+  <!-- 7F -->
+  <g transform="translate(460 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <rect x="16" y="16" width="148" height="148" rx="32" fill="#fff" stroke="#eef2f0" stroke-width="3"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M50 47c27-14 53-20 78-19" stroke="#15803d" stroke-width="6" stroke-linecap="round" opacity=".14"/>
+      <path d="M130 151c-27 14-53 20-78 19" stroke="#e07b1a" stroke-width="6" stroke-linecap="round" opacity=".17"/>
+    </g>
+    <text x="28" y="260" class="label">7F. Framed</text>
+    <text x="28" y="289" class="desc">Più iOS/premium, con cornice sottile.</text>
+  </g>
+
+  <!-- 7G -->
+  <g transform="translate(840 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <circle cx="91" cy="90" r="66" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M50 46c26-12 51-18 75-18" stroke="#15803d" stroke-width="6" stroke-linecap="round" opacity=".14"/>
+      <path d="M130 152c-26 12-51 18-75 18" stroke="#e07b1a" stroke-width="6" stroke-linecap="round" opacity=".17"/>
+    </g>
+    <text x="28" y="260" class="label">7G. Orbit</text>
+    <text x="28" y="289" class="desc">Più iconica, senza complicarla troppo.</text>
+  </g>
+
+  <!-- 7H -->
+  <g transform="translate(1220 590)">
+    <rect width="320" height="330" rx="30" fill="#fff" stroke="#e5e7eb"/>
+    <g filter="url(#shadow)" transform="translate(70 36)">
+      <rect width="180" height="180" rx="42" fill="#fff"/>
+      <text x="89" y="123" text-anchor="middle" class="fc">
+        <tspan fill="url(#green)">F</tspan><tspan fill="url(#orange)">C</tspan>
+      </text>
+      <path d="M36 61c37-28 78-39 122-33" stroke="#15803d" stroke-width="7" stroke-linecap="round" opacity=".14"/>
+      <path d="M145 138c-37 28-78 39-122 33" stroke="#e07b1a" stroke-width="7" stroke-linecap="round" opacity=".18"/>
+      <path d="M48 91h82" stroke="#15803d" stroke-width="5" stroke-linecap="round" opacity=".09"/>
+    </g>
+    <text x="28" y="260" class="label">7H. Dynamic</text>
+    <text x="28" y="289" class="desc">La più energica, ma ancora elegante.</text>
+  </g>
+</svg>

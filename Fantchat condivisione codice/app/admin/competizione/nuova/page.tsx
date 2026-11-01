@@ -1,0 +1,657 @@
+﻿"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import AppBar from "../../../components/AppBar";
+import BottomNav from "../../../components/BottomNav";
+import CompetitionBadge from "../../../components/CompetitionBadge";
+import { useRequireLeagueAdmin } from "../../../hooks/useRequireApp";
+import { supabase } from "../../../../lib/supabaseClient";
+import { humanError } from "../../../../lib/humanError";
+
+type Competition = {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  description?: string | null;
+  rules_summary?: string | null;
+  launch_label?: string | null;
+  visibility_status?: string | null;
+  default_total_matchdays?: number | null;
+  default_top_n?: number | null;
+  scope?: string | null;
+};
+
+type Season = {
+  id: string;
+  name: string;
+  competition_id: string;
+  total_matchdays?: number | null;
+};
+
+type Member = {
+  user_id: string;
+  team_name: string;
+};
+
+type Step = 1 | 2 | 3 | 4;
+type Ruleset = "classico" | "non_standard";
+type GameMode = {
+  key: string;
+  name: string;
+  desc: string;
+  ruleset: Ruleset;
+  coachEnabled: boolean;
+};
+type FormationPreset = {
+  key: string;
+  name: string;
+  desc: string;
+  roles: Record<string, number>;
+};
+
+const DEFAULT_ROLES = { P: 1, D: 1, C: 1, A: 1 };
+
+const FORMATION_PRESETS: FormationPreset[] = [
+  {
+    key: "classico",
+    name: "Classico",
+    desc: "Il formato standard che non delude mai.",
+    roles: { P: 1, D: 1, C: 1, A: 1 },
+  },
+  {
+    key: "bilanciato",
+    name: "Bilanciato",
+    desc: "Vediamo le tue capacità di scelta in tutti i ruoli.",
+    roles: { P: 1, D: 2, C: 2, A: 2 },
+  },
+  {
+    key: "serie-a",
+    name: "Serie A",
+    desc: "Il modulo che ci ha resi famosi in Europa.",
+    roles: { P: 1, D: 3, C: 5, A: 2 },
+  },
+];
+
+const GAME_MODES: GameMode[] = [
+  {
+    key: "classico",
+    name: "Classico",
+    desc: "Bonus/malus standard: gol, assist, cartellini, rigori, clean sheet.",
+    ruleset: "classico",
+    coachEnabled: false,
+  },
+  {
+    key: "classico_coach",
+    name: "Classico + allenatore",
+    desc: "Regole classiche con uno slot allenatore obbligatorio e separato.",
+    ruleset: "classico",
+    coachEnabled: true,
+  },
+  {
+    key: "statistico",
+    name: "Statistico",
+    desc: "Passaggi, precisione, tackle, intercetti, npxG, xA e parate.",
+    ruleset: "non_standard",
+    coachEnabled: false,
+  },
+  {
+    key: "statistico_coach",
+    name: "Statistico + allenatore",
+    desc: "Punteggi statistici completi con allenatore obbligatorio.",
+    ruleset: "non_standard",
+    coachEnabled: true,
+  },
+];
+
+function isMissingRpc(message?: string | null) {
+  return /function .* does not exist|could not find the function|schema cache/i.test(
+    message ?? ""
+  );
+}
+
+export default function NuovaCompetizione() {
+  const app = useRequireLeagueAdmin();
+  const router = useRouter();
+
+  const [step, setStep] = useState<Step>(1);
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  const [competitionId, setCompetitionId] = useState("");
+  const [seasonId, setSeasonId] = useState("");
+  const [name, setName] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [roles, setRoles] = useState<Record<string, number>>(DEFAULT_ROLES);
+  const [formationPreset, setFormationPreset] = useState(FORMATION_PRESETS[0].key);
+  const [ruleset, setRuleset] = useState<Ruleset>("classico");
+  const [coachEnabled, setCoachEnabled] = useState(false);
+
+  const [busy, setBusy] = useState(false);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  const accent = app.competitionTheme.primary;
+
+  const selectedCompetition = useMemo(
+    () => competitions.find((c) => c.id === competitionId) ?? null,
+    [competitions, competitionId]
+  );
+
+  const grouped = useMemo(() => {
+    const typeOf = (c: Competition) => (c.type ?? "").toLowerCase();
+
+    return {
+      campionato: competitions.filter((c) => typeOf(c) === "campionato"),
+      champions: competitions.filter((c) => typeOf(c) === "champions"),
+      coppa: competitions.filter((c) => typeOf(c) === "coppa" || typeOf(c) === "coppe"),
+    };
+  }, [competitions]);
+
+  const totalPlayers = useMemo(
+    () => Object.values(roles).reduce((sum, n) => sum + (Number(n) || 0), 0),
+    [roles]
+  );
+  const maxTopPlayers = Math.max(1, Math.ceil(totalPlayers * 0.25));
+
+  const selectedMode = useMemo(
+    () =>
+      GAME_MODES.find(
+        (mode) => mode.ruleset === ruleset && mode.coachEnabled === coachEnabled
+      ) ?? GAME_MODES[0],
+    [coachEnabled, ruleset]
+  );
+
+  useEffect(() => {
+    async function load() {
+      if (!app.activeLeagueId) return;
+
+      setCatalogLoading(true);
+      setErr(null);
+
+      const rpcResult = await supabase.rpc("get_competition_catalog");
+      if (rpcResult.error) {
+        setErr(humanError(rpcResult.error));
+        setCompetitions([]);
+        setCatalogLoading(false);
+        setMembersLoading(false);
+        return;
+      }
+
+      const list = (rpcResult.data ?? []) as Competition[];
+      setCompetitions(list);
+
+      const firstAvailable = list.find((c) => c.visibility_status !== "wip");
+      setCompetitionId(firstAvailable?.id ?? "");
+
+      setMembersLoading(true);
+
+      const membersRpc = await supabase.rpc("get_league_members", {
+        p_league_id: app.activeLeagueId,
+      });
+
+      if (membersRpc.error) {
+        setErr(humanError(membersRpc.error));
+        setMembers([]);
+        setMembersLoading(false);
+        setCatalogLoading(false);
+        return;
+      }
+
+      const membersList = (membersRpc.data ?? []) as Member[];
+      setMembers(membersList);
+      setSelectedUsers(new Set(membersList.map((m) => m.user_id)));
+      setMembersLoading(false);
+      setCatalogLoading(false);
+    }
+
+    load();
+  }, [app.activeLeagueId]);
+
+  useEffect(() => {
+    async function loadSeasons() {
+      if (!competitionId) return;
+
+      const rpcResult = await supabase.rpc("get_competition_seasons", {
+        p_competition_id: competitionId,
+      });
+
+      if (rpcResult.error) {
+        setErr(humanError(rpcResult.error));
+        setSeasons([]);
+        setSeasonId("");
+        return;
+      }
+
+      const list = (rpcResult.data ?? []) as Season[];
+      setSeasons(list);
+      setSeasonId(list[0]?.id ?? "");
+
+      const comp = competitions.find((c) => c.id === competitionId);
+      setName(list[0]?.name ?? comp?.name ?? "");
+    }
+
+    loadSeasons();
+  }, [competitionId, competitions]);
+
+  function toggleUser(userId: string) {
+    setSelectedUsers((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
+
+  function selectFormationPreset(preset: FormationPreset) {
+    setFormationPreset(preset.key);
+    setRoles(preset.roles);
+  }
+
+  function renderCompetitionCard(c: Competition) {
+    const disabled = c.visibility_status === "wip";
+    const active = c.id === competitionId;
+
+    return (
+      <button
+        key={c.id}
+        type="button"
+        disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setCompetitionId(c.id);
+          setStep(2);
+        }}
+        style={{
+          ...s.compCard,
+          borderColor: active ? accent : "#e5e7eb",
+          opacity: disabled ? 0.55 : 1,
+          cursor: disabled ? "not-allowed" : "pointer",
+        }}
+      >
+        <div>
+          <CompetitionBadge name={c.name} type={c.type} />
+          <div style={s.compName}>{c.name}</div>
+          <div style={s.compDesc}>
+            {disabled ? "Working progress" : c.description ?? "Competizione disponibile"}
+          </div>
+        </div>
+
+        <div style={s.compMeta}>
+          <span>{c.default_total_matchdays ?? "—"} giornate</span>
+          <span>Top {c.default_top_n ?? 6}</span>
+        </div>
+      </button>
+    );
+  }
+
+  async function create() {
+    setErr(null);
+
+    if (!app.activeLeagueId) return setErr("Nessuna lega attiva.");
+    if (!competitionId) return setErr("Seleziona una competizione.");
+    if (!seasonId) return setErr("Seleziona una stagione.");
+    if (selectedUsers.size < 1) return setErr("Seleziona almeno un partecipante.");
+    if (totalPlayers < 1) return setErr("Seleziona almeno un giocatore da schierare.");
+
+    setBusy(true);
+
+    const { data, error } = await supabase.rpc("create_league_competition", {
+      p_league_id: app.activeLeagueId,
+      p_competition_id: competitionId,
+      p_season_id: seasonId,
+      p_name: name.trim() || selectedCompetition?.name || "Competizione",
+      p_participant_user_ids: Array.from(selectedUsers),
+      p_players_per_role: roles,
+    });
+
+    if (error) { setBusy(false); return setErr(humanError(error)); }
+
+    const id = (data as any)?.league_competition_id ?? data;
+
+    if (id) {
+      const rulesResult = await supabase.rpc("set_scoring_ruleset", {
+        p_league_competition_id: String(id),
+        p_ruleset: ruleset,
+      });
+      if (rulesResult.error && !(ruleset === "classico" && isMissingRpc(rulesResult.error.message))) {
+        setBusy(false);
+        return setErr(humanError(rulesResult.error));
+      }
+
+      const coachResult = await supabase.rpc("set_coach_mode", {
+        p_league_competition_id: String(id),
+        p_enabled: coachEnabled,
+      });
+      if (coachResult.error && !(coachEnabled === false && isMissingRpc(coachResult.error.message))) {
+        setBusy(false);
+        return setErr(humanError(coachResult.error));
+      }
+
+      await app.setActiveCompetition(String(id));
+    }
+
+    setBusy(false);
+    window.location.href = "/";
+  }
+
+  return (
+    <>
+      <AppBar
+        league={app.leagueName}
+        team={`${app.teamName} · ADMIN`}
+        onMenuOpen={app.openDrawer}
+      />
+
+      <main style={s.container}>
+        <div style={s.header}>
+          <button type="button" onClick={() => router.back()} style={s.backBtn}>
+            ←
+          </button>
+          <div>
+            <h1 style={s.title}>Aggiungi competizione</h1>
+            <p style={s.subtitle}>
+              Scegli dal catalogo FantaChat. Le Coppe sono gestite dal superadmin.
+            </p>
+          </div>
+        </div>
+
+        {err && <div style={s.err}>{err}</div>}
+
+        {step === 1 && (
+          catalogLoading ? (
+            <div style={s.emptyCard}>Caricamento competizioni...</div>
+          ) : competitions.length === 0 ? (
+            <div style={s.emptyCard}>
+              Nessuna competizione disponibile. Applica la migrazione del catalogo
+              o controlla le policy Supabase.
+            </div>
+          ) : (
+            <div style={s.stack}>
+              <Section title="Campionato">
+                {grouped.campionato.length ? grouped.campionato.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
+
+              <Section title="Champions">
+                {grouped.champions.length ? grouped.champions.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
+
+              <Section title="Coppe">
+                {grouped.coppa.length ? grouped.coppa.map(renderCompetitionCard) : <EmptySection />}
+              </Section>
+            </div>
+          )
+        )}
+
+        {step === 2 && selectedCompetition && (
+          <div style={s.card}>
+            <CompetitionBadge name={selectedCompetition.name} type={selectedCompetition.type} />
+            <h2 style={s.cardTitle}>Regole della competizione</h2>
+
+            <p style={s.text}>
+              {selectedCompetition.rules_summary ??
+                "I dati globali, le partite, i voti e le Top X sono gestiti dal superadmin. L’admin della lega sceglie partecipanti e composizione della rosa."}
+            </p>
+
+            <div style={s.ruleGrid}>
+              <Info label="Tipo" value={selectedCompetition.type === "coppa" ? "Coppe" : selectedCompetition.type} />
+              <Info label="Giornate" value={String(selectedCompetition.default_total_matchdays ?? "—")} />
+              <Info label="Top X" value={`Top ${selectedCompetition.default_top_n ?? 6}`} />
+              <Info label="Ambito" value={selectedCompetition.scope === "nazionali" ? "Nazionali" : "Club"} />
+            </div>
+
+            <div>
+              <div style={s.typeLabel}>Modalità di gioco</div>
+              <div style={s.typeRow}>
+                {GAME_MODES.map((mode) => {
+                  const active =
+                    mode.ruleset === ruleset &&
+                    mode.coachEnabled === coachEnabled;
+
+                  return (
+                    <button
+                      key={mode.key}
+                      type="button"
+                      onClick={() => {
+                        setRuleset(mode.ruleset);
+                        setCoachEnabled(mode.coachEnabled);
+                      }}
+                      style={{
+                        ...s.typeCard,
+                        ...(active
+                          ? { borderColor: accent, background: `${accent}0d` }
+                          : {}),
+                      }}
+                    >
+                      <div style={s.typeName}>
+                        {mode.name}
+                        {mode.coachEnabled && <span style={s.proTag}>AL</span>}
+                      </div>
+                      <div style={s.typeDesc}>{mode.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <select value={seasonId} onChange={(e) => setSeasonId(e.target.value)} style={s.input}>
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.name}
+                </option>
+              ))}
+            </select>
+
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nome competizione nella lega"
+              style={s.input}
+            />
+
+            <div style={s.actions}>
+              <button type="button" onClick={() => setStep(1)} style={s.secondaryBtn}>
+                Indietro
+              </button>
+              <button type="button" onClick={() => setStep(3)} style={s.primaryBtn}>
+                Continua
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div style={s.card}>
+            <h2 style={s.cardTitle}>Partecipanti</h2>
+            <p style={s.text}>
+              Scegli quali squadre della lega parteciperanno a questa competizione.
+            </p>
+
+            <div style={s.memberList}>
+              {membersLoading ? (
+                <div style={s.emptySection}>Caricamento squadre della lega...</div>
+              ) : members.length === 0 ? (
+                <div style={s.emptySection}>
+                  Nessuna squadra trovata in questa lega. Controlla che i membri
+                  siano stati aggiunti correttamente.
+                </div>
+              ) : members.map((m) => {
+                const checked = selectedUsers.has(m.user_id);
+
+                return (
+                  <button
+                    type="button"
+                    key={m.user_id}
+                    onClick={() => toggleUser(m.user_id)}
+                    style={{
+                      ...s.memberRow,
+                      borderColor: checked ? "#16a34a" : "#e5e7eb",
+                      background: checked ? "#f0fdf4" : "white",
+                    }}
+                  >
+                    <span style={checked ? s.check : s.emptyCheck}>
+                      {checked ? "✓" : ""}
+                    </span>
+                    <span>{m.team_name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={s.actions}>
+              <button type="button" onClick={() => setStep(2)} style={s.secondaryBtn}>
+                Indietro
+              </button>
+              <button type="button" onClick={() => setStep(4)} style={s.primaryBtn}>
+                Continua
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div style={s.card}>
+            <h2 style={s.cardTitle}>Formazione</h2>
+            <p style={s.text}>
+              Scegli il modulo della competizione. La Rosa si adatterà automaticamente.
+            </p>
+
+            <div style={s.presetGrid}>
+              {FORMATION_PRESETS.map((preset) => {
+                const active = formationPreset === preset.key;
+                const moduleLabel = `${preset.roles.P}-${preset.roles.D}-${preset.roles.C}-${preset.roles.A}`;
+
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => selectFormationPreset(preset)}
+                    style={{
+                      ...s.presetCard,
+                      ...(active
+                        ? { borderColor: accent, background: `${accent}0d` }
+                        : {}),
+                    }}
+                  >
+                    <span style={s.presetTop}>
+                      <b>{preset.name}</b>
+                      <strong style={s.moduleBadge}>{moduleLabel}</strong>
+                    </span>
+                    <small style={s.presetDesc}>{preset.desc}</small>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={s.totalPlayers}>
+              Totale giocatori da schierare: <b>{totalPlayers}</b>
+              <br />
+              <span>
+                Giocatori Top 6 consentiti: <b>{maxTopPlayers}</b>
+              </span>
+            </div>
+
+            <div style={s.summaryType}>
+              Modalità: <b>{selectedMode.name}</b>
+              <br />
+              <span>
+                Allenatore: <b>{coachEnabled ? "obbligatorio" : "non attivo"}</b>
+              </span>
+            </div>
+
+            <div style={s.actions}>
+              <button type="button" onClick={() => setStep(3)} style={s.secondaryBtn}>
+                Indietro
+              </button>
+              <button type="button" onClick={create} disabled={busy} style={s.primaryBtn}>
+                {busy ? "Creazione..." : "Crea competizione"}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <BottomNav />
+    </>
+  );
+}
+
+function Section(props: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={s.section}>
+      <h2 style={s.sectionTitle}>{props.title}</h2>
+      <div style={s.stack}>{props.children}</div>
+    </section>
+  );
+}
+
+function Info(props: { label: string; value: string }) {
+  return (
+    <div style={s.infoBox}>
+      <small>{props.label}</small>
+      <b>{props.value}</b>
+    </div>
+  );
+}
+
+function EmptySection() {
+  return <div style={s.emptySection}>Nessuna competizione in questa sezione.</div>;
+}
+
+const s: Record<string, React.CSSProperties> = {
+  container: { maxWidth: 520, margin: "0 auto", padding: "16px 14px 100px", display: "grid", gap: 14 },
+  header: { display: "grid", gridTemplateColumns: "38px 1fr", gap: 12, alignItems: "start" },
+  backBtn: { width: 34, height: 34, borderRadius: 10, border: "1px solid #e5e7eb", background: "white", fontWeight: 900, cursor: "pointer" },
+  title: { margin: 0, fontSize: 24, fontWeight: 1000, color: "#111827" },
+  subtitle: { margin: "5px 0 0", color: "#6b7280", fontWeight: 700, lineHeight: 1.35 },
+  stack: { display: "grid", gap: 10 },
+  section: { display: "grid", gap: 8 },
+  sectionTitle: { margin: "8px 2px 2px", fontSize: 13, fontWeight: 1000, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.7px" },
+  compCard: { display: "grid", gap: 10, width: "100%", textAlign: "left", padding: 15, borderRadius: 18, border: "1px solid #e5e7eb", background: "white", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  compName: { marginTop: 10, fontSize: 18, fontWeight: 1000, color: "#111827" },
+  compDesc: { marginTop: 4, color: "#6b7280", fontSize: 13, fontWeight: 700, lineHeight: 1.4 },
+  compMeta: { display: "flex", gap: 8, flexWrap: "wrap", color: "#374151", fontSize: 12, fontWeight: 900 },
+  card: { background: "white", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, display: "grid", gap: 12, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  cardTitle: { margin: "4px 0 0", color: "#111827", fontSize: 22, fontWeight: 1000 },
+  text: { margin: 0, color: "#6b7280", fontWeight: 700, lineHeight: 1.5, fontSize: 14 },
+  ruleGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 },
+  infoBox: { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 14, padding: 11, display: "grid", gap: 3 },
+  typeLabel: { fontSize: 13, fontWeight: 1000, color: "#374151", marginBottom: 6 },
+  typeRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))", gap: 8 },
+  typeCard: { textAlign: "left", border: "1.5px solid #e5e7eb", background: "white", borderRadius: 14, padding: 12, cursor: "pointer", fontFamily: "inherit" },
+  typeName: { fontWeight: 1000, color: "#111827", fontSize: 14, display: "flex", alignItems: "center", gap: 6 },
+  typeDesc: { fontSize: 11.5, color: "#6b7280", fontWeight: 700, marginTop: 4, lineHeight: 1.35 },
+  proTag: { fontSize: 9, fontWeight: 1000, color: "white", background: "#e07b1a", borderRadius: 6, padding: "1px 5px" },
+  input: { padding: 13, borderRadius: 13, border: "1px solid #e5e7eb", fontWeight: 800, fontFamily: "inherit" },
+  memberList: { display: "grid", gap: 8 },
+  memberRow: { display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 14, border: "1px solid #e5e7eb", background: "white", fontFamily: "inherit", fontWeight: 800, textAlign: "left" },
+  check: { width: 22, height: 22, borderRadius: 7, background: "#16a34a", color: "white", display: "grid", placeItems: "center", fontWeight: 1000 },
+  emptyCheck: { width: 22, height: 22, borderRadius: 7, border: "1px solid #d1d5db", display: "inline-block" },
+  presetGrid: { display: "grid", gap: 9 },
+  presetCard: {
+    display: "grid",
+    gap: 7,
+    width: "100%",
+    border: "1.5px solid #e5e7eb",
+    background: "white",
+    borderRadius: 15,
+    padding: 13,
+    textAlign: "left",
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+  presetTop: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, color: "#111827", fontSize: 15 },
+  moduleBadge: { color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 999, padding: "4px 8px", fontSize: 12, fontWeight: 1000 },
+  presetDesc: { color: "#64748b", fontSize: 12.5, lineHeight: 1.35, fontWeight: 750 },
+  totalPlayers: { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: 14, padding: 12, fontWeight: 900 },
+  summaryType: { background: "#f9fafb", border: "1px solid #e5e7eb", color: "#374151", borderRadius: 14, padding: 12, fontWeight: 800, fontSize: 13 },
+  actions: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 },
+  primaryBtn: { padding: 14, border: "none", borderRadius: 13, background: "#16a34a", color: "white", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
+  secondaryBtn: { padding: 14, border: "1px solid #e5e7eb", borderRadius: 13, background: "white", color: "#374151", fontWeight: 1000, fontFamily: "inherit", cursor: "pointer" },
+  err: { background: "#fff3e4", border: "1px solid #f4c99d", color: "#b85c0a", padding: 12, borderRadius: 14, fontWeight: 900 },
+  emptyCard: { background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, color: "#64748b", fontWeight: 800, boxShadow: "0 4px 16px rgba(15,23,42,0.06)" },
+  emptySection: { border: "1px dashed #d1d5db", borderRadius: 14, padding: 12, color: "#94a3b8", fontSize: 12, fontWeight: 800 },
+};

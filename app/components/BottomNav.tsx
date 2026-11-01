@@ -113,7 +113,7 @@ export default function BottomNav({ unreadCount = 0, withSpacer = true, activePa
   return (
     <>
       {withSpacer && <div className="fc-bottom-spacer" />}
-      <nav className="fc-bottom-nav" aria-label="Navigazione principale">
+      <nav className="fc-bottom-nav" aria-label="Navigazione principale" data-tutorial-target="main-nav">
         {TABS.map((tab) => {
           const active = isActive(tab.path);
           return (

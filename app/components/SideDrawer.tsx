@@ -17,6 +17,7 @@ type Props = {
   activeLeagueCompetitionId: string | null; onSwitchCompetition: (id: string) => void;
   teamPrimary?: string | null; teamSecondary?: string | null; teamPattern?: BadgePattern | null;
   uiTheme: "light" | "dark"; onThemeChange: (theme: "light" | "dark") => void;
+  onNotificationSettings: () => void;
 };
 
 export default function SideDrawer(props: Props) {
@@ -73,6 +74,10 @@ export default function SideDrawer(props: Props) {
           <Item href="/storico" title="Storico" sub="Giornate passate" pathname={pathname} onClose={props.onClose} icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
           <Item href="/statistiche" title="Statistiche" sub="Giocatori" pathname={pathname} onClose={props.onClose} icon={<><path d="M4 20V11M9.5 20V5M15 20v-8M20.5 20V8" /><path d="M3 20h18" /></>} />
           <Item href="/regole" title="Regole" sub="Punteggi e bonus" pathname={pathname} onClose={props.onClose} icon={<><path d="M5 4a1 1 0 0 1 1-1h12v18H6a1 1 0 0 0-1 1z" /><path d="M18 3v18M9 8h6M9 12h5" /></>} />
+          <button type="button" onClick={props.onNotificationSettings} style={s.item}>
+            <svg viewBox="0 0 24 24" style={{ ...s.itemIco, stroke: "var(--drawer-muted)" }}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
+            <div><div style={s.itemT}>Notifiche</div><div style={s.itemS}>Gestisci autorizzazione</div></div>
+          </button>
 
           {props.isAdmin && (
             <>
@@ -168,7 +173,7 @@ const s: Record<string, React.CSSProperties> = {
   cmeta: { color: "var(--drawer-muted)", fontSize: 11, marginTop: 1, fontWeight: 700 },
   cbadge: { marginLeft: "auto", color: "white", fontSize: 9.5, fontWeight: 1000, borderRadius: 999, padding: "3px 9px" },
   addcomp: { width: "100%", border: "1px dashed var(--drawer-border)", background: "var(--drawer-card)", color: "var(--drawer-muted)", borderRadius: 14, padding: 11, fontWeight: 800, fontSize: 13, cursor: "pointer", fontFamily: "inherit" },
-  item: { display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid var(--drawer-border)", borderRadius: 14, marginBottom: 7, textDecoration: "none", background: "var(--drawer-card)", boxShadow: "var(--drawer-shadow)" },
+  item: { width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid var(--drawer-border)", borderRadius: 14, marginBottom: 7, textDecoration: "none", background: "var(--drawer-card)", boxShadow: "var(--drawer-shadow)", fontFamily: "inherit", textAlign: "left", cursor: "pointer" },
   itemIco: { width: 20, height: 20, fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0 },
   itemT: { fontWeight: 900, fontSize: 13.5, color: "var(--drawer-text)" },
   itemS: { fontSize: 11, color: "var(--drawer-muted)", fontWeight: 700 },

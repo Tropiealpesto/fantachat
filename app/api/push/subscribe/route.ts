@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     );
 
   if (error) {
-    return Response.json({ ok: false, error: error.message }, { status: 500 });
+    return Response.json({ ok: false, error: "Non è stato possibile attivare le notifiche su questo dispositivo." }, { status: 500 });
   }
 
   return Response.json({ ok: true, push: pushConfigStatus() });

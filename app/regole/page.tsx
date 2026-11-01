@@ -53,6 +53,7 @@ export default function RegolePage() {
           </p>
         </section>
 
+        <div data-tutorial-target="rules-overview">
         <RuleCard title="Come funziona">
           <p>
             Ogni giornata ha una finestra di scelta ordinata. Il primo a scegliere
@@ -70,6 +71,7 @@ export default function RegolePage() {
             il reset dell’admin della lega.
           </p>
         </RuleCard>
+        </div>
 
         <RuleCard title="Scelta giocatori">
           <p>
@@ -126,6 +128,7 @@ export default function RegolePage() {
           </p>
         </RuleCard>
 
+        <div data-tutorial-target="rules-scoring">
         <RuleCard title="Punteggi comuni">
           <h3 style={s.subTitle}>Bonus</h3>
 
@@ -166,6 +169,7 @@ export default function RegolePage() {
             diversa indicazione della competizione.
           </p>
         </RuleCard>
+        </div>
 
         {isPro && (
           <section style={{ ...s.card, borderTop: "3px solid #e07b1a" }}>

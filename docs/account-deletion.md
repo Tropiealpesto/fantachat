@@ -1,36 +1,29 @@
-# FantaChat Cancellazione account - bozza operativa
+# FantaChat Cancellazione account - procedura operativa
 
 Aggiornata: 2026-07-02
 
-Questa bozza e' la base pubblicata nell'app in `/cancellazione-account`.
+La pagina pubblicata nell'app è `/cancellazione-account`.
 
 ## Procedura attuale
 
-L'utente invia una richiesta dall'email associata all'account a `[DA COMPLETARE: email privacy]`.
+L'utente autenticato può avviare la cancellazione direttamente dalla pagina in-app. Il pulsante chiama l'endpoint autenticato `/api/account/delete`; non è necessario inviare password o dati sensibili via email.
 
 La richiesta dovrebbe indicare:
 
-- volonta di cancellare l'account;
-- email dell'account;
-- eventuale nome squadra o lega collegata.
-
-Non deve contenere password o dati sensibili non necessari.
+Per chi non riesce ad accedere resta disponibile il contatto ufficiale `fantachat.app.2026@gmail.com` per una verifica manuale.
 
 ## Cosa fare lato operativo
 
-- Verificare che la richiesta arrivi dall'email dell'account.
-- Eliminare o anonimizzare dati identificativi dove tecnicamente possibile.
-- Valutare quali dati di lega/classifica conservare in forma aggregata o anonimizzata per non rompere lo storico della competizione.
-- Confermare all'utente la chiusura della richiesta.
+- L'endpoint verifica il token Supabase e opera solo sull'utente autenticato.
+- I dati personali applicativi vengono eliminati; i messaggi vengono anonimizzati per preservare la storia della lega.
+- Le righe dipendenti dall'utente vengono rimosse tramite le relazioni cascade di Supabase.
+- In caso di errore tecnico l'utente riceve un messaggio e può contattare il canale privacy.
 
 ## Da completare prima del lancio
 
-- Email privacy ufficiale.
-- SLA operativo, ad esempio gestione entro 30 giorni salvo eccezioni.
-- Procedura tecnica interna per cancellazione/anonymizzazione.
-- Eventuale pulsante in-app per richiesta guidata.
-- Log interno delle richieste evase, nel rispetto del principio di minimizzazione.
+- Verificare in ambiente Supabase di produzione la migration `048_chat_moderation_and_message_guards.sql` e il funzionamento dell'endpoint con un account di test.
+- Confermare titolare, fornitori, retention e canale privacy nella documentazione pubblica.
 
 ## Stato
 
-Implementata pagina pubblica e link da login/menu laterale. Procedura ancora manuale e da formalizzare.
+Pagina pubblica, pulsante in-app ed endpoint implementati. La procedura manuale resta solo come fallback per gli utenti che non riescono ad autenticarsi.

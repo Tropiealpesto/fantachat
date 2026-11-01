@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "mobile:add:ios": "cap add ios",
+    "mobile:sync:ios": "cap sync ios",
+    "mobile:open:ios": "cap open ios",
+    "mobile:assets:ios": "capacitor-assets generate --ios",
     "push:vapid": "node scripts/generate-vapid.mjs",
     "sportmonks:inspect": "node scripts/sportmonks-inspect.mjs",
     "sportmonks:sync": "node scripts/sportmonks-sync.mjs",
@@ -14,6 +18,8 @@
     "sportmonks:sync:lineups": "node scripts/sportmonks-sync.mjs --expected-lineups"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@supabase/supabase-js": "^2.95.3",
     "next": "16.1.6",
     "react": "19.2.3",
@@ -22,6 +28,8 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

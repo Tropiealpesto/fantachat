@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../components/AppContext";
 import { supabase } from "../../lib/supabaseClient";
 import { humanError } from "../../lib/humanError";
+import TutorialHelp from "../components/TutorialHelp";
 
 type Row = {
   league_id: string;
@@ -80,6 +81,7 @@ export default function SelezionaLega() {
     <main style={s.page}>
       <div style={s.topbar}>
         <div style={s.logo}><span style={{ color: "#15803d" }}>Fanta</span><span style={{ color: "#e07b1a" }}>Chat</span></div>
+        <TutorialHelp compact />
         <button type="button" onClick={logout} style={s.logout} aria-label="Esci">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" />
@@ -99,7 +101,8 @@ export default function SelezionaLega() {
       ) : rows.length === 0 ? (
         <div style={s.empty}>Non sei ancora in nessuna lega.</div>
       ) : (
-        rows.map((r, index) => {
+        <div data-tutorial-target="league-list">
+        {rows.map((r, index) => {
           const active = r.league_id === app.activeLeagueId;
           return (
             <button key={`${r.league_id}-${index}`} type="button" onClick={() => select(r.league_id)} style={{ ...s.card, ...(active ? s.cardOn : {}) }}>
@@ -116,10 +119,11 @@ export default function SelezionaLega() {
               )}
             </button>
           );
-        })
+        })}
+        </div>
       )}
 
-      <button type="button" onClick={() => router.push("/crea-lega")} style={{ ...s.card, ...s.create }}>
+      <button type="button" onClick={() => router.push("/crea-lega")} style={{ ...s.card, ...s.create }} data-tutorial-target="create-league">
         <span style={s.plus}>+</span>
         <span style={{ minWidth: 0 }}>
           <div style={s.ctitle}>Crea nuova lega</div>
@@ -129,7 +133,7 @@ export default function SelezionaLega() {
       </button>
 
       <div style={s.sec}>Entra con un codice</div>
-      <div style={s.join}>
+      <div style={s.join} data-tutorial-target="join-form">
         <h2 style={s.jtitle}>Hai un codice invito?</h2>
         <p style={s.jsub}>Inseriscilo qui per unirti alla lega.</p>
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="CODICE INVITO" style={{ ...s.input, letterSpacing: 2, textTransform: "uppercase" }} />
@@ -156,38 +160,39 @@ export default function SelezionaLega() {
 
 const s: Record<string, React.CSSProperties> = {
   page: {
-    minHeight: "100dvh", maxWidth: 520, margin: "0 auto", padding: "16px 14px 40px",
-    background: "radial-gradient(circle at 88% 2%, rgba(224,123,26,.10), transparent 32%), radial-gradient(circle at 10% 1%, rgba(21,128,61,.08), transparent 30%), #f6f7f9",
+    minHeight: "100dvh", maxWidth: 600, margin: "0 auto", padding: "14px 16px 42px",
+    color: "var(--fc-text, var(--text, #0f172a))",
+    background: "linear-gradient(180deg, color-mix(in srgb, var(--fc-primary, #16a34a) 5%, var(--fc-page-bg, var(--bg, #f4f7f4))) 0, var(--fc-page-bg, var(--bg, #f4f7f4)) 240px)",
   },
-  topbar: { display: "flex", alignItems: "center", gap: 10, padding: "6px 4px 4px" },
-  logo: { fontSize: 22, fontWeight: 1000, letterSpacing: "-.5px" },
-  logout: { marginLeft: "auto", width: 38, height: 38, borderRadius: "50%", border: "1px solid #e5e7eb", background: "#fff", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer" },
-  h1: { fontSize: 22, fontWeight: 1000, color: "#0f172a", margin: "18px 2px 0" },
-  accent: { width: 40, height: 3.5, borderRadius: 3, background: "linear-gradient(90deg,#15803d,#e07b1a)", margin: "7px 2px 0" },
-  sub: { fontSize: 13, color: "#64748b", fontWeight: 700, margin: "9px 2px 14px" },
-  sec: { fontSize: 10.5, fontWeight: 1000, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".07em", margin: "18px 4px 9px" },
-  card: { width: "100%", display: "grid", gridTemplateColumns: "48px 1fr 24px", gap: 12, alignItems: "center", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 12, textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 22px rgba(15,23,42,.06)", marginBottom: 9 },
-  cardOn: { borderColor: "#15803d", background: "#f3fbf5" },
-  crest: { width: 48, height: 48, borderRadius: 14, display: "grid", placeItems: "center", color: "#fff", fontWeight: 900, fontSize: 14, border: "2px solid #fff", boxShadow: "0 3px 8px rgba(0,0,0,.16)" },
-  lname: { fontSize: 15, fontWeight: 1000, color: "#0f172a", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
-  lmeta: { fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
-  pill: { display: "inline-flex", marginTop: 6, padding: "2px 8px", borderRadius: 999, color: "#15803d", background: "#dcfce7", fontSize: 9.5, fontWeight: 1000, textTransform: "uppercase" },
-  chev: { color: "#cbd5e1", display: "grid", placeItems: "center" },
-  check: { width: 28, height: 28, borderRadius: "50%", background: "#15803d", color: "#fff", display: "grid", placeItems: "center", fontWeight: 1000, fontSize: 15, justifySelf: "center" },
-  create: { border: "1px dashed #fdba74", background: "#fff8f3", boxShadow: "none" },
-  plus: { width: 48, height: 48, borderRadius: 14, background: "#fff3e4", color: "#e07b1a", display: "grid", placeItems: "center", fontSize: 26, lineHeight: 1 },
-  ctitle: { fontSize: 15, fontWeight: 1000, color: "#0f172a" },
-  csub: { fontSize: 12, color: "#64748b", fontWeight: 700, marginTop: 2 },
-  join: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 20, padding: 16, boxShadow: "0 8px 22px rgba(15,23,42,.06)", marginTop: 4 },
-  jtitle: { fontSize: 17, fontWeight: 1000, color: "#0f172a", margin: 0 },
-  jsub: { fontSize: 12.5, color: "#64748b", fontWeight: 700, margin: "4px 0 12px" },
-  input: { width: "100%", padding: "13px 15px", borderRadius: 14, border: "1px solid #e5e7eb", background: "#fff", color: "#0f172a", fontSize: 14, fontWeight: 800, fontFamily: "inherit", outline: "none", marginBottom: 9 },
-  jbtn: { width: "100%", padding: 14, border: "none", borderRadius: 14, background: "#15803d", color: "#fff", fontWeight: 800, fontSize: 15, fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 10px 22px rgba(21,128,61,.24)", marginTop: 2 },
-  help: { display: "flex", gap: 12, alignItems: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 18, padding: 14, marginTop: 14 },
-  hicon: { width: 40, height: 40, borderRadius: "50%", background: "#dcfce7", display: "grid", placeItems: "center", flexShrink: 0 },
-  htitle: { fontSize: 14, fontWeight: 1000, color: "#15803d" },
-  htext: { fontSize: 12.5, color: "#374151", fontWeight: 650, lineHeight: 1.35, marginTop: 2 },
-  ok: { color: "#15803d", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 14, padding: "10px 12px", fontWeight: 800, marginBottom: 10 },
-  err: { color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 14, padding: "10px 12px", fontWeight: 800, marginBottom: 10 },
-  empty: { color: "#64748b", fontWeight: 800, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, boxShadow: "0 8px 22px rgba(15,23,42,.06)", marginBottom: 9 },
+  topbar: { display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 42 },
+  logo: { fontFamily: "Nunito, sans-serif", fontSize: 23, fontWeight: 900, letterSpacing: "-.7px", lineHeight: 1 },
+  logout: { width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--fc-border, var(--border, #e5e7eb))", background: "var(--fc-card-bg, var(--card, #fff))", color: "var(--fc-muted, var(--muted, #64748b))", display: "grid", placeItems: "center", cursor: "pointer" },
+  h1: { fontFamily: "Nunito, sans-serif", fontSize: "clamp(28px, 7vw, 38px)", fontWeight: 900, letterSpacing: "-.8px", lineHeight: 1.05, color: "var(--fc-text, var(--text, #0f172a))", margin: "30px 2px 0" },
+  accent: { width: 44, height: 3, borderRadius: 3, background: "linear-gradient(90deg,var(--fc-primary-dark, #15803d),var(--fc-accent, var(--brand-orange, #e07b1a)))", margin: "10px 2px 0" },
+  sub: { maxWidth: 500, fontSize: 14, color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 600, lineHeight: 1.5, margin: "10px 2px 24px" },
+  sec: { fontSize: 10, fontWeight: 900, color: "var(--fc-muted, var(--muted, #64748b))", textTransform: "uppercase", letterSpacing: ".1em", margin: "25px 2px 9px" },
+  card: { width: "100%", display: "grid", gridTemplateColumns: "46px minmax(0, 1fr) 24px", gap: 12, alignItems: "center", background: "var(--fc-card-bg, var(--card, #fff))", color: "inherit", border: "1px solid var(--fc-border, var(--border, #e5e7eb))", borderRadius: 8, padding: "11px 12px", textAlign: "left", cursor: "pointer", fontFamily: "inherit", boxShadow: "0 7px 20px rgba(15,23,42,.055)", marginBottom: 8, transition: "border-color .18s ease, box-shadow .18s ease, transform .18s ease" },
+  cardOn: { borderColor: "color-mix(in srgb, var(--fc-primary, #22c55e) 58%, var(--fc-border, #e5e7eb))", background: "color-mix(in srgb, var(--fc-primary, #22c55e) 7%, var(--fc-card-bg, #fff))", boxShadow: "0 0 0 2px color-mix(in srgb, var(--fc-primary, #22c55e) 13%, transparent), 0 9px 22px rgba(15,23,42,.07)" },
+  crest: { width: 46, height: 46, borderRadius: 12, display: "grid", placeItems: "center", color: "#fff", fontWeight: 900, fontSize: 13, border: "2px solid rgba(255,255,255,.82)", boxShadow: "0 4px 9px rgba(15,23,42,.16)" },
+  lname: { fontSize: 14, fontWeight: 900, color: "var(--fc-text, var(--text, #0f172a))", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  lmeta: { display: "flex", gap: 6, alignItems: "center", fontSize: 11.5, color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 700, marginTop: 3, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" },
+  pill: { display: "inline-flex", marginTop: 6, padding: "3px 7px", borderRadius: 999, color: "var(--fc-primary-dark, #15803d)", background: "color-mix(in srgb, var(--fc-primary, #22c55e) 14%, transparent)", fontSize: 9, fontWeight: 900, letterSpacing: ".03em", textTransform: "uppercase" },
+  chev: { color: "var(--fc-muted, #94a3b8)", display: "grid", placeItems: "center" },
+  check: { width: 25, height: 25, borderRadius: "50%", background: "var(--fc-primary-dark, #15803d)", color: "#fff", display: "grid", placeItems: "center", fontWeight: 900, fontSize: 13, justifySelf: "center" },
+  create: { border: "1px solid color-mix(in srgb, var(--fc-accent, var(--brand-orange, #e07b1a)) 40%, var(--fc-border, #e5e7eb))", background: "color-mix(in srgb, var(--fc-accent, var(--brand-orange, #e07b1a)) 7%, var(--fc-card-bg, #fff))", boxShadow: "none", marginBottom: 25 },
+  plus: { width: 42, height: 42, borderRadius: 10, background: "color-mix(in srgb, var(--fc-accent, var(--brand-orange, #e07b1a)) 13%, transparent)", color: "var(--fc-accent, var(--brand-orange, #e07b1a))", display: "grid", placeItems: "center", fontSize: 24, lineHeight: 1 },
+  ctitle: { fontSize: 13.5, fontWeight: 900, color: "var(--fc-text, var(--text, #0f172a))" },
+  csub: { fontSize: 11.5, color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 700, marginTop: 3 },
+  join: { background: "var(--fc-card-bg, var(--card, #fff))", border: "1px solid var(--fc-border, var(--border, #e5e7eb))", borderRadius: 8, padding: 15, boxShadow: "0 8px 22px rgba(15,23,42,.055)", marginTop: 0 },
+  jtitle: { fontSize: 15, fontWeight: 900, color: "var(--fc-text, var(--text, #0f172a))", margin: 0 },
+  jsub: { fontSize: 11.5, color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 600, lineHeight: 1.4, margin: "4px 0 14px" },
+  input: { width: "100%", padding: "11px 12px", borderRadius: 7, border: "1px solid var(--fc-border, var(--border, #e5e7eb))", background: "var(--fc-page-bg, var(--bg, #f4f7f4))", color: "var(--fc-text, var(--text, #0f172a))", fontSize: 13, fontWeight: 700, fontFamily: "inherit", outline: "none", marginBottom: 9 },
+  jbtn: { width: "100%", minHeight: 43, padding: "10px 14px", border: "none", borderRadius: 7, background: "var(--fc-primary-dark, #15803d)", color: "#fff", fontWeight: 800, fontSize: 13, fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 8px 16px color-mix(in srgb, var(--fc-primary-dark, #15803d) 22%, transparent)", marginTop: 2 },
+  help: { display: "flex", gap: 9, alignItems: "center", background: "transparent", border: "none", borderRadius: 0, padding: "2px 2px 0", marginTop: 15 },
+  hicon: { width: 23, height: 23, borderRadius: "50%", background: "transparent", border: "1px solid color-mix(in srgb, var(--fc-primary, #22c55e) 44%, transparent)", color: "var(--fc-primary-dark, #15803d)", display: "grid", placeItems: "center", flexShrink: 0, fontSize: 13, fontWeight: 900 },
+  htitle: { fontSize: 11.5, fontWeight: 800, color: "var(--fc-text, var(--text, #0f172a))" },
+  htext: { fontSize: 11.5, color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 600, lineHeight: 1.35, marginTop: 1 },
+  ok: { color: "var(--fc-primary-dark, #15803d)", background: "color-mix(in srgb, var(--fc-primary, #22c55e) 11%, var(--fc-card-bg, #fff))", border: "1px solid color-mix(in srgb, var(--fc-primary, #22c55e) 38%, transparent)", borderRadius: 8, padding: "11px 13px", fontWeight: 800, fontSize: 13, marginBottom: 16 },
+  err: { color: "#b91c1c", background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: 8, padding: "11px 13px", fontWeight: 800, fontSize: 13, marginBottom: 16 },
+  empty: { color: "var(--fc-muted, var(--muted, #64748b))", fontWeight: 700, background: "color-mix(in srgb, var(--fc-card-bg, #fff) 75%, transparent)", border: "1px dashed var(--fc-border, var(--border, #e5e7eb))", borderRadius: 8, padding: 16, marginBottom: 8 },
 };

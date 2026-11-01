@@ -47,11 +47,11 @@ export default function Storico() {
           </div>
         </div>
 
-        <div className="fc-history-list" style={s.list}>
+        <div className="fc-history-list" style={s.list} data-tutorial-target="history-list">
           {rows.map((r) => {
             const open = r.status === "open";
             return (
-              <button key={r.matchday_id} className="fc-history-card" style={s.card} onClick={() => router.push(`/storico/${r.matchday_id}`)}>
+              <button key={r.matchday_id} className="fc-history-card" style={s.card} onClick={() => router.push(`/storico/${r.matchday_id}`)} data-tutorial-target={rows[0]?.matchday_id === r.matchday_id ? "history-card" : undefined}>
                 <div className="fc-history-tile" style={{ ...s.tile, background: `${accent}14`, color: accent }}>{r.matchday_number}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={s.title}>Giornata {r.matchday_number}</div>

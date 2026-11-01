@@ -92,7 +92,7 @@ export default function Personalizza() {
           </div>
 
           <div style={s.lab}>Colori</div>
-          <div style={s.colors}>
+          <div style={s.colors} data-tutorial-target="custom-colors">
             <label style={s.crow}>
               <input type="color" value={primary} onChange={(e) => setPrimary(e.target.value)} style={s.colorInput} />
               <span>Primario</span>
@@ -117,7 +117,7 @@ export default function Personalizza() {
           </div>
 
           <div style={s.lab}>Disegno stemma</div>
-          <div style={s.patternGrid}>
+          <div style={s.patternGrid} data-tutorial-target="custom-patterns">
             {PATTERNS.map((p) => {
               const active = p.key === pattern;
 
@@ -146,7 +146,7 @@ export default function Personalizza() {
             })}
           </div>
 
-          <button type="button" onClick={save} disabled={saving} style={{ ...s.cta, opacity: saving ? 0.6 : 1 }}>
+          <button type="button" onClick={save} disabled={saving} style={{ ...s.cta, opacity: saving ? 0.6 : 1 }} data-tutorial-target="custom-save">
             {saved ? "Salvato ✓" : saving ? "Salvataggio…" : "Salva colori"}
           </button>
         </div>

@@ -1,0 +1,70 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { useApp } from "./AppContext";
+import SideDrawer from "./SideDrawer";
+import { type BadgePattern } from "./TeamBadge";
+
+type DrawerCompetition = {
+  id: string;
+  name: string;
+  competition_type: string | null;
+  competition_slug: string | null;
+  season_name: string | null;
+  matchday_number: number | null;
+  is_active: boolean;
+};
+
+export default function SideDrawerWrapper() {
+  const app = useApp();
+  const [competitions, setCompetitions] = useState<DrawerCompetition[]>([]);
+  const [colors, setColors] = useState<{ primary: string | null; secondary: string | null; pattern: BadgePattern | null }>({ primary: null, secondary: null, pattern: null });
+
+  // colori della mia squadra (per lo stemma nell'header del menu)
+  useEffect(() => {
+    if (!app.activeLeagueId || !app.userId) return;
+    let off = false;
+    supabase.rpc("get_league_members", { p_league_id: app.activeLeagueId }).then(({ data }) => {
+      if (off) return;
+      const me = (data as any[] | null)?.find((m) => m.user_id === app.userId);
+      if (me) setColors({ primary: me.color_primary ?? null, secondary: me.color_secondary ?? null, pattern: me.kit_pattern ?? "split" });
+    });
+    return () => { off = true; };
+  }, [app.activeLeagueId, app.userId, app.drawerOpen]);
+
+  useEffect(() => {
+    if (!app.drawerOpen || !app.activeLeagueId) return;
+
+    async function load() {
+      const { data, error } = await supabase.rpc("get_league_competitions", { p_league_id: app.activeLeagueId });
+      setCompetitions(!error && data ? (data as DrawerCompetition[]) : []);
+    }
+
+    load();
+  }, [app.drawerOpen, app.activeLeagueId, app.activeLeagueCompetitionId]);
+
+  async function switchCompetition(id: string) {
+    await app.setActiveCompetition(id);
+    app.closeDrawer();
+  }
+
+  return (
+    <SideDrawer
+      isOpen={app.drawerOpen}
+      onClose={app.closeDrawer}
+      teamName={app.teamName}
+      leagueName={app.leagueName}
+      isAdmin={app.isAdmin}
+      isSuperAdmin={app.isSuperAdmin}
+      competitions={competitions}
+      activeLeagueCompetitionId={app.activeLeagueCompetitionId}
+      onSwitchCompetition={switchCompetition}
+      teamPrimary={colors.primary}
+      teamSecondary={colors.secondary}
+      teamPattern={colors.pattern}
+      uiTheme={app.uiTheme}
+      onThemeChange={app.setUiTheme}
+    />
+  );
+}

@@ -842,7 +842,7 @@ export default function Home() {
 
         <PushNotificationPrompt />
 
-        <div style={s.matchdayCard}>
+        <div style={s.matchdayCard} data-tutorial-target="home-matchday">
           <div style={s.matchdayIcon}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="4" y="5" width="16" height="15" rx="2" />
@@ -885,7 +885,7 @@ export default function Home() {
           </button>
         </div>
 
-        <section style={s.card}>
+        <section style={s.card} data-tutorial-target="home-standing">
           <div style={s.sectionHeader}>
             <h2 style={s.sectionTitle}>La tua classifica</h2>
 
@@ -1011,7 +1011,7 @@ export default function Home() {
         )}
 
         {recap?.has_data && (
-          <div style={s.recapCard}>
+          <div style={s.recapCard} data-tutorial-target="home-recap">
             <div style={s.recapRow}>
               <div style={s.recapIcon}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

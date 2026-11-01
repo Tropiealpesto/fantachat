@@ -1,4 +1,10 @@
-self.addEventListener("install", () => {
+const OFFLINE_URL = "/offline.html";
+const OFFLINE_CACHE = "fantachat-offline-v1";
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE).then((cache) => cache.add(OFFLINE_URL))
+  );
   self.skipWaiting();
 });
 
@@ -7,9 +13,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Lasciamo che Next/Vercel gestiscano normalmente le richieste.
-  // Questo SW serve soprattutto a rendere installabile la PWA.
-  event.respondWith(fetch(event.request));
+  if (event.request.method !== "GET") return;
+
+  // Do not cache authenticated/API responses. If a navigation loses network,
+  // show a stable fallback instead of leaving the installed app blank.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
+  }
 });
 
 self.addEventListener("push", (event) => {

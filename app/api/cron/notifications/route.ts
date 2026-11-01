@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { processNotificationJobs } from "../../notifications/process/route";
+import { processNotificationJobs } from "../../../../lib/notificationJobs";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
