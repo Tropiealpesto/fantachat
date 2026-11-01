@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
             }
           : {
               catalog: false,
-              fixtures: false,
+              // Refresh the fixture index before reading recent stats so a new
+              // matchday is available even when it was not entered manually.
+              fixtures: true,
               stats: true,
               expectedLineups: false,
               matchday: matchday > 0 ? matchday : undefined,
@@ -92,11 +94,12 @@ export async function POST(request: NextRequest) {
       summary,
     });
   } catch (error) {
+    console.error("Sportmonks sync failed", error);
     return Response.json(
       {
         ok: false,
         duration_ms: Date.now() - startedAt,
-        error: error instanceof Error ? error.message : String(error),
+        error: "Aggiornamento dati sportivi non riuscito. Riprova tra poco.",
       },
       { status: 500 }
     );
