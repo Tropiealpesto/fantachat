@@ -143,6 +143,8 @@ export default function SuperadminPage() {
     setMsg(null);
     setErr(null);
     setSyncingSportmonks(true);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 270_000);
 
     try {
       const { data } = await supabase.auth.getSession();
@@ -159,6 +161,7 @@ export default function SuperadminPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ mode }),
+        signal: controller.signal,
       });
 
       const payload = await response.json().catch(() => ({}));
@@ -191,8 +194,13 @@ export default function SuperadminPage() {
 
       await loadCompetitions();
     } catch (error) {
-      setErr(humanError(error, "Non è stato possibile aggiornare i dati sportivi."));
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setErr("L'aggiornamento sta richiedendo troppo tempo. Riprova tra poco: i dati vengono caricati in blocchi più piccoli.");
+      } else {
+        setErr(humanError(error, "Non è stato possibile aggiornare i dati sportivi."));
+      }
     } finally {
+      window.clearTimeout(timeoutId);
       setSyncingSportmonks(false);
     }
   }

@@ -155,6 +155,21 @@ function chunks(values, size = 100) {
   return result;
 }
 
+async function mapWithConcurrency(values, concurrency, worker) {
+  const results = new Array(values.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(Math.max(1, concurrency), values.length) }, async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= values.length) return;
+      results[index] = await worker(values[index], index);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 async function updateRowsByIds(table, ids, values) {
   if (!ids.length) return 0;
 
@@ -849,8 +864,13 @@ async function importStats(competition, season) {
 
   const totals = { fixtures: 0, playerStats: 0, keeperStats: 0, coachStats: 0, recalcs: 0 };
 
-  for (const fixture of playableFixtures) {
-    const result = await importStatsForFixture(competition, season, fixture);
+  const fixtureResults = await mapWithConcurrency(
+    playableFixtures,
+    4,
+    (fixture) => importStatsForFixture(competition, season, fixture)
+  );
+
+  for (const result of fixtureResults) {
     totals.fixtures += 1;
     totals.playerStats += result.playerStats;
     totals.keeperStats += result.keeperStats;
@@ -980,8 +1000,13 @@ async function importExpectedLineups(competition, season) {
   const fixtures = await fixturesForExpectedLineups(competition, season);
   const totals = { fixtures: fixtures.length, expectedLineups: 0, skippedFixtures: 0 };
 
-  for (const fixture of fixtures) {
-    const result = await importExpectedLineupsForFixture(competition, season, fixture);
+  const fixtureResults = await mapWithConcurrency(
+    fixtures,
+    4,
+    (fixture) => importExpectedLineupsForFixture(competition, season, fixture)
+  );
+
+  for (const result of fixtureResults) {
     totals.expectedLineups += result.count;
     if (result.skipped) totals.skippedFixtures += 1;
   }
