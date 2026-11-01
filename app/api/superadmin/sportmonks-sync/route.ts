@@ -7,6 +7,8 @@ type SyncOptions = {
   stats?: boolean;
   expectedLineups?: boolean;
   matchday?: number;
+  fixturesWindowHoursBefore?: number;
+  fixturesWindowHoursAfter?: number;
   statsWindowHoursBefore?: number;
   statsWindowHoursAfter?: number;
   expectedLineupsWindowHours?: number;
@@ -79,6 +81,8 @@ export async function POST(request: NextRequest) {
               stats: true,
               expectedLineups: false,
               matchday: matchday > 0 ? matchday : undefined,
+              fixturesWindowHoursBefore: 72,
+              fixturesWindowHoursAfter: 6,
               statsWindowHoursBefore: 72,
               statsWindowHoursAfter: 6,
             };

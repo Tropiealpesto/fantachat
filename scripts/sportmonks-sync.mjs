@@ -72,6 +72,8 @@ function ensureRuntimeEnv() {
 }
 
 let selectedMatchday = 0;
+let fixturesWindowHoursBefore = null;
+let fixturesWindowHoursAfter = null;
 let statsWindowHoursBefore = 8;
 let statsWindowHoursAfter = 3;
 let expectedLineupsWindowHours = 72;
@@ -576,9 +578,34 @@ async function getOrCreateMatchday(seasonId, number) {
   );
 }
 
-async function importFixtures(competition, season) {
+function parseSportmonksDate(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const normalized = /(?:z|[+-]\d{2}:?\d{2})$/i.test(raw)
+    ? raw
+    : `${raw.replace(" ", "T")}Z`;
+  const date = new Date(normalized);
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
+async function importFixtures(competition, season, options = {}) {
   const schedule = await sportmonks(`/schedules/seasons/${season.sportmonks_id}`);
-  const fixtures = flattenFixtures(schedule).filter((fixture) => matchdayNumber(fixture));
+  let fixtures = flattenFixtures(schedule).filter((fixture) => matchdayNumber(fixture));
+
+  const matchday = Number(options.matchday ?? 0);
+  const from = options.from ? new Date(options.from) : null;
+  const to = options.to ? new Date(options.to) : null;
+
+  if (matchday > 0) {
+    fixtures = fixtures.filter((fixture) => matchdayNumber(fixture) === matchday);
+  } else if (from || to) {
+    fixtures = fixtures.filter((fixture) => {
+      const startsAt = parseSportmonksDate(fixture.starting_at);
+      if (!startsAt) return false;
+      return (!from || startsAt >= from) && (!to || startsAt <= to);
+    });
+  }
+
   let fixtureCount = 0;
 
   for (const fixture of fixtures) {
@@ -972,6 +999,12 @@ export async function runSportmonksSync(options = {}) {
   const shouldRunAll = !onlyCatalog && !onlyFixtures && !onlyStats && !onlyExpectedLineups;
 
   selectedMatchday = Number(options.matchday ?? 0);
+  fixturesWindowHoursBefore = options.fixturesWindowHoursBefore == null
+    ? null
+    : Number(options.fixturesWindowHoursBefore);
+  fixturesWindowHoursAfter = options.fixturesWindowHoursAfter == null
+    ? null
+    : Number(options.fixturesWindowHoursAfter);
   statsWindowHoursBefore = Number(options.statsWindowHoursBefore ?? 8);
   statsWindowHoursAfter = Number(options.statsWindowHoursAfter ?? 3);
   expectedLineupsWindowHours = Number(options.expectedLineupsWindowHours ?? 72);
@@ -991,7 +1024,19 @@ export async function runSportmonksSync(options = {}) {
   }
 
   if (shouldRunAll || onlyFixtures) {
-    summary.fixtures = await importFixtures(competition, season);
+    const hasFixtureWindow = fixturesWindowHoursBefore != null || fixturesWindowHoursAfter != null;
+    const fixtureFrom = hasFixtureWindow
+      ? new Date(Date.now() - (fixturesWindowHoursBefore ?? 0) * 60 * 60 * 1000).toISOString()
+      : undefined;
+    const fixtureTo = hasFixtureWindow
+      ? new Date(Date.now() + (fixturesWindowHoursAfter ?? 0) * 60 * 60 * 1000).toISOString()
+      : undefined;
+
+    summary.fixtures = await importFixtures(competition, season, {
+      matchday: selectedMatchday,
+      from: fixtureFrom,
+      to: fixtureTo,
+    });
   }
 
   if (shouldRunAll || onlyStats) {
