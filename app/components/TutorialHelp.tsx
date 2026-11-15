@@ -148,17 +148,6 @@ function contentForPath(pathname: string): TutorialContent {
     };
   }
 
-  if (pathname.startsWith("/podcast")) {
-    return {
-      title: "Come usare il Podcast",
-      steps: [
-        { title: "Scegli un contenuto", text: "Qui trovi gli aggiornamenti e i contenuti audio pubblicati per la tua competizione." },
-        { title: "Ascolta l'analisi", text: "Apri una scheda per leggere il contenuto o ascoltare l'audio, quando disponibile." },
-        { title: "Resta aggiornato", text: "Controlla questa sezione dopo gli aggiornamenti della giornata per non perdere le novità." },
-      ],
-    };
-  }
-
   if (pathname.startsWith("/privacy") || pathname.startsWith("/termini") || pathname.startsWith("/cancellazione-account")) {
     return {
       title: "Come usare questa pagina",
