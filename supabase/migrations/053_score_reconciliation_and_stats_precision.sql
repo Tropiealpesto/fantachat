@@ -119,7 +119,7 @@ begin
   if to_regclass('public.competition_standings') is not null then
     execute 'update public.competition_standings set total_points = round(total_points, 2)';
 
-    foreach v_column in array['p_total', 'd_total', 'c_total', 'a_total'] loop
+    foreach v_column in array array['p_total', 'd_total', 'c_total', 'a_total'] loop
       if exists (
         select 1
         from information_schema.columns
