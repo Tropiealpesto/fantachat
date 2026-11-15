@@ -1276,3 +1276,100 @@ html[data-ui-theme="dark"] .fc-stats-metric.is-active {
   border-color: rgba(255,138,38,.42) !important;
   color: #ff9d44 !important;
 }
+
+/* Shared interaction polish: keeps all app surfaces predictable on mobile and desktop. */
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed !important;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .18s ease;
+}
+
+.appbar-brand {
+  appearance: none;
+  -webkit-appearance: none;
+  color: inherit;
+}
+
+.fc-empty,
+.fc-empty-state,
+.fc-error,
+.fc-error-state {
+  border: 1px solid var(--fc-border, var(--border));
+  border-radius: 12px;
+  background: var(--fc-card-bg, var(--card));
+  color: var(--fc-muted, var(--muted));
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.fc-error,
+.fc-error-state {
+  border-color: color-mix(in srgb, #dc2626 22%, var(--fc-border, var(--border)));
+  background: color-mix(in srgb, #fee2e2 48%, var(--fc-card-bg, var(--card)));
+  color: #b91c1c;
+}
+
+@media (max-width: 380px) {
+  .appbar-inner {
+    gap: 7px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .appbar-logo {
+    font-size: 21px;
+  }
+
+  .appbar-sub {
+    font-size: 10px;
+  }
+
+  .fc-bottom-nav {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .fc-bottom-label {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

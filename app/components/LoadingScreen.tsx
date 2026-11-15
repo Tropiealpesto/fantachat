@@ -12,6 +12,7 @@ export default function LoadingScreen() {
           <LogoMark size={30} />
         </span>
       </div>
+      <p style={s.message}>Sto preparando la tua lega...</p>
 
       <style>{`
         @keyframes fc-loading-spin {
@@ -76,5 +77,12 @@ const s: Record<string, React.CSSProperties> = {
     height: 34,
     display: "grid",
     placeItems: "center",
+  },
+  message: {
+    margin: "-4px 0 0",
+    color: "var(--muted, #64748b)",
+    fontSize: 12,
+    fontWeight: 800,
+    textAlign: "center",
   },
 };

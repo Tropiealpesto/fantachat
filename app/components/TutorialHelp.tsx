@@ -270,6 +270,22 @@ export default function TutorialHelp({ compact = false }: { compact?: boolean })
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const frame = window.requestAnimationFrame(() => {
+      coachModalRef.current?.querySelector<HTMLElement>("button")?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!open || !targetRect) return;
 
     const frame = window.requestAnimationFrame(() => {
@@ -340,6 +356,7 @@ export default function TutorialHelp({ compact = false }: { compact?: boolean })
             role="dialog"
             aria-modal="true"
             aria-labelledby="tutorial-title"
+            aria-describedby="tutorial-step-text"
             onClick={(event) => event.stopPropagation()}
           >
             {coachLayout && (
@@ -370,7 +387,7 @@ export default function TutorialHelp({ compact = false }: { compact?: boolean })
 
             <div style={s.stepIcon}>{stepIndex + 1}</div>
             <h3 style={s.stepTitle}>{step.title}</h3>
-            <p style={s.stepText}>{step.text}</p>
+            <p id="tutorial-step-text" style={s.stepText}>{step.text}</p>
 
             <div style={s.actions}>
               {stepIndex > 0 ? (
@@ -461,6 +478,9 @@ const s: Record<string, CSSProperties> = {
     background: "var(--fc-card-bg, #ffffff)",
     color: "var(--fc-text, #14251b)",
     boxShadow: "0 14px 34px rgba(15,23,42,.18)",
+    maxHeight: "calc(100dvh - 28px)",
+    overflowY: "auto",
+    overscrollBehavior: "contain",
   },
   coachModal: {
     position: "fixed",
@@ -468,6 +488,7 @@ const s: Record<string, CSSProperties> = {
     maxWidth: 292,
     padding: 13,
     borderRadius: 14,
+    maxHeight: "calc(100dvh - 28px)",
   },
   arrow: {
     position: "absolute",

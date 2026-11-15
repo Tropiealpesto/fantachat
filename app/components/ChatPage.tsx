@@ -19,6 +19,10 @@ type Member = { user_id: string; team_name: string; role: string; color_primary?
 type Competition = { id: string; name: string; competition_type: string | null };
 type PlayerHit = { real_player_id: string; name: string; role: string; team: string; points: number; image_url?: string | null };
 
+function hideFormationEvents(rows: Message[]) {
+  return rows.filter((message) => message.kind !== "lineup" && message.kind !== "lineup_notification");
+}
+
 type Props = {
   leagueId: string; currentUserId: string; currentTeamName: string;
   activeLeagueCompetitionId?: string | null; competitions?: Competition[];
@@ -161,7 +165,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
       setNotice(humanError(error, "Non è stato possibile caricare la chat."));
       return;
     }
-    setMessages((data ?? []) as Message[]);
+    setMessages(hideFormationEvents((data ?? []) as Message[]));
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 50);
   }, [leagueId]);
 
@@ -179,7 +183,7 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
         setLoading(false);
         return;
       }
-      setMessages((msgs ?? []) as Message[]);
+      setMessages(hideFormationEvents((msgs ?? []) as Message[]));
       setMembers((mem ?? []) as Member[]);
       setLoading(false);
       setTimeout(() => endRef.current?.scrollIntoView({ behavior: "auto" }), 60);
@@ -357,12 +361,27 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
     if (reason === null) return;
 
     setActionBusy(true);
-    const { error } = await supabase.rpc("report_chat_message", {
+    const { data: reportId, error } = await supabase.rpc("report_chat_message", {
       p_message_id: message.id,
       p_reason: reason.trim() || "Altro",
     });
     setActionBusy(false);
     setActionMessageId(null);
+    if (!error && reportId) {
+      supabase.auth.getSession().then(({ data }) => {
+        const accessToken = data.session?.access_token;
+        if (!accessToken) return;
+
+        fetch("/api/notifications/moderation-report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ reportId }),
+        }).catch(() => {});
+      });
+    }
     setNotice(error ? humanError(error, "Segnalazione non riuscita.") : "Segnalazione inviata agli admin della lega.");
   }
 
@@ -502,14 +521,21 @@ export default function ChatPage({ leagueId, currentUserId, activeLeagueCompetit
                   <div className={own ? "fc-chat-bubble fc-chat-bubble-own" : "fc-chat-bubble fc-chat-bubble-other"} style={{ ...s.bubble, ...(own ? { background: "#dff5e5", color: "#0f172a", borderTopRightRadius: 4 } : { background: "#ffffff", color: "#0f172a", borderTopLeftRadius: 4, border: "1px solid #eceff3" }) }}>
                     <span style={{ whiteSpace: "pre-wrap" }}>{renderText(m.content)}</span>
                     {players.map((p) => (
-                      <span key={p.id} className="fc-chat-player-chip" style={s.pchip}>
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="fc-chat-player-chip"
+                        style={s.pchipButton}
+                        onClick={() => router.push(`/giocatore/${p.id}?from=chat`)}
+                        aria-label={`Apri statistiche di ${playerLabel(p)}`}
+                      >
                         <PlayerChipAvatar role={p.role} imageUrl={p.image_url ?? playerImages[p.id]} size={26} />
                         <span style={s.pinfo}>
                           <span style={s.pn}>{playerLabel(p)}</span>
                           <span style={s.pt}>{playerSub(p)}</span>
                         </span>
                         {ptsTag(p.id)}
-                      </span>
+                      </button>
                     ))}
                   </div>
                   {!own && m.user_id && (
@@ -621,6 +647,7 @@ const s: Record<string, React.CSSProperties> = {
   actionMuted: { border: 0, background: "transparent", color: "#94a3b8", borderRadius: 6, padding: "3px 5px", fontSize: 10.5, fontWeight: 800, cursor: "pointer" },
   mention: { fontWeight: 1000, borderRadius: 5, padding: "0 3px" },
   pchip: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #f4c99d", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%" },
+  pchipButton: { display: "inline-flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e5e7eb", borderLeft: "3px solid #f4c99d", borderRadius: 10, padding: "6px 8px", alignSelf: "flex-start", maxWidth: "100%", fontFamily: "inherit", textAlign: "left", cursor: "pointer" },
   pinfo: { display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 },
   pn: { fontSize: 12.5, fontWeight: 950, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   pt: { fontSize: 10.5, fontWeight: 700, color: "#64748b" },

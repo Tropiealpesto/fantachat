@@ -59,6 +59,11 @@ type LineupData = {
   } | null;
 };
 
+type PlayerOption = Player & {
+  disabled?: boolean;
+  reason?: string;
+};
+
 type FormData = {
   competition_id: string | null;
   is_participant: boolean;
@@ -182,6 +187,7 @@ export default function RosaPage() {
   const [coachSheetOpen, setCoachSheetOpen] = useState(false);
   const [probablesOpen, setProbablesOpen] = useState(false);
   const [selectedCoachId, setSelectedCoachId] = useState("");
+  const [unavailablePlayerOwners, setUnavailablePlayerOwners] = useState<Record<string, string>>({});
 
   const roles = useMemo(
     () =>
@@ -253,6 +259,7 @@ export default function RosaPage() {
         const initialData = baseForm.lineup ?? baseForm.draft;
 
         setForm(baseForm);
+        setUnavailablePlayerOwners({});
         setSelected(buildInitialSelected(baseForm.players_per_role, initialData));
         setSelectedCoachId(initialData?.coach?.real_coach_id ?? "");
         setSaved(Boolean(baseForm.lineup?.id));
@@ -319,29 +326,79 @@ export default function RosaPage() {
     };
   }, [app.activeLeagueCompetitionId, form.competition_id, form.matchday?.number]);
 
+  useEffect(() => {
+    const matchdayId = form.matchday?.id;
+
+    if (!app.activeLeagueCompetitionId || !matchdayId) {
+      setUnavailablePlayerOwners({});
+      return;
+    }
+
+    let off = false;
+
+    async function loadTakenPlayers() {
+      const { data } = await supabase.rpc("get_lineup_taken_player_info", {
+        p_league_competition_id: app.activeLeagueCompetitionId,
+        p_matchday_id: matchdayId,
+      });
+
+      if (off) return;
+
+      const owners: Record<string, string> = {};
+      for (const row of (data ?? []) as { real_player_id?: string; owner_team_name?: string | null }[]) {
+        if (row.real_player_id) {
+          owners[row.real_player_id] = row.owner_team_name?.trim() || "un altro utente";
+        }
+      }
+      setUnavailablePlayerOwners(owners);
+    }
+
+    loadTakenPlayers();
+
+    return () => {
+      off = true;
+    };
+  }, [app.activeLeagueCompetitionId, form.matchday?.id]);
+
   function availableFor(role: string, currentId?: string) {
     const others = selectedIds.filter((id) => id && id !== currentId);
     const otherPlayers = others.map((id) => byId.get(id)).filter(Boolean) as Player[];
-    const draftMode = !slotOpen && !saved;
 
     const usedTeams = new Set(otherPlayers.map((p) => norm(p.team)));
     const selectedTopCount = otherPlayers.filter((p) => topNames.has(norm(p.team))).length;
 
     return form.players
       .filter((p) => p.role === role)
-      .filter((p) => {
-        if (p.id === currentId) return true;
-        if (unavailablePlayerIds.has(p.id)) return false;
-        if (selectedIds.includes(p.id)) return false;
+      .map((p): PlayerOption => {
+        if (p.id === currentId) return p;
 
-        if (draftMode) return true;
+        if (unavailablePlayerIds.has(p.id)) {
+          return {
+            ...p,
+            disabled: true,
+            reason: `Già scelto da ${unavailablePlayerOwners[p.id] ?? "un altro utente"}`,
+          };
+        }
+
+        if (selectedIds.includes(p.id)) {
+          return { ...p, disabled: true, reason: "Già presente nella formazione" };
+        }
 
         const teamKey = norm(p.team);
 
-        if (usedTeams.has(teamKey)) return false;
-        if (selectedTopCount >= topLimit && topNames.has(teamKey)) return false;
+        if (usedTeams.has(teamKey)) {
+          return { ...p, disabled: true, reason: "Squadra già scelta" };
+        }
 
-        return true;
+        if (selectedTopCount >= topLimit && topNames.has(teamKey)) {
+          return {
+            ...p,
+            disabled: true,
+            reason: topLimit === 1 ? "Capitano/giocatore Top già scelto" : "Giocatori Top già al limite",
+          };
+        }
+
+        return p;
       })
       .sort((a, b) => label(a).localeCompare(label(b)));
   }
@@ -368,6 +425,25 @@ export default function RosaPage() {
 
     if (new Set(selectedIds).size !== selectedIds.length) {
       return "Non puoi selezionare due volte lo stesso giocatore.";
+    }
+
+    const selectedPlayers = selectedIds.map((id) => byId.get(id)).filter(Boolean) as Player[];
+    if (selectedPlayers.some((player) => unavailablePlayerIds.has(player.id))) {
+      return "Un giocatore è già stato scelto da un altro partecipante.";
+    }
+
+    const teamCounts = new Map<string, number>();
+    for (const player of selectedPlayers) {
+      const teamKey = norm(player.team);
+      teamCounts.set(teamKey, (teamCounts.get(teamKey) ?? 0) + 1);
+    }
+    if (Array.from(teamCounts.values()).some((count) => count > 1)) {
+      return "Puoi schierare al massimo un giocatore per squadra.";
+    }
+
+    const selectedTopCount = selectedPlayers.filter((player) => topNames.has(norm(player.team))).length;
+    if (selectedTopCount > topLimit) {
+      return `Puoi schierare al massimo ${topLimit} giocatori delle Top squadre.`;
     }
 
     if (form.coach_enabled && !selectedCoachId) {
@@ -688,6 +764,7 @@ export default function RosaPage() {
           currentId={currentSlotId}
           options={sheetOptions}
           onClose={() => setActiveSlot(null)}
+          onStats={(id) => router.push(`/giocatore/${id}?from=rosa`)}
           onClear={() => {
             selectPlayer(activeSlot.role, activeSlot.index, "");
             setActiveSlot(null);
@@ -891,8 +968,9 @@ function CampoInterattivo(props: {
 function PlayerSheet(props: {
   role: string;
   currentId: string;
-  options: Player[];
+  options: PlayerOption[];
   onClose: () => void;
+  onStats: (id: string) => void;
   onClear: () => void;
   onSelect: (id: string) => void;
 }) {
@@ -906,8 +984,7 @@ function PlayerSheet(props: {
     return props.options
       .filter((p) =>
         `${p.name} ${p.team ?? ""}`.toLowerCase().includes(needle)
-      )
-      .slice(0, 20);
+      );
   }, [q, props.options]);
 
   return (
@@ -958,24 +1035,46 @@ function PlayerSheet(props: {
 
         <div style={s.resultList}>
           {matches.map((p) => (
-            <button
+            <div
               key={p.id}
-              type="button"
-              onClick={() => props.onSelect(p.id)}
               style={{
-                ...s.resultRow,
-                background: p.id === props.currentId ? "#f0fdf4" : "white",
+                ...s.playerResultRow,
+                background: p.id === props.currentId ? "#f0fdf4" : p.disabled ? "#f3f4f6" : "white",
               }}
             >
-              <PlayerAvatar player={p} role={p.role} size={34} />
+              <button
+                type="button"
+                disabled={p.disabled}
+                onClick={() => {
+                  if (!p.disabled) props.onSelect(p.id);
+                }}
+                style={{
+                  ...s.resultChoose,
+                  cursor: p.disabled ? "not-allowed" : "pointer",
+                  opacity: p.disabled ? 0.82 : 1,
+                }}
+              >
+                <PlayerAvatar player={p} role={p.role} size={34} />
 
-              <span style={s.resultText}>
-                <b>{label(p)}</b>
-                <small>{sub(p)}</small>
-              </span>
+                <span style={s.resultText}>
+                  <b style={p.disabled ? { color: "#64748b" } : undefined}>{label(p)}</b>
+                  <small>{sub(p)}</small>
+                  {p.disabled && <small style={s.resultReason}>{p.reason}</small>}
+                </span>
 
-              <span style={s.addBtn}>+</span>
-            </button>
+                <span style={p.disabled ? s.disabledBtn : s.addBtn}>{p.disabled ? "—" : "+"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => props.onStats(p.id)}
+                style={s.statsBtn}
+                aria-label={`Apri statistiche di ${label(p)}`}
+                title="Apri statistiche"
+              >
+                ↗
+              </button>
+            </div>
           ))}
 
           {matches.length === 0 && (
@@ -2329,11 +2428,58 @@ const s: Record<string, React.CSSProperties> = {
     cursor: "pointer",
   },
 
+  playerResultRow: {
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 30px",
+    alignItems: "stretch",
+    gap: 6,
+    minHeight: 58,
+    padding: "6px 8px",
+    borderBottom: "1px solid #f1f5f9",
+  },
+
+  resultChoose: {
+    minWidth: 0,
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: "38px minmax(0, 1fr) 28px",
+    alignItems: "center",
+    gap: 10,
+    padding: 2,
+    border: 0,
+    background: "transparent",
+    textAlign: "left",
+    fontFamily: "inherit",
+  },
+
+  statsBtn: {
+    width: 28,
+    height: 28,
+    alignSelf: "center",
+    display: "grid",
+    placeItems: "center",
+    border: "1px solid #dbeafe",
+    borderRadius: 8,
+    background: "#eff6ff",
+    color: "#2563eb",
+    fontSize: 15,
+    fontWeight: 1000,
+    cursor: "pointer",
+  },
+
   resultText: {
     display: "grid",
     gap: 2,
     color: "#0f172a",
     fontSize: 13,
+  },
+
+  resultReason: {
+    color: "#64748b",
+    fontSize: 10.5,
+    fontWeight: 900,
+    lineHeight: 1.2,
   },
 
   addBtn: {
@@ -2345,6 +2491,18 @@ const s: Record<string, React.CSSProperties> = {
     background: "#e07b1a",
     color: "white",
     fontSize: 18,
+    fontWeight: 1000,
+  },
+
+  disabledBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    display: "grid",
+    placeItems: "center",
+    background: "#e2e8f0",
+    color: "#94a3b8",
+    fontSize: 15,
     fontWeight: 1000,
   },
 

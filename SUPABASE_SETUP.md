@@ -36,6 +36,46 @@ SUPABASE_SERVICE_ROLE_KEY=...
 
 La service role è usata solo nel server client esistente. Non esporla mai nel frontend.
 
+## Migration successive obbligatorie
+
+Dopo le migration iniziali, applica anche le migration numerate dalla `010` in avanti
+presenti nella cartella `supabase/migrations`, mantenendo l'ordine numerico. In
+particolare:
+
+- `048_chat_moderation_and_message_guards.sql` abilita segnalazioni e blocco utenti;
+- `049_score_precision_two_decimals.sql` rende canonico il calcolo a due decimali;
+- `051_superadmin_email_normalization.sql` mantiene il riconoscimento del superadmin
+  tramite la tabella `app_admins` e normalizza maiuscole/spazi dell'email;
+- `052_lineup_constraints_and_chat_events.sql` applica i vincoli della formazione;
+- `053_score_reconciliation_and_stats_precision.sql` ripara gli aggregati già presenti,
+  arrotonda le statistiche a due decimali e gestisce in modo sicuro le colonne che
+  potrebbero non esistere in uno schema più vecchio.
+
+La `053` va eseguita anche se una migration precedente sui decimali ha restituito un
+errore: è progettata per non fallire quando mancano `matchday_team_scores` o una delle
+colonne ruolo della classifica.
+
+## Email per le segnalazioni
+
+Per inviare al superadmin un avviso quando viene segnalato un messaggio, configura in
+Vercel le variabili server-side:
+
+```env
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=FantaChat <notifiche@dominio-verificato.it>
+SUPERADMIN_EMAIL=...
+```
+
+`SUPERADMIN_EMAIL` è opzionale se esiste già una riga corretta in `app_admins`; in quel
+caso viene usata l'email della tabella. Se l'email non è configurata, la segnalazione
+resta comunque salvata e non viene persa.
+
+## Contratto dei punteggi
+
+I componenti e gli aggregati vengono conservati a due decimali. L'interfaccia mostra il
+punteggio FantaChat finale a una cifra decimale. Esempio: `0,34 + 0,30 + 0,10 + 0,30 +
+0,04 = 1,08`, mostrato come `1,1` solo nel riepilogo finale.
+
 ## Dati seed minimi
 
 La migration `009` crea:

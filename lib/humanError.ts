@@ -32,6 +32,14 @@ export function humanError(error: unknown, fallback = FALLBACK) {
       : fallback;
   }
 
+  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("network error") || lower.includes("load failed")) {
+    return "Connessione non disponibile. Controlla la rete e riprova.";
+  }
+
+  if (lower.includes("timeout") || lower.includes("timed out") || lower.includes("aborted")) {
+    return "La richiesta sta impiegando troppo tempo. Riprova tra poco.";
+  }
+
   if (lower.includes("already registered") || lower.includes("already been registered")) {
     return "Email già registrata.";
   }

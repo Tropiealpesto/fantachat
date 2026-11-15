@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useApp } from "./AppContext";
+import { useRouter } from "next/navigation";
 import TutorialHelp from "./TutorialHelp";
 
 export default function AppBar(props: {
@@ -10,6 +11,7 @@ export default function AppBar(props: {
   onMenuOpen?: () => void;
 }) {
   const app = useApp();
+  const router = useRouter();
   const handleMenu = props.onMenuOpen ?? app.openDrawer;
 
   return (
@@ -28,7 +30,13 @@ export default function AppBar(props: {
           </svg>
         </button>
 
-        <div className="appbar-brand" style={{ flex: 1 }}>
+        <button
+          type="button"
+          className="appbar-brand"
+          aria-label="Torna alla Home"
+          onClick={() => router.push("/")}
+          style={{ flex: 1, border: 0, padding: 0, background: "transparent", textAlign: "left", fontFamily: "inherit", cursor: "pointer" }}
+        >
           <div style={{ minWidth: 0 }}>
             <div className="appbar-logo">
               <span className="logo-fanta">Fanta</span>
@@ -39,7 +47,7 @@ export default function AppBar(props: {
               {props.league} · {props.team}
             </div>
           </div>
-        </div>
+        </button>
 
         <div className="appbar-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <TutorialHelp />

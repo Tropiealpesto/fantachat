@@ -326,6 +326,53 @@ function formatSlotRange(start?: string | null, end?: string | null) {
   return `${day} ${time.format(s)}-${time.format(e)}`;
 }
 
+function matchdayStatusLabel(status?: string | null, hasLineup = false, slotOpen = false) {
+  if (slotOpen) return hasLineup ? "Formazione modificabile" : "Azione richiesta";
+
+  switch ((status ?? "").toLowerCase()) {
+    case "open":
+      return hasLineup ? "Formazione inviata" : "Formazione aperta";
+    case "live":
+    case "in_progress":
+      return "Giornata in corso";
+    case "completed":
+    case "closed":
+      return "Risultati disponibili";
+    case "locked":
+      return "In attesa di apertura";
+    default:
+      return status ? status.replaceAll("_", " ") : "Stato non disponibile";
+  }
+}
+
+function matchdayActionLabel(status?: string | null, hasLineup = false, slotOpen = false) {
+  if (slotOpen) return hasLineup ? "Modifica formazione" : "Completa formazione";
+
+  switch ((status ?? "").toLowerCase()) {
+    case "live":
+    case "in_progress":
+      return "Segui il live";
+    case "completed":
+    case "closed":
+      return "Vedi risultato";
+    default:
+      return hasLineup ? "Vedi formazione" : "Apri formazione";
+  }
+}
+
+function matchdayActionPath(status?: string | null) {
+  switch ((status ?? "").toLowerCase()) {
+    case "live":
+    case "in_progress":
+      return "/live";
+    case "completed":
+    case "closed":
+      return "/storico";
+    default:
+      return "/rosa";
+  }
+}
+
 function homeHeroBackground() {
   return [
     "linear-gradient(145deg, rgba(8,83,44,.95) 0%, rgba(12,117,61,.96) 55%, rgba(20,166,87,.96) 100%)",
@@ -746,6 +793,16 @@ export default function Home() {
         }));
   const mySlotLabel = formatSlotRange(data.my_slot?.starts_at, data.my_slot?.ends_at);
   const matchdayDeadline = formatDeadline(data.matchday?.deadline_end_at ?? data.matchday?.slot_end);
+  const matchdayStatus = matchdayStatusLabel(
+    data.matchday?.status,
+    hasLineup,
+    Boolean(data.my_slot?.is_open)
+  );
+  const matchdayAction = matchdayActionLabel(
+    data.matchday?.status,
+    hasLineup,
+    Boolean(data.my_slot?.is_open)
+  );
 
   function StandLine({ row, mine }: { row: StandRow; mine: boolean }) {
     const c = memberColors[row.user_id];
@@ -870,18 +927,18 @@ export default function Home() {
               background: "transparent",
             }}
           >
-            {data.matchday?.status ?? "locked"}
+            {matchdayStatus}
           </span>
 
           <button
             disabled={!data.matchday}
-            onClick={() => router.push("/rosa")}
+            onClick={() => router.push(matchdayActionPath(data.matchday?.status))}
             style={{
               ...s.primaryBtn,
               background: data.matchday ? theme.primary : "#d1d5db",
             }}
           >
-            {hasLineup ? "Vedi rosa" : "Invia rosa"}
+            {matchdayAction}
           </button>
         </div>
 

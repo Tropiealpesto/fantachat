@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import AppBar from "../../components/AppBar";
 import BottomNav from "../../components/BottomNav";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -9,6 +9,7 @@ import CompetitionBadge from "../../components/CompetitionBadge";
 import { useRequireApp } from "../../hooks/useRequireApp";
 import { supabase } from "../../../lib/supabaseClient";
 import { rpcJson, fmt, signedFmt } from "../../../lib/rpc";
+import { formatScore, roundScore } from "../../../lib/scoreMath.mjs";
 
 type PlayerHistory = {
   matchday_number: number;
@@ -107,20 +108,17 @@ function num(value: number | null | undefined) {
 }
 
 function round2(value: number) {
-  return Math.round(value * 100) / 100;
+  return roundScore(value, 2);
 }
 
 function fmt2(value: number | null | undefined) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  const rounded = round2(Number(value));
-  return String(Object.is(rounded, -0) ? 0 : rounded).replace(".", ",");
+  return formatScore(Number(value), 2);
 }
 
 function signedFmt2(value: number | null | undefined) {
   if (value == null || !Number.isFinite(Number(value))) return "—";
-  const rounded = round2(Number(value));
-  const normalized = Object.is(rounded, -0) ? 0 : rounded;
-  return `${normalized > 0 ? "+" : ""}${String(normalized).replace(".", ",")}`;
+  return formatScore(Number(value), 2, true);
 }
 
 function normalizePct(value: number | null | undefined) {
@@ -247,6 +245,10 @@ export default function Giocatore() {
   const app = useRequireApp(true);
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromRosa = searchParams.get("from") === "rosa";
+  const fromLive = searchParams.get("from") === "live";
+  const fromChat = searchParams.get("from") === "chat";
   const [data, setData] = useState<PlayerDetail>(null);
   const [loading, setLoading] = useState(true);
   const [openMatchday, setOpenMatchday] = useState<number | null>(null);
@@ -280,7 +282,7 @@ export default function Giocatore() {
 
       <main className="fc-player-page" style={s.container}>
         <button type="button" style={s.backBtn} onClick={() => router.back()}>
-          ← Indietro
+          ← {fromRosa ? "Torna alla formazione" : fromLive ? "Torna al live" : fromChat ? "Torna alla chat" : "Indietro"}
         </button>
 
         {!data ? (

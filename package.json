@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:score": "node scripts/score-math-check.mjs",
+    "verify": "npm run test:score && npx tsc --noEmit && npm run lint",
     "mobile:add:ios": "cap add ios",
     "mobile:sync:ios": "cap sync ios",
     "mobile:open:ios": "cap open ios",

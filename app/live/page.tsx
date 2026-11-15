@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "../components/AppBar";
 import BottomNav from "../components/BottomNav";
 import LoadingScreen from "../components/LoadingScreen";
@@ -87,6 +88,15 @@ function liveColor(v: number) {
   return "#64748b";
 }
 
+function formatUpdatedAt(value: Date | null) {
+  if (!value) return "In attesa del primo aggiornamento";
+
+  return `Ultimo aggiornamento ${new Intl.DateTimeFormat("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value)}`;
+}
+
 function playerKey(role: string, name?: string | null, team?: string | null) {
   return `${role}|${(name ?? "").trim().toLowerCase()}|${(team ?? "").trim().toLowerCase()}`;
 }
@@ -162,6 +172,7 @@ function PlayerAvatar({ player, size = 24 }: { player: LivePlayer; size?: number
 
 export default function LivePage() {
   const app = useRequireApp(true);
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<LiveData>(empty);
@@ -171,6 +182,7 @@ export default function LivePage() {
     Record<string, { primary: string | null; secondary: string | null; pattern: BadgePattern | null }>
   >({});
   const [playerImages, setPlayerImages] = useState<Record<string, string | null>>({});
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!app.ready || !app.competitionId) return;
@@ -230,6 +242,7 @@ export default function LivePage() {
         if (!off) {
           setData(r ?? empty);
           setErr(null);
+          setLastUpdatedAt(new Date());
         }
       } catch (e: any) {
         if (!off) setErr(humanError(e));
@@ -326,6 +339,11 @@ export default function LivePage() {
               : "Nessuna giornata attiva"}
           </p>
 
+          <div style={s.updatedAt} aria-live="polite">
+            <span style={s.updatedDot} />
+            {formatUpdatedAt(lastUpdatedAt)} · aggiornamento automatico
+          </div>
+
         </section>
 
         {err && <div style={s.err}>{err}</div>}
@@ -415,8 +433,23 @@ export default function LivePage() {
                             null,
                         };
 
+                        const canOpenStats = Boolean(player.real_player_id && player.role !== "AL");
+
                         return (
-                        <div key={`${p.name}-${i}`} style={s.playerRow}>
+                        <button
+                          key={`${p.name}-${i}`}
+                          type="button"
+                          disabled={!canOpenStats}
+                          onClick={() => {
+                            if (canOpenStats) router.push(`/giocatore/${player.real_player_id}?from=live`);
+                          }}
+                          style={{
+                            ...s.playerRow,
+                            ...s.playerRowButton,
+                            cursor: canOpenStats ? "pointer" : "default",
+                          }}
+                          aria-label={canOpenStats ? `Apri statistiche di ${pLabel(player)}` : undefined}
+                        >
                           <div style={s.playerLeft}>
                             <PlayerAvatar player={player} size={24} />
                           </div>
@@ -434,7 +467,8 @@ export default function LivePage() {
                           >
                             {liveValue(player.points)}
                           </span>
-                        </div>
+                          {canOpenStats && <span style={s.playerArrow} aria-hidden="true">›</span>}
+                        </button>
                         );
                       })
                     )}
@@ -452,7 +486,7 @@ export default function LivePage() {
         </section>
 
         <p style={s.refresh}>
-          Si aggiorna automaticamente ogni 15 secondi
+          I dati si aggiornano automaticamente ogni 15 secondi. Tocca un giocatore per aprire le statistiche.
         </p>
       </main>
 
@@ -517,6 +551,25 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 11.5,
     color: "#64748b",
     fontWeight: 750,
+  },
+
+  updatedAt: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    color: "#64748b",
+    fontSize: 10,
+    fontWeight: 750,
+  },
+
+  updatedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    background: "#16a34a",
+    boxShadow: "0 0 0 3px #dcfce7",
+    flexShrink: 0,
   },
 
   list: {
@@ -640,11 +693,26 @@ const s: Record<string, React.CSSProperties> = {
   playerRow: {
     minHeight: 38,
     display: "grid",
-    gridTemplateColumns: "22px 1fr auto",
+    gridTemplateColumns: "22px minmax(0, 1fr) auto 12px",
     gap: 7,
     alignItems: "center",
     padding: "6px 8px",
     borderBottom: "1px solid #f1f5f9",
+  },
+
+  playerRowButton: {
+    width: "100%",
+    border: 0,
+    background: "white",
+    textAlign: "left",
+    fontFamily: "inherit",
+  },
+
+  playerArrow: {
+    color: "#94a3b8",
+    fontSize: 18,
+    lineHeight: 1,
+    fontWeight: 700,
   },
 
   playerLeft: {
