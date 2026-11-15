@@ -327,7 +327,7 @@ function formatSlotRange(start?: string | null, end?: string | null) {
 }
 
 function matchdayStatusLabel(status?: string | null, hasLineup = false, slotOpen = false) {
-  if (slotOpen) return hasLineup ? "Formazione modificabile" : "Azione richiesta";
+  if (slotOpen) return hasLineup ? "Formazione inviata" : "Azione richiesta";
 
   switch ((status ?? "").toLowerCase()) {
     case "open":
@@ -346,7 +346,7 @@ function matchdayStatusLabel(status?: string | null, hasLineup = false, slotOpen
 }
 
 function matchdayActionLabel(status?: string | null, hasLineup = false, slotOpen = false) {
-  if (slotOpen) return hasLineup ? "Modifica formazione" : "Completa formazione";
+  if (slotOpen) return hasLineup ? "Vedi formazione" : "Completa formazione";
 
   switch ((status ?? "").toLowerCase()) {
     case "live":
