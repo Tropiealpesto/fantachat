@@ -10,7 +10,7 @@ const sections: LegalSection[] = [
   {
     title: "Come richiederla",
     body: [
-      "Se hai effettuato l'accesso, usa il pulsante in-app qui sopra. Se non riesci ad accedere, contatta fantachat.app.2026@gmail.com dall'indirizzo associato al tuo account.",
+      "Se hai effettuato l'accesso, usa il pulsante qui sopra. La richiesta viene autorizzata dalla sessione dell'account e non richiede l'invio della password. Se non riesci ad accedere, contatta fantachat.app.2026@gmail.com dall'indirizzo associato al tuo account.",
       "Non inviare password o dati sensibili non necessari.",
     ],
   },
@@ -23,8 +23,8 @@ const sections: LegalSection[] = [
   {
     title: "Cosa viene cancellato",
     body: [
-      "La cancellazione riguarda account, dati identificativi collegati, preferenze personali e contenuti associati quando tecnicamente possibile e nei limiti previsti dalla legge.",
-      "Messaggi, classifiche, formazioni o dati di competizione potrebbero essere anonimizzati o conservati in forma non direttamente identificativa se servono a mantenere integra la storia della lega.",
+      "La cancellazione elimina l'account di autenticazione, le preferenze personali e i dati identificativi collegati. Le sottoscrizioni alle notifiche vengono eliminate insieme all'account.",
+      "Messaggi, classifiche, formazioni o dati di competizione possono essere anonimizzati o conservati in forma non direttamente identificativa se servono a mantenere integra la storia della lega.",
     ],
   },
   {
@@ -83,7 +83,7 @@ export default function AccountDeletionPage() {
     <LegalPage
       eyebrow="Gestione account"
       title="Cancellazione account"
-      updated="15 luglio 2026"
+      updated="15 novembre 2026"
       intro="Questa pagina spiega come richiedere la cancellazione dell'account FantaChat e cosa aspettarsi durante la procedura."
       actions={
         <section className="legal-card" aria-labelledby="account-delete-action-title">

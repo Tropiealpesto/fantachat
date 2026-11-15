@@ -1,19 +1,15 @@
-# FantaChat Privacy Policy - bozza operativa
+# FantaChat Privacy Policy - base operativa
 
-Aggiornata: 2026-07-02
+Aggiornata: 2026-11-15
 
-Questa bozza e' la base pubblicata nell'app in `/privacy`. Prima del lancio pubblico deve essere completata e validata con i dati reali del progetto.
+Questa base corrisponde alla pagina pubblicata nell'app in `/privacy`. Prima del lancio pubblico va completata con i dati identificativi definitivi e sottoposta a una revisione legale.
 
 ## Da completare prima del lancio
 
-- Titolare del trattamento: nome o societa, indirizzo, eventuale P.IVA.
-- Email privacy ufficiale.
-- Elenco fornitori effettivi: autenticazione/database, hosting, analytics/log, eventuale provider statistiche calcio.
-- Ruolo privacy dei fornitori: responsabile, autonomo titolare, sub-responsabile.
-- Trasferimenti extra SEE e garanzie applicabili.
-- Tempi di conservazione per account, chat, log, classifiche, dati aggregati.
-- Eta minima o procedura per utenti minorenni.
-- Procedura interna per richieste privacy e cancellazione account.
+- Indirizzo del titolare e eventuale partita IVA, se applicabili.
+- Conferma dei ruoli privacy dei fornitori e dei trasferimenti extra SEE.
+- Conferma dei tempi di conservazione definitivi.
+- Revisione legale finale.
 
 ## Dati personali trattati
 

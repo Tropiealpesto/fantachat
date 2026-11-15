@@ -70,6 +70,9 @@ export default function SideDrawer(props: Props) {
           <Section style={{ marginTop: 18 }}>La tua squadra</Section>
           <Item href="/personalizza" title="Personalizza" sub="Colori dello stemma" pathname={pathname} onClose={props.onClose} icon={<><path d="M12 3l5 5a7 7 0 1 1-10 0z" /></>} />
 
+          <Section style={{ marginTop: 18 }}>Account</Section>
+          <Item href="/cancellazione-account" title="Cancellazione account" sub="Gestisci o elimina i tuoi dati" pathname={pathname} onClose={props.onClose} icon={<><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h6M8 16h4" /></>} />
+
           <Section style={{ marginTop: 18 }}>Esplora</Section>
           <Item href="/storico" title="Storico" sub="Giornate passate" pathname={pathname} onClose={props.onClose} icon={<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>} />
           <Item href="/statistiche" title="Statistiche" sub="Giocatori" pathname={pathname} onClose={props.onClose} icon={<><path d="M4 20V11M9.5 20V5M15 20v-8M20.5 20V8" /><path d="M3 20h18" /></>} />
