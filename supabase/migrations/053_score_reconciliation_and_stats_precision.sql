@@ -5,6 +5,96 @@
 -- aggregate read models follow the same contract and safely repairs databases
 -- where an earlier precision migration was only partially applied.
 
+-- Keep this migration self-contained: if the previous precision migration was
+-- stopped by an aggregate-table error, recreate the canonical player scorer
+-- before the read model below calls it.
+create or replace function public.compute_player_points_v2(
+  p_ruleset text,
+  p_role text,
+  p_goals integer,
+  p_assists integer,
+  p_yellow integer,
+  p_red integer,
+  p_pen_missed integer,
+  p_pen_saved integer,
+  p_goals_conceded integer,
+  p_clean_sheet boolean,
+  p_xg numeric default null,
+  p_xa numeric default null,
+  p_passes_completed integer default 0,
+  p_pass_accuracy numeric default null,
+  p_tackles integer default 0,
+  p_interceptions integer default 0,
+  p_npxg numeric default null,
+  p_saves integer default 0,
+  p_save_pct numeric default null
+)
+returns numeric
+language plpgsql
+stable
+set search_path to 'public'
+as $function$
+declare
+  v_ruleset text := coalesce(p_ruleset, 'classico');
+  v_role text := upper(coalesce(p_role, ''));
+  v_points numeric;
+  v_pass_accuracy numeric;
+  v_save_pct numeric;
+begin
+  v_points := public.compute_player_points(
+    v_role,
+    coalesce(p_goals, 0),
+    coalesce(p_assists, 0),
+    coalesce(p_yellow, 0),
+    coalesce(p_red, 0),
+    coalesce(p_pen_missed, 0),
+    coalesce(p_pen_saved, 0),
+    coalesce(p_goals_conceded, 0),
+    coalesce(p_clean_sheet, false)
+  );
+
+  if v_ruleset = 'pro' then
+    return round(v_points + public.compute_extra_points(v_ruleset, v_role, p_xg, p_xa), 2);
+  end if;
+
+  if v_ruleset not in ('non_standard', 'nonstandard', 'statistico') then
+    return round(v_points, 2);
+  end if;
+
+  v_pass_accuracy := case
+    when p_pass_accuracy is null then null
+    when p_pass_accuracy <= 1 then p_pass_accuracy * 100
+    else p_pass_accuracy
+  end;
+
+  v_save_pct := case
+    when p_save_pct is not null and p_save_pct <= 1 then p_save_pct * 100
+    when p_save_pct is not null then p_save_pct
+    when coalesce(p_saves, 0) + coalesce(p_goals_conceded, 0) > 0
+      then (coalesce(p_saves, 0)::numeric / (coalesce(p_saves, 0) + coalesce(p_goals_conceded, 0)::numeric)) * 100
+    else null
+  end;
+
+  v_points :=
+    v_points
+    + coalesce(p_passes_completed, 0) * 0.005
+    + case when coalesce(p_passes_completed, 0) >= 20 and coalesce(v_pass_accuracy, 0) > 85 then 0.3 else 0 end
+    + coalesce(p_tackles, 0) * 0.10
+    + coalesce(p_interceptions, 0) * 0.10
+    + coalesce(p_npxg, p_xg, 0)
+    + coalesce(p_xa, 0);
+
+  if v_role = 'P' then
+    v_points :=
+      v_points
+      + case when coalesce(v_save_pct, 0) > 80 then 0.5 else 0 end
+      + case when coalesce(v_save_pct, 0) > 80 and coalesce(p_saves, 0) >= 5 then 1 else 0 end;
+  end if;
+
+  return round(v_points, 2);
+end;
+$function$;
+
 do $backfill$
 declare
   v_column text;
